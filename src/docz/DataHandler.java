@@ -94,5 +94,11 @@ public class DataHandler {
     public synchronized long getNewID() {
         return ++lastID;
     }
+    
+    public synchronized void updateLastID(long id){
+        if(lastID < id){
+            lastID = id;
+        }
+    }
 
 }

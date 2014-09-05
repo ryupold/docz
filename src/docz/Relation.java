@@ -16,7 +16,7 @@ import org.w3c.dom.Element;
  * @author Michael
  */
 public class Relation extends Entity{
-    private String title, description;
+    
     private Date created;
     private Element node;
     private long from, to;
@@ -56,7 +56,7 @@ public class Relation extends Entity{
     }
 
     public static Doc createRelation(Document DB, String title, String description, Doc From, Doc To) {
-        Element node = DB.createElement("doc");
+        Element node = DB.createElement("relation");
         
         Element titleN = DB.createElement("title");
         titleN.setTextContent(title);
@@ -91,14 +91,6 @@ public class Relation extends Entity{
 
     public Element getNode() {
         return node;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getDescription() {
-        return description;
     }
 
     public Date getCreated() {
