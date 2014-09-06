@@ -6,6 +6,8 @@
 
 package docz;
 
+import org.w3c.dom.Document;
+
 /**
  *
  * @author Michael
@@ -28,5 +30,9 @@ public class Entity {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+    
+    public void save(Document DB){
+        
     }
 }

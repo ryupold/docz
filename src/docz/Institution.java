@@ -96,7 +96,10 @@ public class Institution extends Entity{
         
         Element createdN = DB.createElement("created");
         createdN.setTextContent(DateFormat.getDateTimeInstance().format(new Date()));
-        node.appendChild(createdN);        
+        node.appendChild(createdN);     
+        
+        Element logoN = DB.createElement("logo");
+        node.appendChild(logoN);
 
         return new Institution(node);
     }
@@ -129,6 +132,16 @@ public class Institution extends Entity{
             
         return logo;
     }
+    
+    public void setLogo(String file){
+        try {
+            node.getElementsByTagName("logo").item(0).setTextContent(file);
+            logo = null;
+            isModified = true;
+        } catch (Exception ex) {
+            Log.l(ex);
+        }
+    }
 
     public boolean isIsModified() {
         return isModified;
@@ -151,7 +164,42 @@ public class Institution extends Entity{
         isModified = true;
     }
     
-    public void save(){
+    public void save(Document DB){
+        
+        try {
+            node.getElementsByTagName("title").item(0).setTextContent(title);
+        } catch (Exception ex) {
+            Log.l(ex);
+        }
+        try {
+            node.getElementsByTagName("description").item(0).setTextContent(description);
+        } catch (Exception ex) {
+            Log.l(ex);
+        }
+
+        try {
+            node.getElementsByTagName("created").item(0).setTextContent(DateFormat.getDateTimeInstance().format(created));
+        } catch (Exception ex) {
+            Log.l(ex);
+        }
+
+        try {
+            
+            Node tagsNode = node.getElementsByTagName("tags").item(0);
+            NodeList tagNodes = tagsNode.getChildNodes();
+            for (int i = 0; i < tagNodes.getLength(); i++) {
+                tagsNode.removeChild(tagNodes.item(i));
+                i--;
+            }
+            for (String tag : tags) {
+                Element tagN = DB.createElement("tag");
+                tagN.setTextContent(tag);
+                tagsNode.appendChild(tagN);
+            }
+        } catch (Exception ex) { 
+            Log.l(ex);
+        }
+                
         isModified = false;
     }
     

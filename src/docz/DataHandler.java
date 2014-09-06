@@ -25,7 +25,7 @@ public class DataHandler {
 
     private String dbPath;
     private Document DB;
-    private Element root, docz, relations;
+    private Element root, docz, relationz, institutionz;
     private List<Doc> docs = new ArrayList<Doc>();
     private List<Relation> relation = new ArrayList<Relation>();
 
@@ -54,8 +54,12 @@ public class DataHandler {
                 root.appendChild(docz);
 
                 //Relations node
-                relations = DB.createElement("relations");
-                root.appendChild(relations);
+                relationz = DB.createElement("relationz");
+                root.appendChild(relationz);
+                
+                //Relations node
+                institutionz = DB.createElement("institutionz");
+                root.appendChild(institutionz);
 
 //                Element tmp = DB.createElement("");
 //                tmp.setTextContent("");
@@ -70,9 +74,14 @@ public class DataHandler {
                     docz = (Element) nl.item(0);
                 }
 
-                nl = root.getElementsByTagName("relations");
+                nl = root.getElementsByTagName("relationz");
                 if (nl.getLength() > 0) {
-                    relations = (Element) nl.item(0);
+                    relationz = (Element) nl.item(0);
+                }
+                
+                nl = root.getElementsByTagName("institutionz");
+                if (nl.getLength() > 0) {
+                    institutionz = (Element) nl.item(0);
                 }
 
                 Log.l("DB file loaded.");

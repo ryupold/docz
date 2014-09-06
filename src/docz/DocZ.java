@@ -33,7 +33,7 @@ public class DocZ extends javax.swing.JFrame {
 
         jPanel1 = new javax.swing.JPanel();
         txtSearch = new javax.swing.JTextField();
-        btnAddDoc = new javax.swing.JButton();
+        btnAdd = new javax.swing.JButton();
         ckbDocs = new javax.swing.JCheckBox();
         ckbRelations = new javax.swing.JCheckBox();
         ckbTags = new javax.swing.JCheckBox();
@@ -48,7 +48,13 @@ public class DocZ extends javax.swing.JFrame {
         txtSearch.setFont(new java.awt.Font("Arial", 0, 18)); // NOI18N
         txtSearch.setToolTipText("Search...");
 
-        btnAddDoc.setText("+");
+        btnAdd.setFont(new java.awt.Font("Arial", 1, 36)); // NOI18N
+        btnAdd.setText("+");
+        btnAdd.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAddActionPerformed(evt);
+            }
+        });
 
         ckbDocs.setSelected(true);
         ckbDocs.setText("Docs");
@@ -67,7 +73,7 @@ public class DocZ extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(txtSearch)
-                    .addComponent(btnAddDoc, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(btnAdd, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(ckbDocs)
                         .addGap(18, 18, 18)
@@ -87,7 +93,7 @@ public class DocZ extends javax.swing.JFrame {
                     .addComponent(ckbRelations)
                     .addComponent(ckbTags))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(btnAddDoc)
+                .addComponent(btnAdd)
                 .addContainerGap())
         );
 
@@ -97,11 +103,11 @@ public class DocZ extends javax.swing.JFrame {
         tabDocZ.setLayout(tabDocZLayout);
         tabDocZLayout.setHorizontalGroup(
             tabDocZLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 734, Short.MAX_VALUE)
+            .addGap(0, 745, Short.MAX_VALUE)
         );
         tabDocZLayout.setVerticalGroup(
             tabDocZLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 463, Short.MAX_VALUE)
+            .addGap(0, 718, Short.MAX_VALUE)
         );
 
         tabs.addTab("DocZ", tabDocZ);
@@ -110,11 +116,11 @@ public class DocZ extends javax.swing.JFrame {
         tabPreview.setLayout(tabPreviewLayout);
         tabPreviewLayout.setHorizontalGroup(
             tabPreviewLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 734, Short.MAX_VALUE)
+            .addGap(0, 745, Short.MAX_VALUE)
         );
         tabPreviewLayout.setVerticalGroup(
             tabPreviewLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 463, Short.MAX_VALUE)
+            .addGap(0, 718, Short.MAX_VALUE)
         );
 
         tabs.addTab("Preview", tabPreview);
@@ -127,7 +133,7 @@ public class DocZ extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
-                .addComponent(tabs)
+                .addComponent(tabs, javax.swing.GroupLayout.DEFAULT_SIZE, 750, Short.MAX_VALUE)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -135,13 +141,18 @@ public class DocZ extends javax.swing.JFrame {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(tabs)
+                    .addComponent(tabs, javax.swing.GroupLayout.DEFAULT_SIZE, 754, Short.MAX_VALUE)
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void btnAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddActionPerformed
+        AddDialog addDialog = new AddDialog(this, true);
+        addDialog.setVisible(true);
+    }//GEN-LAST:event_btnAddActionPerformed
 
     /**
      * @param args the command line arguments
@@ -179,7 +190,7 @@ public class DocZ extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnAddDoc;
+    private javax.swing.JButton btnAdd;
     private javax.swing.JCheckBox ckbDocs;
     private javax.swing.JCheckBox ckbRelations;
     private javax.swing.JCheckBox ckbTags;
