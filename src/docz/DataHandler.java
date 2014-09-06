@@ -8,9 +8,17 @@ package docz;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.*;
 
 /**
@@ -98,6 +106,53 @@ public class DataHandler {
 
     public String getDbPath() {
         return dbPath;
+    }
+    
+    public synchronized void addDoc(Doc doc)
+    {
+        docz.appendChild(doc.getNode());
+    }
+    
+    public synchronized void addRelation(Relation relation)
+    {
+        relationz.appendChild(relation.getNode());
+    }
+    
+    public synchronized void addInstitution(Institution institution)
+    {
+        institutionz.appendChild(institution.getNode());
+    }
+    
+    public synchronized void removeDoc(Doc doc)
+    {
+        docz.removeChild(doc.getNode());
+    }
+    
+    public synchronized void removeRelation(Relation relation)
+    {
+        relationz.removeChild(relation.getNode());
+    }
+    
+    public synchronized void removeInstitution(Institution institution)
+    {
+        institutionz.removeChild(institution.getNode());
+    }
+    
+    public synchronized void save(){
+        try {
+            TransformerFactory transformerFactory = TransformerFactory
+                    .newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            DOMSource domSource = new DOMSource(DB);
+            StreamResult streamResult = new StreamResult(new File(
+                    dbPath));
+            
+            transformer.transform(domSource, streamResult);
+        } catch (TransformerConfigurationException ex) {
+            Log.l(ex);
+        } catch (TransformerException ex) {
+            Log.l(ex);
+        }
     }
 
     public synchronized long getNewID() {
