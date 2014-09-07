@@ -8,8 +8,10 @@ package docz;
 
 import java.awt.Image;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import javax.imageio.ImageIO;
@@ -25,7 +27,7 @@ import org.w3c.dom.NodeList;
 public class Institution extends Entity{
     
     private long id;
-    private List<String> tags;
+    private List<String> tags = new ArrayList<String>();
     private Date created;
     private Image logo;
     private final Element node;
@@ -69,37 +71,50 @@ public class Institution extends Entity{
         }
     }
 
-    public static Institution createInstitution(Document DB, String title, String description, List<String> tags, Date date, List<File> files) {
-        Element node = DB.createElement("institution");
+    public static Institution createInstitution(String title, String description, List<String> tags, List<File> files) {
+        Element node = DataHandler.instance.DB.createElement("institution");
 
-        Element idN = DB.createElement("id");
-        idN.setTextContent(DataHandler.instance.getNewID()+"");
+        long institutionID = DataHandler.instance.getNewID();
+        
+        Element idN = DataHandler.instance.DB.createElement("id");
+        idN.setTextContent(institutionID+"");
         node.appendChild(idN);
         
-        Element titleN = DB.createElement("title");
+        Element titleN = DataHandler.instance.DB.createElement("title");
         titleN.setTextContent(title);
         node.appendChild(titleN);
 
-        Element descriptionN = DB.createElement("description");
+        Element descriptionN = DataHandler.instance.DB.createElement("description");
         descriptionN.setTextContent(description);
         node.appendChild(descriptionN);
 
-        Element tagsN = DB.createElement("tags");
+        Element tagsN = DataHandler.instance.DB.createElement("tags");
         if (tags != null) {
             for (String tag : tags) {
-                Element tagN = DB.createElement("tag");
+                Element tagN = DataHandler.instance.DB.createElement("tag");
                 tagN.setTextContent(tag);
                 tagsN.appendChild(tagN);
             }
         }
         node.appendChild(tagsN);
         
-        Element createdN = DB.createElement("created");
+        Element createdN = DataHandler.instance.DB.createElement("created");
         createdN.setTextContent(DateFormat.getDateTimeInstance().format(new Date()));
         node.appendChild(createdN);     
         
-        Element logoN = DB.createElement("logo");
+        Element logoN = DataHandler.instance.DB.createElement("logo");
         node.appendChild(logoN);
+        
+        for (int i=0; i<files.size(); i++) {
+            new File(DataHandler.instance.getDBDirectory()+"/institution_"+institutionID).mkdirs();
+            File newPath = new File(DataHandler.instance.getDBDirectory()+"/institution_"+institutionID+"/"+files.get(i).getName());
+            int fi=0;
+            while(newPath.exists()){
+                fi++;
+                newPath = new File(DataHandler.instance.getDBDirectory()+"/institution_"+institutionID+"/"+fi+files.get(i).getName());
+            }
+            Resources.copyFile(files.get(i), newPath);
+        }
 
         return new Institution(node);
     }
@@ -122,11 +137,23 @@ public class Institution extends Entity{
     public Image getLogo() {
         if (logo == null) {
             try {
-                String path = node.getElementsByTagName("logo").item(0).getTextContent();
-                logo = ImageIO.read(new File(path));
+                File[] files = new File(DataHandler.instance.getDBDirectory()+"/institution_"+id).listFiles(new FilenameFilter() {
+
+                    @Override
+                    public boolean accept(File dir, String filename) {
+                        filename = filename.toLowerCase();
+                        return filename.endsWith(".jpg")
+                            || filename.endsWith(".jpeg")
+                            || filename.endsWith(".png")
+                            || filename.endsWith(".bmp")
+                            || filename.endsWith(".wbmp")
+                            || filename.endsWith(".gif");
+                    }
+                });
+                logo = ImageIO.read(files[0]);
             } catch (Exception ex) {
                 Log.l(ex);
-                logo = Resources.img_nofiles;
+                logo = Resources.getImg_nofiles();
             }
         }
             

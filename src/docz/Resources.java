@@ -3,27 +3,37 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package docz;
 
 import java.awt.Image;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 
 /**
  *
  * @author Michael
  */
-public class Resources {
-    public static final Image img_loading;
-    public static final Image img_nofiles;
-    public static final Image img_pdf;
-    public static final Image img_otherfile;
-    public static final String allowedTitleChars = "abcdefghijklmnopqrstuvwxyz" + "abcdefghijklmnopqrstuvwxyz".toUpperCase() + "!#$(){}[]0123456789.,+=-_ \t";
-    
-    static{
+public abstract class Resources {
+
+    private static Image img_loading;
+    private static Image img_nofiles;
+    private static Image img_pdf;
+    private static Image img_otherfile;
+    private static String allowedTitleChars = "abcdefghijklmnopqrstuvwxyz" + "abcdefghijklmnopqrstuvwxyz".toUpperCase() + "!#$(){}[]0123456789.,+=-_ \t";
+
+    private Resources() {
+    }
+
+    private static void loadImages() {
         String file = "none";
-        Image loadingTmp = null, nofilesTmp = null, pdfTmp = null, otherfileTmp=null;
+        Image loadingTmp = null, nofilesTmp = null, pdfTmp = null, otherfileTmp = null;
         try {
 //            paypal = ImageIO.read(new File("paypal.jpg"));
 //            nopaypal = ImageIO.read(new File("nopaypal.jpg"));
@@ -39,10 +49,67 @@ public class Resources {
         } catch (IOException ex) {
             Log.l(ex);
         }
-        
+
         img_loading = loadingTmp;
         img_nofiles = nofilesTmp;
         img_pdf = pdfTmp;
         img_otherfile = otherfileTmp;
     }
+
+    public static Image getImg_loading() {
+        if (img_loading == null) {
+            loadImages();
+        }
+
+        return img_loading;
+    }
+
+    public static Image getImg_nofiles() {
+        if (img_nofiles == null) {
+            loadImages();
+        }
+
+        return img_nofiles;
+    }
+
+    public static Image getImg_otherfile() {
+        if (img_otherfile == null) {
+            loadImages();
+        }
+
+        return img_otherfile;
+    }
+
+    public static Image getImg_pdf() {
+        if (img_pdf == null) {
+            loadImages();
+        }
+
+        return img_pdf;
+    }
+
+    public static String getAllowedTitleChars() {
+        return allowedTitleChars;
+    }
+
+    public static boolean copyFile(File from, File to) {
+        try {
+            InputStream in = new FileInputStream(from);
+            OutputStream out = new FileOutputStream(to);
+            
+            byte[] buf = new byte[1024];
+            int len;
+            while ((len = in.read(buf)) > 0) {
+                out.write(buf, 0, len);
+            }
+            in.close();
+            out.close();
+            
+            return true;
+        } catch (IOException ex) {
+            Log.l(ex);
+            return false;
+        }
+    }
+
 }

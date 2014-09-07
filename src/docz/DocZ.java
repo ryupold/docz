@@ -7,6 +7,9 @@
 package docz;
 
 import javax.swing.JFrame;
+import net.sourceforge.jdatepicker.JDateComponentFactory;
+import net.sourceforge.jdatepicker.impl.JDatePanelImpl;
+import net.sourceforge.jdatepicker.impl.JDatePickerImpl;
 
 /**
  *
@@ -20,6 +23,8 @@ public class DocZ extends javax.swing.JFrame {
     public DocZ() {
         initComponents();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        Log.l("DB file = "+DataHandler.instance);
+        DataHandler.instance.reloadData();
     }
 
     /**
@@ -39,7 +44,6 @@ public class DocZ extends javax.swing.JFrame {
         ckbTags = new javax.swing.JCheckBox();
         tabs = new javax.swing.JTabbedPane();
         tabDocZ = new javax.swing.JPanel();
-        tabPreview = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -112,19 +116,6 @@ public class DocZ extends javax.swing.JFrame {
 
         tabs.addTab("DocZ", tabDocZ);
 
-        javax.swing.GroupLayout tabPreviewLayout = new javax.swing.GroupLayout(tabPreview);
-        tabPreview.setLayout(tabPreviewLayout);
-        tabPreviewLayout.setHorizontalGroup(
-            tabPreviewLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 745, Short.MAX_VALUE)
-        );
-        tabPreviewLayout.setVerticalGroup(
-            tabPreviewLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 718, Short.MAX_VALUE)
-        );
-
-        tabs.addTab("Preview", tabPreview);
-
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -133,7 +124,7 @@ public class DocZ extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
-                .addComponent(tabs, javax.swing.GroupLayout.DEFAULT_SIZE, 750, Short.MAX_VALUE)
+                .addComponent(tabs)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -141,7 +132,7 @@ public class DocZ extends javax.swing.JFrame {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(tabs, javax.swing.GroupLayout.DEFAULT_SIZE, 754, Short.MAX_VALUE)
+                    .addComponent(tabs)
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -196,7 +187,6 @@ public class DocZ extends javax.swing.JFrame {
     private javax.swing.JCheckBox ckbTags;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel tabDocZ;
-    private javax.swing.JPanel tabPreview;
     private javax.swing.JTabbedPane tabs;
     private javax.swing.JTextField txtSearch;
     // End of variables declaration//GEN-END:variables

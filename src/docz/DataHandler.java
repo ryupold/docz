@@ -7,7 +7,9 @@ package docz;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
@@ -31,11 +33,13 @@ public class DataHandler {
     private static DocumentBuilder builder = null;
     private static long lastID = 0;
 
-    private String dbPath;
-    private Document DB;
+    private String dbFile = "db.xml";
+    private String dbDir = "db";
+    public Document DB;
     private Element root, docz, relationz, institutionz;
-    private List<Doc> docs = new ArrayList<Doc>();
-    private List<Relation> relation = new ArrayList<Relation>();
+    private Map<Long, Doc> docs = new HashMap<>();
+    private Map<Long, Institution> institutions = new HashMap<>();
+    private List<Relation> relations = new ArrayList<Relation>();
 
     static {
         try {
@@ -48,9 +52,10 @@ public class DataHandler {
 
     private DataHandler() {
         try {
-            File dbFile = new File(dbPath);
+            File databaseFile = new File(dbDir + "/" + dbFile);
+            new File(dbDir).mkdirs();
 
-            if (dbFile.createNewFile()) {
+            if (databaseFile.createNewFile()) {
                 DB = builder.newDocument();
 
                 //create root node
@@ -64,17 +69,14 @@ public class DataHandler {
                 //Relations node
                 relationz = DB.createElement("relationz");
                 root.appendChild(relationz);
-                
+
                 //Relations node
                 institutionz = DB.createElement("institutionz");
                 root.appendChild(institutionz);
 
-//                Element tmp = DB.createElement("");
-//                tmp.setTextContent("");
-//                root.appendChild(tmp);
                 Log.l("first start... new DB file created.");
             } else {
-                DB = builder.parse(dbFile);
+                DB = builder.parse(dbDir + "/" + dbFile);
                 root = DB.getDocumentElement();
 
                 NodeList nl = root.getElementsByTagName("docz");
@@ -86,7 +88,7 @@ public class DataHandler {
                 if (nl.getLength() > 0) {
                     relationz = (Element) nl.item(0);
                 }
-                
+
                 nl = root.getElementsByTagName("institutionz");
                 if (nl.getLength() > 0) {
                     institutionz = (Element) nl.item(0);
@@ -100,53 +102,70 @@ public class DataHandler {
         }
     }
 
-    public void setDbPath(String dbPath) {
-        this.dbPath = dbPath;
+    public void reloadData() {
+        NodeList docList = docz.getChildNodes();
+        NodeList institutionList = institutionz.getChildNodes();
+        NodeList relationList = relationz.getChildNodes();
+
+        for (int i = 0; i < docList.getLength(); i++) {
+            if (docList.item(i).getNodeName().equalsIgnoreCase("doc")) {
+                Doc doc = new Doc((Element) docList.item(i));
+                docs.put(doc.getID(), doc);
+            }
+        }
+        
+        for (int i = 0; i < institutionList.getLength(); i++) {
+            if (institutionList.item(i).getNodeName().equalsIgnoreCase("institution")) {
+                Institution inst = new Institution((Element) institutionList.item(i));
+                institutions.put(inst.getID(), inst);
+            }
+        }
+        
+        for (int i = 0; i < relationList.getLength(); i++) {
+            if (relationList.item(i).getNodeName().equalsIgnoreCase("relation")) {
+                Relation relation = new Relation((Element) relationList.item(i));
+                relations.add(relation);
+            }
+        }
     }
 
-    public String getDbPath() {
-        return dbPath;
+    public String getDBDirectory() {
+        return dbDir;
     }
-    
-    public synchronized void addDoc(Doc doc)
-    {
+
+    public synchronized void addDoc(Doc doc) {
         docz.appendChild(doc.getNode());
     }
-    
-    public synchronized void addRelation(Relation relation)
-    {
+
+    public synchronized void addRelation(Relation relation) {
         relationz.appendChild(relation.getNode());
     }
-    
-    public synchronized void addInstitution(Institution institution)
-    {
+
+    public synchronized void addInstitution(Institution institution) {
         institutionz.appendChild(institution.getNode());
     }
-    
-    public synchronized void removeDoc(Doc doc)
-    {
+
+    public synchronized void removeDoc(Doc doc) {
         docz.removeChild(doc.getNode());
     }
-    
-    public synchronized void removeRelation(Relation relation)
-    {
+
+    public synchronized void removeRelation(Relation relation) {
         relationz.removeChild(relation.getNode());
     }
-    
-    public synchronized void removeInstitution(Institution institution)
-    {
+
+    public synchronized void removeInstitution(Institution institution) {
         institutionz.removeChild(institution.getNode());
     }
-    
-    public synchronized void save(){
+
+    public synchronized void save() {
         try {
             TransformerFactory transformerFactory = TransformerFactory
                     .newInstance();
             Transformer transformer = transformerFactory.newTransformer();
             DOMSource domSource = new DOMSource(DB);
             StreamResult streamResult = new StreamResult(new File(
-                    dbPath));
-            
+                    dbDir + "/" + dbFile));
+
             transformer.transform(domSource, streamResult);
         } catch (TransformerConfigurationException ex) {
             Log.l(ex);
@@ -158,11 +177,16 @@ public class DataHandler {
     public synchronized long getNewID() {
         return ++lastID;
     }
-    
-    public synchronized void updateLastID(long id){
-        if(lastID < id){
+
+    public synchronized void updateLastID(long id) {
+        if (lastID < id) {
             lastID = id;
         }
+    }
+
+    @Override
+    public String toString() {
+        return dbFile;
     }
 
 }

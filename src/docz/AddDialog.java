@@ -3,12 +3,33 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package docz;
 
 import de.realriu.riulib.gui.imagelist.AbstractImageList.Alignment;
 import de.realriu.riulib.gui.imagelist.FileImageList;
 import de.realriu.riulib.gui.imagelist.ReferenzImageList;
+import java.awt.FileDialog;
+import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.imageio.ImageIO;
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import net.sourceforge.jdatepicker.DateModel;
+import net.sourceforge.jdatepicker.JDatePanel;
+import net.sourceforge.jdatepicker.JDatePicker;
+import net.sourceforge.jdatepicker.impl.JDatePanelImpl;
+import net.sourceforge.jdatepicker.impl.JDatePickerImpl;
 
 /**
  *
@@ -16,12 +37,28 @@ import de.realriu.riulib.gui.imagelist.ReferenzImageList;
  */
 public class AddDialog extends javax.swing.JDialog {
 
+    private ReferenzImageList<String> imgList;
+    private List<File> files = new ArrayList<>();
+    private ImagePanel imgPanel;
+
     /**
      * Creates new form AddDialog
      */
     public AddDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
+        imgList = (ReferenzImageList<String>) imgListDocFiles;
+
+        ((JDatePanel) datePicker).addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                DateModel<?> dm = ((JDatePanel) datePicker).getModel();
+                lblDocDate.setText(dm.getDay() + "." + (1 + dm.getMonth()) + "." + dm.getYear());
+            }
+        });
+
+        lblDocDate.setText(Calendar.getInstance().get(Calendar.DAY_OF_MONTH) + "." + (Calendar.getInstance().get(Calendar.MONTH) + 1) + "." + Calendar.getInstance().get(Calendar.YEAR));
     }
 
     /**
@@ -41,14 +78,15 @@ public class AddDialog extends javax.swing.JDialog {
         jLabel3 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
         jLabel5 = new javax.swing.JLabel();
-        jTextField1 = new javax.swing.JTextField();
-        jTextField2 = new javax.swing.JTextField();
-        jTextField3 = new javax.swing.JTextField();
-        jTextField4 = new javax.swing.JTextField();
-        jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
+        txtDocDescription = new javax.swing.JTextField();
+        txtDocTags = new javax.swing.JTextField();
+        txtDocTitle = new javax.swing.JTextField();
+        btnDocRemoveFile = new javax.swing.JButton();
+        btnDocAddFile = new javax.swing.JButton();
         imgListDocFiles = new ReferenzImageList<String>(Alignment.Horizontal, true);
         btnDocSave = new javax.swing.JButton();
+        datePicker = (JDatePanelImpl)net.sourceforge.jdatepicker.JDateComponentFactory.createJDatePanel();
+        lblDocDate = new javax.swing.JLabel();
         jPanel2 = new javax.swing.JPanel();
         jLabel6 = new javax.swing.JLabel();
         txtInstitutionTags = new javax.swing.JTextField();
@@ -57,7 +95,7 @@ public class AddDialog extends javax.swing.JDialog {
         jLabel8 = new javax.swing.JLabel();
         jLabel9 = new javax.swing.JLabel();
         jLabel10 = new javax.swing.JLabel();
-        jPanel4 = new javax.swing.JPanel();
+        imgLogo = imgPanel = new ImagePanel();
         btnInstitutionLogo = new javax.swing.JButton();
         btnInstitutionSave = new javax.swing.JButton();
 
@@ -80,24 +118,32 @@ public class AddDialog extends javax.swing.JDialog {
         jLabel5.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel5.setText("Files:");
 
-        jTextField1.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
+        txtDocDescription.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
 
-        jTextField2.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
+        txtDocTags.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
 
-        jTextField3.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
-
-        jTextField4.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
-        jTextField4.addActionListener(new java.awt.event.ActionListener() {
+        txtDocTitle.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
+        txtDocTitle.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jTextField4ActionPerformed(evt);
+                txtDocTitleActionPerformed(evt);
             }
         });
 
-        jButton1.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
-        jButton1.setText("-");
+        btnDocRemoveFile.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
+        btnDocRemoveFile.setText("-");
+        btnDocRemoveFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDocRemoveFileActionPerformed(evt);
+            }
+        });
 
-        jButton2.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
-        jButton2.setText("+");
+        btnDocAddFile.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
+        btnDocAddFile.setText("+");
+        btnDocAddFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDocAddFileActionPerformed(evt);
+            }
+        });
 
         imgListDocFiles.setBackground(new java.awt.Color(0, 0, 0));
 
@@ -109,7 +155,7 @@ public class AddDialog extends javax.swing.JDialog {
         );
         imgListDocFilesLayout.setVerticalGroup(
             imgListDocFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 119, Short.MAX_VALUE)
+            .addGap(0, 148, Short.MAX_VALUE)
         );
 
         btnDocSave.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
@@ -120,6 +166,23 @@ public class AddDialog extends javax.swing.JDialog {
             }
         });
 
+        datePicker.setBackground(getBackground());
+
+        javax.swing.GroupLayout datePickerLayout = new javax.swing.GroupLayout(datePicker);
+        datePicker.setLayout(datePickerLayout);
+        datePickerLayout.setHorizontalGroup(
+            datePickerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 263, Short.MAX_VALUE)
+        );
+        datePickerLayout.setVerticalGroup(
+            datePickerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 200, Short.MAX_VALUE)
+        );
+
+        lblDocDate.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
+        lblDocDate.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblDocDate.setText("DATE");
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -127,30 +190,33 @@ public class AddDialog extends javax.swing.JDialog {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(imgListDocFiles, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jLabel3)
-                        .addGap(70, 70, 70)
-                        .addComponent(jTextField2, javax.swing.GroupLayout.DEFAULT_SIZE, 473, Short.MAX_VALUE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel4)
-                        .addGap(71, 71, 71)
-                        .addComponent(jTextField3))
+                        .addGap(70, 70, 70)
+                        .addComponent(txtDocTags))
+                    .addComponent(imgListDocFiles, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(btnDocAddFile)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnDocRemoveFile)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnDocSave))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel5)
+                        .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel2)
                             .addComponent(jLabel1)
-                            .addComponent(jLabel5))
+                            .addComponent(jLabel3))
                         .addGap(10, 10, 10)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jTextField1)
-                            .addComponent(jTextField4)))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jButton2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButton1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(btnDocSave)))
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(lblDocDate, javax.swing.GroupLayout.DEFAULT_SIZE, 222, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(datePicker, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(txtDocDescription)
+                            .addComponent(txtDocTitle))))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -159,30 +225,32 @@ public class AddDialog extends javax.swing.JDialog {
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
-                    .addComponent(jTextField4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(txtDocTitle, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
-                    .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel3)
-                    .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(txtDocDescription, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jLabel4)
-                        .addGap(18, 18, 18)
-                        .addComponent(jLabel5))
-                    .addComponent(jTextField3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(14, 14, 14)
-                .addComponent(imgListDocFiles, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(7, 7, 7)
+                        .addComponent(lblDocDate, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(jLabel3)
+                    .addComponent(datePicker, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel4)
+                    .addComponent(txtDocTags, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jLabel5)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(imgListDocFiles, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButton2)
-                    .addComponent(jButton1)
+                    .addComponent(btnDocAddFile)
+                    .addComponent(btnDocRemoveFile)
                     .addComponent(btnDocSave))
-                .addContainerGap())
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("+ Doc", jPanel1);
@@ -210,23 +278,33 @@ public class AddDialog extends javax.swing.JDialog {
         jLabel10.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel10.setText("Logo:");
 
-        jPanel4.setBackground(new java.awt.Color(0, 0, 0));
+        imgLogo.setBackground(new java.awt.Color(0, 0, 0));
 
-        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
-        jPanel4.setLayout(jPanel4Layout);
-        jPanel4Layout.setHorizontalGroup(
-            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        javax.swing.GroupLayout imgLogoLayout = new javax.swing.GroupLayout(imgLogo);
+        imgLogo.setLayout(imgLogoLayout);
+        imgLogoLayout.setHorizontalGroup(
+            imgLogoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 100, Short.MAX_VALUE)
         );
-        jPanel4Layout.setVerticalGroup(
-            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        imgLogoLayout.setVerticalGroup(
+            imgLogoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 100, Short.MAX_VALUE)
         );
 
         btnInstitutionLogo.setText("...");
+        btnInstitutionLogo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnInstitutionLogoActionPerformed(evt);
+            }
+        });
 
         btnInstitutionSave.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
         btnInstitutionSave.setText("save");
+        btnInstitutionSave.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnInstitutionSaveActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -250,11 +328,11 @@ public class AddDialog extends javax.swing.JDialog {
                         .addGap(70, 70, 70)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(imgLogo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(btnInstitutionLogo)
                                 .addGap(0, 0, Short.MAX_VALUE))
-                            .addComponent(txtInstitutionTags, javax.swing.GroupLayout.DEFAULT_SIZE, 473, Short.MAX_VALUE)))
+                            .addComponent(txtInstitutionTags, javax.swing.GroupLayout.DEFAULT_SIZE, 495, Short.MAX_VALUE)))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(btnInstitutionSave)))
@@ -278,10 +356,10 @@ public class AddDialog extends javax.swing.JDialog {
                 .addGap(18, 18, 18)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(imgLogo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jLabel10, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addComponent(btnInstitutionLogo))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 106, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 297, Short.MAX_VALUE)
                 .addComponent(btnInstitutionSave)
                 .addContainerGap())
         );
@@ -302,17 +380,99 @@ public class AddDialog extends javax.swing.JDialog {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jTextField4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField4ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jTextField4ActionPerformed
-
     private void txtInstitutionTitleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtInstitutionTitleActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_txtInstitutionTitleActionPerformed
 
     private void btnDocSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDocSaveActionPerformed
-        
+        if (txtDocTitle.getText().trim().length() > 0 && imgList.count() > 0) {
+            try {
+                List<String> tags = new ArrayList<>();
+                String[] tagArray = txtDocTags.getText().split(",");
+                for (String t : tagArray) {
+                    tags.add(t.trim().toLowerCase());
+                }
+                DataHandler.instance.addDoc(Doc.createDoc(txtDocTitle.getText(), txtDocDescription.getText(), tags, DateFormat.getDateInstance().parse(lblDocDate.getText()), files));
+
+                DataHandler.instance.save();
+                setVisible(false);
+            } catch (ParseException ex) {
+                Log.l(ex);
+            }
+        }
     }//GEN-LAST:event_btnDocSaveActionPerformed
+
+    private void txtDocTitleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtDocTitleActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtDocTitleActionPerformed
+
+    private void btnDocAddFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDocAddFileActionPerformed
+        JFileChooser fc = new JFileChooser();
+
+        fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fc.setMultiSelectionEnabled(true);
+        if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            for (File f : fc.getSelectedFiles()) {
+                String filename = f.getAbsolutePath().toLowerCase();
+                if ((filename.endsWith(".jpg")
+                        || filename.endsWith(".jpeg")
+                        || filename.endsWith(".png")
+                        || filename.endsWith(".bmp")
+                        || filename.endsWith(".wbmp")
+                        || filename.endsWith(".gif"))) {
+                    try {
+                        imgList.addImage(ImageIO.read(f), f.getName(), f.getAbsolutePath());
+                    } catch (IOException ex) {
+                        Log.l(ex);
+                    }
+                } else if (filename.endsWith(".pdf")) {
+                    Image pdf = Resources.getImg_pdf();
+                    imgList.addImage(pdf, f.getName(), f.getAbsolutePath());
+                } else {
+                    imgList.addImage(Resources.getImg_otherfile(), f.getName(), f.getAbsolutePath());
+                }
+
+                files.add(f);
+            }
+        }
+    }//GEN-LAST:event_btnDocAddFileActionPerformed
+
+    private void btnInstitutionLogoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnInstitutionLogoActionPerformed
+        JFileChooser fc = new JFileChooser();
+        fc.setFileFilter(new FileNameExtensionFilter("Image files", "jpg", "jpeg", "bmp", "wbmp", "png", "gif"));
+        fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fc.setMultiSelectionEnabled(false);
+        if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            try {
+                imgPanel.setImg(fc.getSelectedFile());
+            } catch (IOException ex) {
+                Log.l(ex);
+            }
+        }
+    }//GEN-LAST:event_btnInstitutionLogoActionPerformed
+
+    private void btnInstitutionSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnInstitutionSaveActionPerformed
+        if (txtInstitutionTitle.getText().trim().length() > 0) {
+
+            List<String> tags = new ArrayList<>();
+            String[] tagArray = txtInstitutionTags.getText().split(",");
+            for (String t : tagArray) {
+                tags.add(t.trim().toLowerCase());
+            }
+            
+            List<File> logo = new ArrayList<>();
+            logo.add(imgPanel.getImg());
+            DataHandler.instance.addInstitution(Institution.createInstitution(txtInstitutionTitle.getText(), txtInstitutionDescription.getText(), tags, logo));
+
+            DataHandler.instance.save();
+            setVisible(false);
+        }
+    }//GEN-LAST:event_btnInstitutionSaveActionPerformed
+
+    private void btnDocRemoveFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDocRemoveFileActionPerformed
+        if(imgList.getSelectedImageIndex() >= 0)
+            imgList.removeImage(imgList.getSelectedImageIndex());
+    }//GEN-LAST:event_btnDocRemoveFileActionPerformed
 
     /**
      * @param args the command line arguments
@@ -358,12 +518,14 @@ public class AddDialog extends javax.swing.JDialog {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.ButtonGroup addButtonGroup;
+    private javax.swing.JButton btnDocAddFile;
+    private javax.swing.JButton btnDocRemoveFile;
     private javax.swing.JButton btnDocSave;
     private javax.swing.JButton btnInstitutionLogo;
     private javax.swing.JButton btnInstitutionSave;
+    private javax.swing.JPanel datePicker;
     private javax.swing.JPanel imgListDocFiles;
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
+    private javax.swing.JPanel imgLogo;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel2;
@@ -375,12 +537,11 @@ public class AddDialog extends javax.swing.JDialog {
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel4;
     private javax.swing.JTabbedPane jTabbedPane1;
-    private javax.swing.JTextField jTextField1;
-    private javax.swing.JTextField jTextField2;
-    private javax.swing.JTextField jTextField3;
-    private javax.swing.JTextField jTextField4;
+    private javax.swing.JLabel lblDocDate;
+    private javax.swing.JTextField txtDocDescription;
+    private javax.swing.JTextField txtDocTags;
+    private javax.swing.JTextField txtDocTitle;
     private javax.swing.JTextField txtInstitutionDescription;
     private javax.swing.JTextField txtInstitutionTags;
     private javax.swing.JTextField txtInstitutionTitle;

@@ -56,26 +56,26 @@ public class Relation extends Entity {
         }
     }
 
-    public static Doc createRelation(Document DB, String title, String description, Doc From, Doc To) {
-        Element node = DB.createElement("relation");
+    public static Doc createRelation(String title, String description, Doc From, Doc To) {
+        Element node = DataHandler.instance.DB.createElement("relation");
 
-        Element titleN = DB.createElement("title");
+        Element titleN = DataHandler.instance.DB.createElement("title");
         titleN.setTextContent(title);
         node.appendChild(titleN);
 
-        Element descriptionN = DB.createElement("description");
+        Element descriptionN = DataHandler.instance.DB.createElement("description");
         descriptionN.setTextContent(description);
         node.appendChild(descriptionN);
 
-        Element createdN = DB.createElement("created");
+        Element createdN = DataHandler.instance.DB.createElement("created");
         createdN.setTextContent(DateFormat.getDateTimeInstance().format(new Date()));
         node.appendChild(createdN);
 
-        Element fromN = DB.createElement("from");
+        Element fromN = DataHandler.instance.DB.createElement("from");
         fromN.setTextContent(From.getID() + "");
         node.appendChild(fromN);
 
-        Element toN = DB.createElement("to");
+        Element toN = DataHandler.instance.DB.createElement("to");
         toN.setTextContent(From.getID() + "");
         node.appendChild(toN);
 

@@ -12,10 +12,21 @@ package docz;
  */
 public class Log {
     public static void l(Exception ex){
+        l(ex, true);
+    }
+    
+    public static void l(Exception ex, boolean showStackTrace){
         System.out.println(ex.getClass().getName()+": "+ex.getMessage());
+        if(showStackTrace){
+            ex.printStackTrace();
+        }
     }
     
     public static void l(String line){
         System.out.println(line);
+    }
+    
+    public static void l(Object toString){
+        System.out.println(toString.toString());
     }
 }

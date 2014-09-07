@@ -9,9 +9,11 @@ import java.awt.Image;
 import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import javax.imageio.ImageIO;
+import javax.xml.parsers.DocumentBuilder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -21,12 +23,11 @@ import org.w3c.dom.NodeList;
  *
  * @author Michael
  */
-public class Doc extends Entity{
-    
+public class Doc extends Entity {
+
     private long id;
     private List<String> tags;
     private Date date, created;
-    private List<String> files;
     private Image thumbnail = null;
     private final Element node;
     private boolean isModified = false;
@@ -40,7 +41,7 @@ public class Doc extends Entity{
         } catch (Exception ex) {
             Log.l(ex);
         }
-        
+
         try {
             title = node.getElementsByTagName("title").item(0).getTextContent();
         } catch (Exception ex) {
@@ -66,66 +67,58 @@ public class Doc extends Entity{
         try {
             Node tagsNode = node.getElementsByTagName("tags").item(0);
             NodeList tagNodes = tagsNode.getChildNodes();
+            tags = new ArrayList<>();
             for (int i = 0; i < tagNodes.getLength(); i++) {
                 tags.add(tagNodes.item(i).getTextContent());
-            }
-        } catch (Exception ex) { 
-            Log.l(ex);
-        }
-
-        try {
-            Node filesNode = node.getElementsByTagName("files").item(0);
-            NodeList fileNodes = filesNode.getChildNodes();
-            for (int i = 0; i < fileNodes.getLength(); i++) {
-                files.add(fileNodes.item(i).getTextContent());
             }
         } catch (Exception ex) {
             Log.l(ex);
         }
     }
 
-    public static Doc createDoc(Document DB, String title, String description, List<String> tags, Date date, List<String> files) {
-        Element node = DB.createElement("doc");
-
-        Element idN = DB.createElement("id");
-        idN.setTextContent(DataHandler.instance.getNewID()+"");
+    public static Doc createDoc(String title, String description, List<String> tags, Date date, List<File> files) {
+        Element node = DataHandler.instance.DB.createElement("doc");
+        final long docID = DataHandler.instance.getNewID();
+        Element idN = DataHandler.instance.DB.createElement("id");
+        idN.setTextContent(docID + "");
         node.appendChild(idN);
-        
-        Element titleN = DB.createElement("title");
+
+        Element titleN = DataHandler.instance.DB.createElement("title");
         titleN.setTextContent(title);
         node.appendChild(titleN);
 
-        Element descriptionN = DB.createElement("description");
+        Element descriptionN = DataHandler.instance.DB.createElement("description");
         descriptionN.setTextContent(description);
         node.appendChild(descriptionN);
 
-        Element tagsN = DB.createElement("tags");
+        Element tagsN = DataHandler.instance.DB.createElement("tags");
         if (tags != null) {
             for (String tag : tags) {
-                Element tagN = DB.createElement("tag");
+                Element tagN = DataHandler.instance.DB.createElement("tag");
                 tagN.setTextContent(tag);
                 tagsN.appendChild(tagN);
             }
         }
         node.appendChild(tagsN);
-        
-        Element dateN = DB.createElement("date");
+
+        Element dateN = DataHandler.instance.DB.createElement("date");
         dateN.setTextContent(DateFormat.getDateTimeInstance().format(date));
         node.appendChild(dateN);
-        
-        Element createdN = DB.createElement("created");
+
+        Element createdN = DataHandler.instance.DB.createElement("created");
         createdN.setTextContent(DateFormat.getDateTimeInstance().format(new Date()));
         node.appendChild(createdN);
 
-        Element filesN = DB.createElement("files");
-        if (files != null) {
-            for (String file : files) {
-                Element fileN = DB.createElement("file");
-                fileN.setTextContent(file);
-                filesN.appendChild(fileN);
+        for (int i=0; i<files.size(); i++) {
+            new File(DataHandler.instance.getDBDirectory()+"/doc_"+docID).mkdirs();
+            File newPath = new File(DataHandler.instance.getDBDirectory()+"/doc_"+docID+"/"+files.get(i).getName());
+            int fi=0;
+            while(newPath.exists()){
+                fi++;
+                newPath = new File(DataHandler.instance.getDBDirectory()+"/doc_"+docID+"/"+fi+files.get(i).getName());
             }
+            Resources.copyFile(files.get(i), newPath);
         }
-        node.appendChild(filesN);
 
         return new Doc(node);
     }
@@ -145,9 +138,16 @@ public class Doc extends Entity{
     public Date getDate() {
         return date;
     }
-    
-    public List<String> getFiles() {
-        return files;
+
+    public File[] getFiles() {
+        File docDir = new File("DB/" + id + "/");
+        if (docDir.exists() && docDir.isDirectory()) {
+            return docDir.listFiles();
+        } else {
+            docDir.mkdirs();
+        }
+
+        return new File[0];
     }
 
     public long getID() {
@@ -156,11 +156,12 @@ public class Doc extends Entity{
 
     public Image getThumbnail() {
         if (thumbnail == null) {
-            if (files.size() > 0) {
+            File[] files = getFiles();
+            if (files.length > 0) {
                 File imageFile = null;
                 File pdfFile = null;
-                for (String f : files) {
-                    String filename = f.toLowerCase();
+                for (File f : files) {
+                    String filename = f.getName().toLowerCase();
                     if ((filename.endsWith(".jpg")
                             || filename.endsWith(".jpeg")
                             || filename.endsWith(".png")
@@ -168,11 +169,11 @@ public class Doc extends Entity{
                             || filename.endsWith(".wbmp")
                             || filename.endsWith(".gif"))
                             && imageFile == null) {
-                        imageFile = new File(f);
+                        imageFile = f;
                     }
 
                     if (filename.endsWith(".pdf") && pdfFile == null) {
-                        pdfFile = new File(f);
+                        pdfFile = f;
                     }
                 }
 
@@ -180,18 +181,18 @@ public class Doc extends Entity{
                     try {
                         thumbnail = ImageIO.read(imageFile);
                     } catch (IOException ex) {
-                        thumbnail = Resources.img_loading;
+                        thumbnail = Resources.getImg_loading();
                         Log.l(ex);
                     }
                 } else if (pdfFile != null) {
-                    thumbnail = Resources.img_pdf;
+                    thumbnail = Resources.getImg_pdf();
                 } else {
-                    thumbnail = Resources.img_otherfile;
+                    thumbnail = Resources.getImg_otherfile();
                 }
             }
 
         } else {
-            thumbnail = Resources.img_nofiles;
+            thumbnail = Resources.getImg_nofiles();
         }
 
         return thumbnail;
@@ -216,18 +217,13 @@ public class Doc extends Entity{
         isModified = true;
     }
 
-    public void setFiles(List<String> files) {
-        this.files = files;
-        isModified = true;
-    }
-
     public void setTags(List<String> tags) {
         this.tags = tags;
         isModified = true;
     }
-    
-    public void save(Document DB){
-        
+
+    public void save(Document DB) {
+
         try {
             node.getElementsByTagName("title").item(0).setTextContent(title);
         } catch (Exception ex) {
@@ -251,7 +247,7 @@ public class Doc extends Entity{
         }
 
         try {
-            
+
             Node tagsNode = node.getElementsByTagName("tags").item(0);
             NodeList tagNodes = tagsNode.getChildNodes();
             for (int i = 0; i < tagNodes.getLength(); i++) {
@@ -263,27 +259,10 @@ public class Doc extends Entity{
                 tagN.setTextContent(tag);
                 tagsNode.appendChild(tagN);
             }
-        } catch (Exception ex) { 
-            Log.l(ex);
-        }
-
-        try {
-            
-            Node filesNode = node.getElementsByTagName("files").item(0);
-            NodeList tagNodes = filesNode.getChildNodes();
-            for (int i = 0; i < tagNodes.getLength(); i++) {
-                filesNode.removeChild(tagNodes.item(i));
-                i--;
-            }
-            for (String file : files) {
-                Element fileN = DB.createElement("file");
-                fileN.setTextContent(file);
-                filesNode.appendChild(fileN);
-            }
         } catch (Exception ex) {
             Log.l(ex);
         }
-        
+
         isModified = false;
-    }    
+    }
 }
