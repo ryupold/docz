@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package docz;
 
 import java.awt.Image;
@@ -24,8 +23,8 @@ import org.w3c.dom.NodeList;
  *
  * @author Michael
  */
-public class Institution extends Entity{
-    
+public class Institution extends Entity {
+
     private long id;
     private List<String> tags = new ArrayList<String>();
     private Date created;
@@ -42,7 +41,7 @@ public class Institution extends Entity{
         } catch (Exception ex) {
             Log.l(ex);
         }
-        
+
         try {
             title = node.getElementsByTagName("title").item(0).getTextContent();
         } catch (Exception ex) {
@@ -66,7 +65,7 @@ public class Institution extends Entity{
             for (int i = 0; i < tagNodes.getLength(); i++) {
                 tags.add(tagNodes.item(i).getTextContent());
             }
-        } catch (Exception ex) { 
+        } catch (Exception ex) {
             Log.l(ex);
         }
     }
@@ -75,11 +74,11 @@ public class Institution extends Entity{
         Element node = DataHandler.instance.DB.createElement("institution");
 
         long institutionID = DataHandler.instance.getNewID();
-        
+
         Element idN = DataHandler.instance.DB.createElement("id");
-        idN.setTextContent(institutionID+"");
+        idN.setTextContent(institutionID + "");
         node.appendChild(idN);
-        
+
         Element titleN = DataHandler.instance.DB.createElement("title");
         titleN.setTextContent(title);
         node.appendChild(titleN);
@@ -97,21 +96,21 @@ public class Institution extends Entity{
             }
         }
         node.appendChild(tagsN);
-        
+
         Element createdN = DataHandler.instance.DB.createElement("created");
         createdN.setTextContent(DateFormat.getDateTimeInstance().format(new Date()));
-        node.appendChild(createdN);     
-        
+        node.appendChild(createdN);
+
         Element logoN = DataHandler.instance.DB.createElement("logo");
         node.appendChild(logoN);
-        
-        for (int i=0; i<files.size(); i++) {
-            new File(DataHandler.instance.getDBDirectory()+"/institution_"+institutionID).mkdirs();
-            File newPath = new File(DataHandler.instance.getDBDirectory()+"/institution_"+institutionID+"/"+files.get(i).getName());
-            int fi=0;
-            while(newPath.exists()){
+
+        for (int i = 0; i < files.size(); i++) {
+            new File(DataHandler.instance.getDBDirectory() + "/institution_" + institutionID).mkdirs();
+            File newPath = new File(DataHandler.instance.getDBDirectory() + "/institution_" + institutionID + "/" + files.get(i).getName());
+            int fi = 0;
+            while (newPath.exists()) {
                 fi++;
-                newPath = new File(DataHandler.instance.getDBDirectory()+"/institution_"+institutionID+"/"+fi+files.get(i).getName());
+                newPath = new File(DataHandler.instance.getDBDirectory() + "/institution_" + institutionID + "/" + fi + files.get(i).getName());
             }
             Resources.copyFile(files.get(i), newPath);
         }
@@ -130,6 +129,7 @@ public class Institution extends Entity{
     public Date getCreated() {
         return created;
     }
+
     public long getID() {
         return id;
     }
@@ -137,17 +137,17 @@ public class Institution extends Entity{
     public Image getLogo() {
         if (logo == null) {
             try {
-                File[] files = new File(DataHandler.instance.getDBDirectory()+"/institution_"+id).listFiles(new FilenameFilter() {
+                File[] files = new File(DataHandler.instance.getDBDirectory() + "/institution_" + id).listFiles(new FilenameFilter() {
 
                     @Override
                     public boolean accept(File dir, String filename) {
                         filename = filename.toLowerCase();
                         return filename.endsWith(".jpg")
-                            || filename.endsWith(".jpeg")
-                            || filename.endsWith(".png")
-                            || filename.endsWith(".bmp")
-                            || filename.endsWith(".wbmp")
-                            || filename.endsWith(".gif");
+                                || filename.endsWith(".jpeg")
+                                || filename.endsWith(".png")
+                                || filename.endsWith(".bmp")
+                                || filename.endsWith(".wbmp")
+                                || filename.endsWith(".gif");
                     }
                 });
                 logo = ImageIO.read(files[0]);
@@ -156,11 +156,11 @@ public class Institution extends Entity{
                 logo = Resources.getImg_nofiles();
             }
         }
-            
+
         return logo;
     }
-    
-    public void setLogo(String file){
+
+    public void setLogo(String file) {
         try {
             node.getElementsByTagName("logo").item(0).setTextContent(file);
             logo = null;
@@ -190,9 +190,9 @@ public class Institution extends Entity{
         this.tags = tags;
         isModified = true;
     }
-    
-    public void save(Document DB){
-        
+
+    public void save(Document DB) {
+
         try {
             node.getElementsByTagName("title").item(0).setTextContent(title);
         } catch (Exception ex) {
@@ -211,7 +211,7 @@ public class Institution extends Entity{
         }
 
         try {
-            
+
             Node tagsNode = node.getElementsByTagName("tags").item(0);
             NodeList tagNodes = tagsNode.getChildNodes();
             for (int i = 0; i < tagNodes.getLength(); i++) {
@@ -223,11 +223,27 @@ public class Institution extends Entity{
                 tagN.setTextContent(tag);
                 tagsNode.appendChild(tagN);
             }
-        } catch (Exception ex) { 
+        } catch (Exception ex) {
             Log.l(ex);
         }
-                
+
         isModified = false;
     }
-    
+
+    @Override
+    public int hashCode() {
+        return (int) id;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof Institution)) {
+            return false;
+        }
+
+        return ((Institution) obj).getID() == id;
+    }
 }

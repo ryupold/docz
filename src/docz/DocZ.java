@@ -6,17 +6,19 @@
 
 package docz;
 
+import java.util.LinkedList;
+import java.util.List;
 import javax.swing.JFrame;
-import net.sourceforge.jdatepicker.JDateComponentFactory;
-import net.sourceforge.jdatepicker.impl.JDatePanelImpl;
-import net.sourceforge.jdatepicker.impl.JDatePickerImpl;
+
 
 /**
  *
  * @author Michael
  */
 public class DocZ extends javax.swing.JFrame {
-
+    
+    private DoczView doczView;
+    
     /**
      * Creates new form DocZ
      */
@@ -42,8 +44,10 @@ public class DocZ extends javax.swing.JFrame {
         ckbDocs = new javax.swing.JCheckBox();
         ckbRelations = new javax.swing.JCheckBox();
         ckbTags = new javax.swing.JCheckBox();
+        btnSearch = new javax.swing.JButton();
+        ckbInstitutions = new javax.swing.JCheckBox();
         tabs = new javax.swing.JTabbedPane();
-        tabDocZ = new javax.swing.JPanel();
+        tabDocZ = doczView = new DoczView();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -69,6 +73,16 @@ public class DocZ extends javax.swing.JFrame {
         ckbTags.setSelected(true);
         ckbTags.setText("Tags");
 
+        btnSearch.setText("?");
+        btnSearch.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSearchActionPerformed(evt);
+            }
+        });
+
+        ckbInstitutions.setSelected(true);
+        ckbInstitutions.setText("Institutions");
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -76,26 +90,36 @@ public class DocZ extends javax.swing.JFrame {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(txtSearch)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(ckbInstitutions)
+                        .addGap(0, 0, Short.MAX_VALUE))
                     .addComponent(btnAdd, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(ckbDocs)
                         .addGap(18, 18, 18)
                         .addComponent(ckbRelations)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 17, Short.MAX_VALUE)
-                        .addComponent(ckbTags)))
+                        .addComponent(ckbTags))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(txtSearch)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnSearch))
                 .addGap(18, 18, 18)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(ckbDocs)
                     .addComponent(ckbRelations)
                     .addComponent(ckbTags))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(ckbInstitutions)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(btnAdd)
                 .addContainerGap())
@@ -145,6 +169,11 @@ public class DocZ extends javax.swing.JFrame {
         addDialog.setVisible(true);
     }//GEN-LAST:event_btnAddActionPerformed
 
+    private void btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchActionPerformed
+        Entity[] findings = DataHandler.instance.search(txtSearch.getText().split(" "), ckbDocs.isSelected(), ckbInstitutions.isSelected(), ckbRelations.isSelected(), ckbTags.isSelected());
+        doczView.showSearchResults(findings);
+    }//GEN-LAST:event_btnSearchActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -182,7 +211,9 @@ public class DocZ extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAdd;
+    private javax.swing.JButton btnSearch;
     private javax.swing.JCheckBox ckbDocs;
+    private javax.swing.JCheckBox ckbInstitutions;
     private javax.swing.JCheckBox ckbRelations;
     private javax.swing.JCheckBox ckbTags;
     private javax.swing.JPanel jPanel1;

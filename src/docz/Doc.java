@@ -140,7 +140,7 @@ public class Doc extends Entity {
     }
 
     public File[] getFiles() {
-        File docDir = new File("DB/" + id + "/");
+        File docDir = new File("DB/doc_" + id + "/");
         if (docDir.exists() && docDir.isDirectory()) {
             return docDir.listFiles();
         } else {
@@ -265,4 +265,23 @@ public class Doc extends Entity {
 
         isModified = false;
     }
+
+    @Override
+    public int hashCode() {
+        return (int)id;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj == null)
+            return false;
+        if(!(obj instanceof Doc))
+            return false;
+        
+        return ((Doc)obj).getID() == id;
+    }
+    
+    
+    
+    
 }

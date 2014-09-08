@@ -8,6 +8,7 @@ package docz;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -113,14 +114,14 @@ public class DataHandler {
                 docs.put(doc.getID(), doc);
             }
         }
-        
+
         for (int i = 0; i < institutionList.getLength(); i++) {
             if (institutionList.item(i).getNodeName().equalsIgnoreCase("institution")) {
                 Institution inst = new Institution((Element) institutionList.item(i));
                 institutions.put(inst.getID(), inst);
             }
         }
-        
+
         for (int i = 0; i < relationList.getLength(); i++) {
             if (relationList.item(i).getNodeName().equalsIgnoreCase("relation")) {
                 Relation relation = new Relation((Element) relationList.item(i));
@@ -182,6 +183,50 @@ public class DataHandler {
         if (lastID < id) {
             lastID = id;
         }
+    }
+
+    public Entity[] search(String[] searchWords, boolean docsAllowed, boolean institutionsAllowed, boolean relationsAllowed, boolean tagsAllowed) {
+        List<Entity> searchResults = new LinkedList<>();
+
+        if (docsAllowed) {
+            for (Doc d : docs.values()) {
+                for (String s : searchWords) {
+                    if (d.getTitle().toLowerCase().contains(s.toLowerCase())
+                            || d.getDescription().toLowerCase().contains(s.toLowerCase())
+                            || (tagsAllowed && d.getTags().contains(s.toLowerCase()))) {
+                        searchResults.add(d);
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (relationsAllowed) {
+            for (Relation r : relations) {
+                for (String s : searchWords) {
+                    if (r.getTitle().toLowerCase().contains(s.toLowerCase())
+                            || r.getDescription().toLowerCase().contains(s.toLowerCase())) {
+                        searchResults.add(r);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if (institutionsAllowed) {
+            for (Institution i : institutions.values()) {
+                for (String s : searchWords) {
+                    if (i.getTitle().toLowerCase().contains(s.toLowerCase())
+                            || i.getDescription().toLowerCase().contains(s.toLowerCase())
+                            || (tagsAllowed && i.getTags().contains(s.toLowerCase()))) {
+                        searchResults.add(i);
+                        break;
+                    }
+                }
+            }
+        }
+
+        return searchResults.toArray(new Entity[searchResults.size()]);
     }
 
     @Override
