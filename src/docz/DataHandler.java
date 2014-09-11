@@ -56,7 +56,7 @@ public class DataHandler {
             File databaseFile = new File(dbDir + "/" + dbFile);
             new File(dbDir).mkdirs();
 
-            if (databaseFile.createNewFile()) {
+            if (!databaseFile.exists()) {
                 DB = builder.newDocument();
 
                 //create root node
@@ -74,6 +74,8 @@ public class DataHandler {
                 //Relations node
                 institutionz = DB.createElement("institutionz");
                 root.appendChild(institutionz);
+                
+                save();
 
                 Log.l("first start... new DB file created.");
             } else {

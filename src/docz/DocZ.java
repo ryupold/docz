@@ -24,6 +24,7 @@ public class DocZ extends javax.swing.JFrame {
      */
     public DocZ() {
         initComponents();
+        setTitle("DocZ");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         Log.l("DB file = "+DataHandler.instance);
         DataHandler.instance.reloadData();
@@ -167,6 +168,8 @@ public class DocZ extends javax.swing.JFrame {
     private void btnAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddActionPerformed
         AddDialog addDialog = new AddDialog(this, true);
         addDialog.setVisible(true);
+        addDialog.dispose();
+        System.gc();
     }//GEN-LAST:event_btnAddActionPerformed
 
     private void btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchActionPerformed

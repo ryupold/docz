@@ -6,30 +6,35 @@
 package docz;
 
 import de.realriu.riulib.gui.imagelist.AbstractImageList.Alignment;
-import de.realriu.riulib.gui.imagelist.FileImageList;
 import de.realriu.riulib.gui.imagelist.ReferenzImageList;
-import java.awt.FileDialog;
+import de.realriu.riulib.gui.imagelist.ScaledImageList;
 import java.awt.Image;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDragEvent;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetEvent;
+import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
+import javax.swing.TransferHandler;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import net.sourceforge.jdatepicker.DateModel;
 import net.sourceforge.jdatepicker.JDatePanel;
-import net.sourceforge.jdatepicker.JDatePicker;
 import net.sourceforge.jdatepicker.impl.JDatePanelImpl;
-import net.sourceforge.jdatepicker.impl.JDatePickerImpl;
 
 /**
  *
@@ -37,7 +42,7 @@ import net.sourceforge.jdatepicker.impl.JDatePickerImpl;
  */
 public class AddDialog extends javax.swing.JDialog {
 
-    private ReferenzImageList<String> imgList;
+    private ScaledImageList imgList;
     private List<File> files = new ArrayList<>();
     private ImagePanel imgPanel;
 
@@ -47,7 +52,7 @@ public class AddDialog extends javax.swing.JDialog {
     public AddDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
-        imgList = (ReferenzImageList<String>) imgListDocFiles;
+        imgList = (ScaledImageList) imgListDocFiles;
 
         ((JDatePanel) datePicker).addActionListener(new ActionListener() {
 
@@ -83,7 +88,7 @@ public class AddDialog extends javax.swing.JDialog {
         txtDocTitle = new javax.swing.JTextField();
         btnDocRemoveFile = new javax.swing.JButton();
         btnDocAddFile = new javax.swing.JButton();
-        imgListDocFiles = new ReferenzImageList<String>(Alignment.Horizontal, true);
+        imgListDocFiles = new ScaledImageList(Alignment.Horizontal, true, 150, 150);
         btnDocSave = new javax.swing.JButton();
         datePicker = (JDatePanelImpl)net.sourceforge.jdatepicker.JDateComponentFactory.createJDatePanel();
         lblDocDate = new javax.swing.JLabel();
@@ -421,15 +426,15 @@ public class AddDialog extends javax.swing.JDialog {
                         || filename.endsWith(".wbmp")
                         || filename.endsWith(".gif"))) {
                     try {
-                        imgList.addImage(ImageIO.read(f), f.getName(), f.getAbsolutePath());
+                        imgList.addImage(ImageIO.read(f), f.getName());
                     } catch (IOException ex) {
                         Log.l(ex);
                     }
                 } else if (filename.endsWith(".pdf")) {
                     Image pdf = Resources.getImg_pdf();
-                    imgList.addImage(pdf, f.getName(), f.getAbsolutePath());
+                    imgList.addImage(pdf, f.getName());
                 } else {
-                    imgList.addImage(Resources.getImg_otherfile(), f.getName(), f.getAbsolutePath());
+                    imgList.addImage(Resources.getImg_otherfile(), f.getName());
                 }
 
                 files.add(f);
@@ -459,7 +464,7 @@ public class AddDialog extends javax.swing.JDialog {
             for (String t : tagArray) {
                 tags.add(t.trim().toLowerCase());
             }
-            
+
             List<File> logo = new ArrayList<>();
             logo.add(imgPanel.getImg());
             DataHandler.instance.addInstitution(Institution.createInstitution(txtInstitutionTitle.getText(), txtInstitutionDescription.getText(), tags, logo));
@@ -470,8 +475,10 @@ public class AddDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_btnInstitutionSaveActionPerformed
 
     private void btnDocRemoveFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDocRemoveFileActionPerformed
-        if(imgList.getSelectedImageIndex() >= 0)
-            imgList.removeImage(imgList.getSelectedImageIndex());
+        if (imgList.getSelectedImageIndex() >= 0) {
+            files.remove(imgList.getSelectedImageIndex());
+            imgList.removeImage(imgList.getSelectedImageIndex());            
+        }
     }//GEN-LAST:event_btnDocRemoveFileActionPerformed
 
     /**

@@ -20,12 +20,15 @@ public class DoczView extends javax.swing.JPanel {
     private Relation[] relations;
     private Entity[] relatedEntities;
     private Entity[] searchResults;
+    public static final int previewWIDTH = 200, previewHEIGHT = 250;
+    public static final int paddingX = 10, paddingY = 30;
     
 
     public void showSearchResults(Entity[] results) {
         mode = Mode.Search;
         searchResults = results;
-        repaint();
+        System.gc();
+        repaint();        
     }
 
     /**
@@ -63,12 +66,19 @@ public class DoczView extends javax.swing.JPanel {
     public void paint(Graphics g) {
         super.paint(g); //To change body of generated methods, choose Tools | Templates.
 
-        int paddingX = 10, paddingY = 10, width = 100, height = 200;
+        
+        int itemsPerRow = (int)(1f*getWidth()/(previewWIDTH+paddingX));
 
         if (mode == Mode.Search && searchResults != null) {
             for (int i = 0; i < searchResults.length; i++) {
                 Image img = searchResults[i] instanceof Doc ? ((Doc)searchResults[i]).getThumbnail() : searchResults[i] instanceof Institution ? ((Institution)searchResults[i]).getLogo() : Resources.getImg_relation();
-                g.drawImage(img, paddingX+(i*(width+paddingX)), paddingY, width, height, this);
+                
+                int x = paddingX+((i%itemsPerRow)*(previewWIDTH+paddingX));
+                int y = (previewHEIGHT+paddingY)*(i/itemsPerRow) + paddingY;
+                
+                g.drawImage(img, x, y, previewWIDTH, previewHEIGHT, this);
+                g.drawString(searchResults[i].getTitle().length()>=33 ? searchResults[i].getTitle().substring(0, 30)+"..." : searchResults[i].getTitle(), x, y+previewHEIGHT+11);
+                g.drawString(searchResults[i].getTitle().length()>=33 ? searchResults[i].getTitle().substring(0, 30)+"..." : searchResults[i].getTitle(), x+1, y+previewHEIGHT+11);
             }
         } else if (mode == Mode.Relations) {
 

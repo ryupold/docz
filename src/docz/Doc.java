@@ -5,7 +5,9 @@
  */
 package docz;
 
+import de.realriu.riulib.helpers.ScaleImage;
 import java.awt.Image;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -190,10 +192,10 @@ public class Doc extends Entity {
                     thumbnail = Resources.getImg_otherfile();
                 }
             }
-
-        } else {
-            thumbnail = Resources.getImg_nofiles();
-        }
+            
+            ScaleImage.Rectangle rect = ScaleImage.fitToRect(DoczView.previewWIDTH, DoczView.previewHEIGHT, (BufferedImage)thumbnail);
+            thumbnail = ScaleImage.scale((BufferedImage)thumbnail, rect.width, rect.heigth);
+        } 
 
         return thumbnail;
     }

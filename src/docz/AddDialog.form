@@ -236,7 +236,7 @@
                 </Property>
               </Properties>
               <AuxValues>
-                <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="new ReferenzImageList&lt;String&gt;(Alignment.Horizontal, true)"/>
+                <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="new ScaledImageList(Alignment.Horizontal, true, 150, 150)"/>
               </AuxValues>
 
               <Layout>
