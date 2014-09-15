@@ -6,8 +6,6 @@
 
 package docz;
 
-import java.util.LinkedList;
-import java.util.List;
 import javax.swing.JFrame;
 
 
@@ -17,8 +15,6 @@ import javax.swing.JFrame;
  */
 public class DocZ extends javax.swing.JFrame {
     
-    private DoczView doczView;
-    
     /**
      * Creates new form DocZ
      */
@@ -27,7 +23,7 @@ public class DocZ extends javax.swing.JFrame {
         setTitle("DocZ");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         Log.l("DB file = "+DataHandler.instance);
-        DataHandler.instance.reloadData();
+        
     }
 
     /**
@@ -48,7 +44,7 @@ public class DocZ extends javax.swing.JFrame {
         btnSearch = new javax.swing.JButton();
         ckbInstitutions = new javax.swing.JCheckBox();
         tabs = new javax.swing.JTabbedPane();
-        tabDocZ = doczView = new DoczView();
+        tabDocZ = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -174,7 +170,7 @@ public class DocZ extends javax.swing.JFrame {
 
     private void btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchActionPerformed
         Entity[] findings = DataHandler.instance.search(txtSearch.getText().split(" "), ckbDocs.isSelected(), ckbInstitutions.isSelected(), ckbRelations.isSelected(), ckbTags.isSelected());
-        doczView.showSearchResults(findings);
+        
     }//GEN-LAST:event_btnSearchActionPerformed
 
     /**

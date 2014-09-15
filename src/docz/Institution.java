@@ -71,51 +71,7 @@ public class Institution extends Entity {
     }
 
     public static Institution createInstitution(String title, String description, List<String> tags, List<File> files) {
-        Element node = DataHandler.instance.DB.createElement("institution");
-
-        long institutionID = DataHandler.instance.getNewID();
-
-        Element idN = DataHandler.instance.DB.createElement("id");
-        idN.setTextContent(institutionID + "");
-        node.appendChild(idN);
-
-        Element titleN = DataHandler.instance.DB.createElement("title");
-        titleN.setTextContent(title);
-        node.appendChild(titleN);
-
-        Element descriptionN = DataHandler.instance.DB.createElement("description");
-        descriptionN.setTextContent(description);
-        node.appendChild(descriptionN);
-
-        Element tagsN = DataHandler.instance.DB.createElement("tags");
-        if (tags != null) {
-            for (String tag : tags) {
-                Element tagN = DataHandler.instance.DB.createElement("tag");
-                tagN.setTextContent(tag);
-                tagsN.appendChild(tagN);
-            }
-        }
-        node.appendChild(tagsN);
-
-        Element createdN = DataHandler.instance.DB.createElement("created");
-        createdN.setTextContent(DateFormat.getDateTimeInstance().format(new Date()));
-        node.appendChild(createdN);
-
-        Element logoN = DataHandler.instance.DB.createElement("logo");
-        node.appendChild(logoN);
-
-        for (int i = 0; i < files.size(); i++) {
-            new File(DataHandler.instance.getDBDirectory() + "/institution_" + institutionID).mkdirs();
-            File newPath = new File(DataHandler.instance.getDBDirectory() + "/institution_" + institutionID + "/" + files.get(i).getName());
-            int fi = 0;
-            while (newPath.exists()) {
-                fi++;
-                newPath = new File(DataHandler.instance.getDBDirectory() + "/institution_" + institutionID + "/" + fi + files.get(i).getName());
-            }
-            Resources.copyFile(files.get(i), newPath);
-        }
-
-        return new Institution(node);
+        return null;
     }
 
     public Element getNode() {
@@ -137,20 +93,7 @@ public class Institution extends Entity {
     public Image getLogo() {
         if (logo == null) {
             try {
-                File[] files = new File(DataHandler.instance.getDBDirectory() + "/institution_" + id).listFiles(new FilenameFilter() {
-
-                    @Override
-                    public boolean accept(File dir, String filename) {
-                        filename = filename.toLowerCase();
-                        return filename.endsWith(".jpg")
-                                || filename.endsWith(".jpeg")
-                                || filename.endsWith(".png")
-                                || filename.endsWith(".bmp")
-                                || filename.endsWith(".wbmp")
-                                || filename.endsWith(".gif");
-                    }
-                });
-                logo = ImageIO.read(files[0]);
+                
             } catch (Exception ex) {
                 Log.l(ex);
                 logo = Resources.getImg_nofiles();
@@ -162,8 +105,7 @@ public class Institution extends Entity {
 
     public void setLogo(String file) {
         try {
-            node.getElementsByTagName("logo").item(0).setTextContent(file);
-            logo = null;
+            
             isModified = true;
         } catch (Exception ex) {
             Log.l(ex);
