@@ -25,22 +25,24 @@ public abstract class DB {
     private DB() {
     }
 
-    public static List<Integer> insert(String sql, boolean returnAutoIncrementKeys) throws SQLException {
+    public static Long insert(String sql, boolean returnAutoIncrementKeys) throws SQLException {
         Connection c = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
+        c.setAutoCommit(false);
         Statement st = c.createStatement();
-        List<Integer> generatedKeys = new ArrayList<>();
-        if (returnAutoIncrementKeys && st.execute(sql, returnAutoIncrementKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS)) {
-            ResultSet rs = st.getGeneratedKeys();
-            while (rs.next()) {
-                generatedKeys.add(rs.getInt(0));
+        long generatedKey = 0;
+        st.execute(sql);
+        
+        if(returnAutoIncrementKeys){
+            ResultSet rs = st.executeQuery("SELECT last_insert_rowid()");
+            if (rs.next()) {
+                generatedKey = rs.getLong(1);
             }
-            rs.close();
         }
-
+        c.commit();
         st.close();
         c.close();
 
-        return returnAutoIncrementKeys ? generatedKeys : null;
+        return returnAutoIncrementKeys ? generatedKey : null;
     }
 
     public static int update(String sql) throws SQLException {
@@ -85,6 +87,7 @@ public abstract class DB {
         }
 
         public void close() throws SQLException {
+            resultSet.close();
             statement.close();
             connection.close();
         }

@@ -5,32 +5,47 @@
  */
 package docz;
 
-import java.awt.Image;
+import docz.DB.DBResult;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.sql.Blob;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
+import javax.imageio.ImageIO;
 
 /**
  *
  * @author Michael
  */
 public class Doc extends Entity {
-    private Image thumbnail = null;
-    private boolean isModified = false;
 
-    public Doc(int id, String title, String description, List<String> tags, Date date, Date created) {
-        
+    protected ImageFile[] images;
+
+    public Doc(long id, String title, String description, List<String> tags, Date date, Date created) {
+        this.id = id;
+        this.title = title;
+        this.description = description;
+        this.tags = tags;
+        this.date = date;
+        this.created = created;
+        this.images = null;
     }
 
-    public static Doc createDoc(String title, String description, List<String> tags, Date date, List<File> files) throws SQLException {
+    public static Doc createDoc(String title, String description, List<String> tags, Date date, List<File> files) throws SQLException, FileNotFoundException, IOException {
         //generate unique file names
         List<String> fileNames = new ArrayList<>();
         int fn = 0;
         for (File file : files) {
+            fn = 0;
             while (fileNames.contains(file.getName())) {
                 fn++;
             }
@@ -41,60 +56,116 @@ public class Doc extends Entity {
                 fileNames.add("d" + fn + "_" + file.getName());
             }
         }
-        
-        
-        
+
         Connection c = DB.createConnection();
-        try{
-            
-            
-            
-        }finally{
+        Date created = new Date();
+        try {
+            Long id = DB.insert("insert into entities(title, description, date, created, type) values('" + title + "', '" + description + "', '" + date.getTime() + "', '" + created.getTime() + "', '1');", true);
+
+            if (id != null) {
+                for (String tag : tags) {
+                    DB.insert("insert into tags(id, tag) values('" + id + "', '" + tag + "');", false);
+                }
+
+                PreparedStatement ps = c.prepareStatement("insert into files(id, name, created, file) values(?, ?, ?, ?)");
+                for (int i = 0; i < files.size(); i++) {
+
+                    Blob b = c.createBlob();
+                    OutputStream os = b.setBinaryStream(0);
+                    FileInputStream fi = new FileInputStream(files.get(i));
+                    byte[] buf = new byte[1024];
+                    int len;
+                    while ((len = fi.read(buf)) > 0) {
+                        os.write(buf, 0, len);
+                    }
+                    fi.close();
+                    os.close();
+
+                    ps.setLong(1, id);
+                    ps.setString(2, fileNames.get(i));
+                    ps.setLong(3, created.getTime());
+                    ps.setBlob(4, b);
+                    ps.execute();
+                }
+                ps.close();
+
+                return new Doc(id, title, description, tags, date, created);
+            } else {
+                return null;
+            }
+        } finally {
             c.close();
         }
-        
-        
-        
-        List<Integer> id = DB.insert("", true);
-        
-
-        return null;
     }
 
-    public Blob[] getFiles() {
-        return null;
+    public boolean removeFile(String name) throws SQLException {
+        return DB.update("delete from files where name='" + name + "' and id='" + this.id + "'") > 0;
     }
 
-    public Image getThumbnail() {
-        return null;
+    public void addFiles(File... files) throws SQLException, IOException {
+
+        List<String> fileNames = new ArrayList<>();
+        int fn = 0;
+        for (File file : files) {
+            fn = 0;
+            while (fileNames.contains(file.getName())) {
+                fn++;
+            }
+
+            if (fn == 0) {
+                fileNames.add(file.getName());
+            } else {
+                fileNames.add("d" + fn + "_" + file.getName());
+            }
+        }
+
+        Connection c = DB.createConnection();
+        PreparedStatement ps = c.prepareStatement("insert into files(id, name, created, file) values(?, ?, ?, ?)");
+        try {
+            for (int i = 0; i < files.length; i++) {
+
+                Blob b = c.createBlob();
+                OutputStream os = b.setBinaryStream(0);
+                FileInputStream fi = new FileInputStream(files[i]);
+                byte[] buf = new byte[1024];
+                int len;
+                while ((len = fi.read(buf)) > 0) {
+                    os.write(buf, 0, len);
+                }
+                fi.close();
+                os.close();
+
+                ps.setLong(1, this.id);
+                ps.setString(2, fileNames.get(i));
+                ps.setLong(3, created.getTime());
+                ps.setBlob(4, b);
+                ps.execute();
+            }
+        } finally {
+            ps.close();
+            c.close();
+        }
     }
 
-    public boolean isIsModified() {
-        return isModified;
-    }
+    public ImageFile[] getImages() throws IOException {
+        if (images == null) {
+            try {
+                DBResult r = DB.select("select name, created, file from files where id='" + id + "'");
+                List<ImageFile> imgs = new LinkedList<>();
+                while (r.resultSet.next()) {
+                    Blob blob = r.resultSet.getBlob(3);
+                    InputStream is = blob.getBinaryStream();
+                    imgs.add(new ImageFile(this, r.resultSet.getString(1), new Date(r.resultSet.getLong(2)), ImageIO.read(is)));
+                    is.close();
+                }
+                r.close();
+                return images = imgs.toArray(new ImageFile[imgs.size()]);
+            } catch (SQLException ex) {
+                Log.l(ex);
+            }
+        }
 
-    public void setTitle(String title) {
-        this.title = title;
-        isModified = true;
-    }
-
-    public void setDate(Date date) {
-        this.date = date;
-        isModified = true;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-        isModified = true;
-    }
-
-    public void setTags(List<String> tags) {
-        this.tags = tags;
-        isModified = true;
-    }
-
-    public void save() {
-
+        return images;
     }
 
     @Override

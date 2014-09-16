@@ -49,7 +49,6 @@ public class DataHandler {
                     + "description  text,"
                     + "date         bigint,"
                     + "created      bigint     not null,"
-                    + "thumbnail    blob,"
                     + "type         integer    not null" //1 = Doc, 2=Institution
                     + ");", false);
             

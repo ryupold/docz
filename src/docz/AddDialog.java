@@ -6,31 +6,23 @@
 package docz;
 
 import de.realriu.riulib.gui.imagelist.AbstractImageList.Alignment;
-import de.realriu.riulib.gui.imagelist.ReferenzImageList;
 import de.realriu.riulib.gui.imagelist.ScaledImageList;
 import java.awt.Image;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.UnsupportedFlavorException;
-import java.awt.dnd.DnDConstants;
-import java.awt.dnd.DropTarget;
-import java.awt.dnd.DropTargetDragEvent;
-import java.awt.dnd.DropTargetDropEvent;
-import java.awt.dnd.DropTargetEvent;
-import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
-import javax.swing.TransferHandler;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import net.sourceforge.jdatepicker.DateModel;
 import net.sourceforge.jdatepicker.JDatePanel;
@@ -401,7 +393,7 @@ public class AddDialog extends javax.swing.JDialog {
 
                 DataHandler.instance.save();
                 setVisible(false);
-            } catch (ParseException ex) {
+            } catch (ParseException | SQLException | IOException ex) {
                 Log.l(ex);
             }
         }
@@ -459,18 +451,22 @@ public class AddDialog extends javax.swing.JDialog {
     private void btnInstitutionSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnInstitutionSaveActionPerformed
         if (txtInstitutionTitle.getText().trim().length() > 0) {
 
-            List<String> tags = new ArrayList<>();
-            String[] tagArray = txtInstitutionTags.getText().split(",");
-            for (String t : tagArray) {
-                tags.add(t.trim().toLowerCase());
-            }
-
-            List<File> logo = new ArrayList<>();
-            logo.add(imgPanel.getImg());
-            DataHandler.instance.addInstitution(Institution.createInstitution(txtInstitutionTitle.getText(), txtInstitutionDescription.getText(), tags, logo));
-
-            DataHandler.instance.save();
-            setVisible(false);
+            try {
+                List<String> tags = new ArrayList<>();
+                String[] tagArray = txtInstitutionTags.getText().split(",");
+                for (String t : tagArray) {
+                    tags.add(t.trim().toLowerCase());
+                }
+                
+                List<File> logo = new ArrayList<>();
+                logo.add(imgPanel.getImg());
+                DataHandler.instance.addInstitution(Institution.createInstitution(txtInstitutionTitle.getText(), txtInstitutionDescription.getText(), tags, logo));
+                
+                DataHandler.instance.save();
+                setVisible(false);
+            } catch (IOException | SQLException ex) {
+                Log.l(ex);
+            } 
         }
     }//GEN-LAST:event_btnInstitutionSaveActionPerformed
 

@@ -6,7 +6,9 @@
 
 package docz;
 
+import java.io.InputStream;
 import java.sql.Blob;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import org.w3c.dom.Document;
@@ -16,14 +18,10 @@ import org.w3c.dom.Document;
  * @author Michael
  */
 public class Entity {
-    protected int id;
+    protected long id;
     protected String title, description;
-    private List<String> tags;
-    private Date date, created;
-    
-    public List<String> getTags() {
-        return tags;
-    }
+    protected List<String> tags;
+    protected Date date, created;
 
     public Date getCreated() {
         return created;
@@ -31,10 +29,6 @@ public class Entity {
 
     public Date getDate() {
         return date;
-    }
-
-    public Blob[] getFiles() {
-        return null;
     }
 
     public long getID() {
@@ -55,6 +49,21 @@ public class Entity {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+    
+    public String[] getTags(){
+        return tags.toArray(new String[tags.size()]);
+    }
+    
+    public void setTags(String... tags){
+        this.tags = new ArrayList<>(tags.length);
+        for(String tag : tags){
+            this.tags.add(tag);
+        }
+    }
+    
+    public void setTags(List<String> tags){
+        this.tags = tags;
     }
     
     public void save(Document DB){
