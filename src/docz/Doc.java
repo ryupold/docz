@@ -9,8 +9,7 @@ import java.awt.Image;
 import java.io.File;
 import java.sql.Blob;
 import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.Statement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -20,19 +19,14 @@ import java.util.List;
  * @author Michael
  */
 public class Doc extends Entity {
-
-    private long id;
-    private List<String> tags;
-    private Date date, created;
     private Image thumbnail = null;
-
     private boolean isModified = false;
 
-    public Doc() {
-
+    public Doc(int id, String title, String description, List<String> tags, Date date, Date created) {
+        
     }
 
-    public static Doc createDoc(String title, String description, List<String> tags, Date date, List<File> files) {
+    public static Doc createDoc(String title, String description, List<String> tags, Date date, List<File> files) throws SQLException {
         //generate unique file names
         List<String> fileNames = new ArrayList<>();
         int fn = 0;
@@ -47,30 +41,28 @@ public class Doc extends Entity {
                 fileNames.add("d" + fn + "_" + file.getName());
             }
         }
-
+        
+        
+        
+        Connection c = DB.createConnection();
+        try{
+            
+            
+            
+        }finally{
+            c.close();
+        }
+        
+        
+        
+        List<Integer> id = DB.insert("", true);
         
 
         return null;
     }
 
-    public List<String> getTags() {
-        return tags;
-    }
-
-    public Date getCreated() {
-        return created;
-    }
-
-    public Date getDate() {
-        return date;
-    }
-
     public Blob[] getFiles() {
         return null;
-    }
-
-    public long getID() {
-        return id;
     }
 
     public Image getThumbnail() {

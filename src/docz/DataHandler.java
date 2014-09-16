@@ -6,11 +6,6 @@
 package docz;
 
 import java.io.File;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.Statement;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -47,7 +42,7 @@ public class DataHandler {
             
             Log.l("first start...");
             
-            DB.insert("create table entity"
+            DB.insert("create table entities"
                     + "("
                     + "id           integer    primary key AUTOINCREMENT,"
                     + "title        text       not null,"
@@ -57,21 +52,39 @@ public class DataHandler {
                     + "thumbnail    blob,"
                     + "type         integer    not null" //1 = Doc, 2=Institution
                     + ");", false);
+            
+            DB.insert("create table tags"
+                    + "("
+                    + "id         integer,"
+                    + "tag        char(255)       not null,"
+                    + "FOREIGN KEY(id) REFERENCES entities(id)"
+                    + ");", false);
+            
 
-            DB.insert("create table relation"
+            DB.insert("create table relations"
                     + "("
                     + "title           text       not null,"
                     + "description     text,"
                     + "created         bigint     not null,"
                     + "entity1         integer,"
                     + "entity2         integer,"
-                    + "FOREIGN KEY(entity1) REFERENCES entity(id),"
-                    + "FOREIGN KEY(entity2) REFERENCES entity(id)"
+                    + "FOREIGN KEY(entity1) REFERENCES entities(id),"
+                    + "FOREIGN KEY(entity2) REFERENCES entities(id)"
+                    + ");", false);
+            
+            DB.insert("create table files"
+                    + "("
+                    + "id              integer,"
+                    + "name            text,"
+                    + "created         bigint           not null,"
+                    + "file            blob             not null,"
+                    + "FOREIGN KEY(id) REFERENCES entities(id)"
                     + ");", false);
                             
             Log.l("... new DB file created.");
 
         } catch (Exception ex) {
+            Log.l("ERROR during table creation");
             Log.l(ex);
         }
     }

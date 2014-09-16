@@ -7,6 +7,7 @@ package docz;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -35,7 +36,7 @@ public abstract class DB {
             }
             rs.close();
         }
-        
+
         st.close();
         c.close();
 
@@ -43,28 +44,50 @@ public abstract class DB {
     }
 
     public static int update(String sql) throws SQLException {
-        
-            Connection c = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
-            Statement st = c.createStatement();
 
-            int updatedRows = st.executeUpdate(sql);
+        Connection c = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
+        Statement st = c.createStatement();
 
-            st.close();
-            c.close();
+        int updatedRows = st.executeUpdate(sql);
 
-            return updatedRows;
+        st.close();
+        c.close();
+
+        return updatedRows;
     }
-    
-    public static ResultSet select(String sql) throws SQLException {
-        
-            Connection c = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
-            Statement st = c.createStatement();
 
-            ResultSet rs = st.executeQuery(sql);
-            
-            st.close();
-            c.close();
+    public static DBResult select(String sql) throws SQLException {
 
-            return rs;
+        Connection c = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
+        Statement st = c.createStatement();
+
+        ResultSet rs = st.executeQuery(sql);
+
+        return new DBResult(c, st, rs);
+    }
+
+    public static Connection createConnection() throws SQLException {
+
+        Connection c = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
+        return c;
+    }
+
+    public static class DBResult {
+
+        public final Connection connection;
+        public final Statement statement;
+        public final ResultSet resultSet;
+
+        public DBResult(Connection connection, Statement statement, ResultSet resultSet) {
+            this.connection = connection;
+            this.statement = statement;
+            this.resultSet = resultSet;
+        }
+
+        public void close() throws SQLException {
+            statement.close();
+            connection.close();
+        }
+
     }
 }
