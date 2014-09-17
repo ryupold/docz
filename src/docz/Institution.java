@@ -27,8 +27,10 @@ import javax.imageio.ImageIO;
  */
 public class Institution extends Entity {
 
-    protected ImageFile[] images;
-
+    public Institution(Entity entity){
+        this(entity.id, entity.title, entity.description, entity.tags, entity.created);
+    }
+    
     public Institution(long id, String title, String description, List<String> tags, Date created) {
         this.id = id;
         this.title = title;
@@ -40,131 +42,7 @@ public class Institution extends Entity {
     }
 
     public static Institution createInstitution(String title, String description, List<String> tags, List<File> files) throws SQLException, FileNotFoundException, IOException {
-        //generate unique file names
-        List<String> fileNames = new ArrayList<>();
-        int fn = 0;
-        for (File file : files) {
-            fn = 0;
-            while (fileNames.contains(file.getName())) {
-                fn++;
-            }
-
-            if (fn == 0) {
-                fileNames.add(file.getName());
-            } else {
-                fileNames.add("d" + fn + "_" + file.getName());
-            }
-        }
-
-        Connection c = DB.createConnection();
-        Date created = new Date();
-        try {
-            Long id = DB.insert("insert into entities(title, description, date, created, type) values('" + title + "', '" + description + "', '" + created.getTime() + "', '" + created.getTime() + "', '2');", true);
-
-            if (id != null) {
-                for (String tag : tags) {
-                    DB.insert("insert into tags(id, tag) values('" + id + "', '" + tag + "');", false);
-                }
-
-                PreparedStatement ps = c.prepareStatement("insert into files(id, name, created, file) values(?, ?, ?, ?)");
-                for (int i = 0; i < files.size(); i++) {
-
-                    Blob b = c.createBlob();
-                    OutputStream os = b.setBinaryStream(0);
-                    FileInputStream fi = new FileInputStream(files.get(i));
-                    byte[] buf = new byte[1024];
-                    int len;
-                    while ((len = fi.read(buf)) > 0) {
-                        os.write(buf, 0, len);
-                    }
-                    fi.close();
-                    os.close();
-
-                    ps.setLong(1, id);
-                    ps.setString(2, fileNames.get(i));
-                    ps.setLong(3, created.getTime());
-                    ps.setBlob(4, b);
-                    ps.execute();
-                }
-                ps.close();
-
-                return new Institution(id, title, description, tags, created);
-            } else {
-                return null;
-            }
-        } finally {
-            c.close();
-        }
-    }
-
-    public boolean removeFile(String name) throws SQLException {
-        return DB.update("delete from files where name='" + name + "' and id='" + this.id + "'") > 0;
-    }
-
-    public void addFiles(File... files) throws SQLException, IOException {
-
-        List<String> fileNames = new ArrayList<>();
-        int fn = 0;
-        for (File file : files) {
-            fn = 0;
-            while (fileNames.contains(file.getName())) {
-                fn++;
-            }
-
-            if (fn == 0) {
-                fileNames.add(file.getName());
-            } else {
-                fileNames.add("d" + fn + "_" + file.getName());
-            }
-        }
-
-        Connection c = DB.createConnection();
-        PreparedStatement ps = c.prepareStatement("insert into files(id, name, created, file) values(?, ?, ?, ?)");
-        try {
-            for (int i = 0; i < files.length; i++) {
-
-                Blob b = c.createBlob();
-                OutputStream os = b.setBinaryStream(0);
-                FileInputStream fi = new FileInputStream(files[i]);
-                byte[] buf = new byte[1024];
-                int len;
-                while ((len = fi.read(buf)) > 0) {
-                    os.write(buf, 0, len);
-                }
-                fi.close();
-                os.close();
-
-                ps.setLong(1, this.id);
-                ps.setString(2, fileNames.get(i));
-                ps.setLong(3, created.getTime());
-                ps.setBlob(4, b);
-                ps.execute();
-            }
-        } finally {
-            ps.close();
-            c.close();
-        }
-    }
-
-    public ImageFile[] getImages() throws IOException {
-        if (images == null) {
-            try {
-                DB.DBResult r = DB.select("select name, created, file from files where id='" + id + "'");
-                List<ImageFile> imgs = new LinkedList<>();
-                while (r.resultSet.next()) {
-                    Blob blob = r.resultSet.getBlob(3);
-                    InputStream is = blob.getBinaryStream();
-                    imgs.add(new ImageFile(this, r.resultSet.getString(1), new Date(r.resultSet.getLong(2)), ImageIO.read(is)));
-                    is.close();
-                }
-                r.close();
-                return images = imgs.toArray(new ImageFile[imgs.size()]);
-            } catch (SQLException ex) {
-                Log.l(ex);
-            }
-        }
-
-        return images;
+        return new Institution(Entity.createEntity(title, description, tags, null, files, 2));
     }
 
     @Override

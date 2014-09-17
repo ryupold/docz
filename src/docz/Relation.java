@@ -5,6 +5,10 @@
  */
 package docz;
 
+import java.io.FileInputStream;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.text.DateFormat;
 import java.util.Date;
 import org.w3c.dom.Document;
@@ -16,60 +20,31 @@ import org.w3c.dom.NodeList;
  *
  * @author Michael
  */
-public class Relation extends Entity {
+public class Relation {
 
-    private Date created;
-    private Element node;
-    private long from, to;
+    protected String title, description;
+    protected Date created;
+    private Entity entity1, entity2;
     private boolean isModified = false;
 
-    public Relation(Element relationNode) {
-        node = relationNode;
-
-        try {
-            title = node.getElementsByTagName("title").item(0).getTextContent();
-        } catch (Exception ex) {
-            Log.l(ex);
-        }
-        try {
-            description = node.getElementsByTagName("description").item(0).getTextContent();
-        } catch (Exception ex) {
-            Log.l(ex);
-        }
-
-        try {
-            created = DateFormat.getDateTimeInstance().parse(node.getElementsByTagName("created").item(0).getTextContent());
-        } catch (Exception ex) {
-            Log.l(ex);
-        }
-
-        try {
-            from = Long.parseLong(node.getElementsByTagName("from").item(0).getTextContent());
-        } catch (Exception ex) {
-            Log.l(ex);
-        }
-
-        try {
-            to = Long.parseLong(node.getElementsByTagName("to").item(0).getTextContent());
-        } catch (Exception ex) {
-            Log.l(ex);
-        }
+    public Relation(String title, String description, Date created, Entity entity1, Entity entity2) {
+        this.title = title;
+        this.description = description;
+        this.created = created;
+        this.entity1 = entity1;
+        this.entity2 = entity2;
     }
 
-    public static Doc createRelation(String title, String description, Doc From, Doc To) {
-        return null;
-    }
+    public static Relation createRelation(String title, String description, Entity entity1, Entity entity2) throws SQLException {
+        Connection c = DB.createConnection();
+        Date created = new Date();
+        try {
+            DB.insert("insert into relations(title, description, created, entity1, entity2) values('"+title+"', '"+description+"', '"+created.getTime()+"', '"+entity1.id+"', '"+entity2.id+"');", false);
 
-    public long getFrom() {
-        return from;
-    }
-
-    public long getTo() {
-        return to;
-    }
-
-    public Element getNode() {
-        return node;
+            return new Relation(title, description, created, entity1, entity2);
+        } finally {
+            c.close();
+        }
     }
 
     public Date getCreated() {
@@ -90,46 +65,25 @@ public class Relation extends Entity {
         isModified = true;
     }
 
-    public void setFrom(long from) {
-        this.from = from;
+    public Entity getEntity1() {
+        return entity1;
+    }
+
+    public Entity getEntity2() {
+        return entity2;
+    }
+
+    public void setEntity1(Entity entity1) {
+        this.entity1 = entity1;
         isModified = true;
     }
 
-    public void setTo(long to) {
-        this.to = to;
+    public void setEntity2(Entity entity2) {
+        this.entity2 = entity2;
         isModified = true;
     }
 
     public void save(Document DB) {
-
-        try {
-            node.getElementsByTagName("title").item(0).setTextContent(title);
-        } catch (Exception ex) {
-            Log.l(ex);
-        }
-        try {
-            node.getElementsByTagName("description").item(0).setTextContent(description);
-        } catch (Exception ex) {
-            Log.l(ex);
-        }
-
-        try {
-            node.getElementsByTagName("created").item(0).setTextContent(DateFormat.getDateTimeInstance().format(created));
-        } catch (Exception ex) {
-            Log.l(ex);
-        }
-        
-        try {
-            node.getElementsByTagName("from").item(0).setTextContent(from+"");
-        } catch (Exception ex) {
-            Log.l(ex);
-        }
-        
-        try {
-            node.getElementsByTagName("to").item(0).setTextContent(to+"");
-        } catch (Exception ex) {
-            Log.l(ex);
-        }
 
         isModified = false;
     }

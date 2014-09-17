@@ -6,11 +6,22 @@
 
 package docz;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.sql.Blob;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
+import javax.imageio.ImageIO;
 import org.w3c.dom.Document;
 
 /**
@@ -19,9 +30,11 @@ import org.w3c.dom.Document;
  */
 public class Entity {
     protected long id;
+    protected int type = 0;
     protected String title, description;
     protected List<String> tags;
     protected Date date, created;
+    protected ImageFile[] images;
 
     public Date getCreated() {
         return created;
@@ -64,6 +77,136 @@ public class Entity {
     
     public void setTags(List<String> tags){
         this.tags = tags;
+    }
+    
+    
+    public static Entity createEntity(String title, String description, List<String> tags, Date date, List<File> files, int type) throws SQLException, FileNotFoundException, IOException {
+        //generate unique file names
+        List<String> fileNames = new ArrayList<>();
+        int fn = 0;
+        for (File file : files) {
+            fn = 0;
+            while (fileNames.contains(file.getName())) {
+                fn++;
+            }
+
+            if (fn == 0) {
+                fileNames.add(file.getName());
+            } else {
+                fileNames.add("d" + fn + "_" + file.getName());
+            }
+        }
+
+        Connection c = DB.createConnection();
+        
+        
+        Date created = new Date();
+        if(date == null){
+            date = created;
+        }
+        try {
+            Long id = DB.insert("insert into entities(title, description, date, created, type) values('" + title + "', '" + description + "', '" + date.getTime() + "', '" + created.getTime() + "', '"+type+"');", true);
+
+            if (id != null) {
+                for (String tag : tags) {
+                    DB.insert("insert into tags(id, tag) values('" + id + "', '" + tag + "');", false);
+                }
+
+                PreparedStatement ps = c.prepareStatement("insert into files(id, name, created, file) values(?, ?, ?, ?)");
+                for (int i = 0; i < files.size(); i++) {
+                    FileInputStream fi = new FileInputStream(files.get(i));
+                    byte[] buf = new byte[fi.available()];
+                    fi.read(buf);
+                    fi.close();
+
+                    ps.setLong(1, id);
+                    ps.setString(2, fileNames.get(i));
+                    ps.setLong(3, created.getTime());
+                    ps.setBytes(4, buf);
+                    ps.execute();
+                }
+                ps.close();
+
+                if(type == 1)
+                    return new Doc(id, title, description, tags, date, created);
+                else if(type == 2)
+                    return new Institution(id, title, description, tags, created);
+                else
+                    return null;
+            } else {
+                return null;
+            }
+        } finally {
+            c.close();
+        }
+    }
+
+    public boolean removeFile(String name) throws SQLException {
+        return DB.update("delete from files where name='" + name + "' and id='" + this.id + "'") > 0;
+    }
+
+    public void addFiles(File... files) throws SQLException, IOException {
+
+        List<String> fileNames = new ArrayList<>();
+        int fn = 0;
+        for (File file : files) {
+            fn = 0;
+            while (fileNames.contains(file.getName())) {
+                fn++;
+            }
+
+            if (fn == 0) {
+                fileNames.add(file.getName());
+            } else {
+                fileNames.add("d" + fn + "_" + file.getName());
+            }
+        }
+
+        Connection c = DB.createConnection();
+        PreparedStatement ps = c.prepareStatement("insert into files(id, name, created, file) values(?, ?, ?, ?)");
+        try {
+            for (int i = 0; i < files.length; i++) {
+
+                Blob b = c.createBlob();
+                OutputStream os = b.setBinaryStream(0);
+                FileInputStream fi = new FileInputStream(files[i]);
+                byte[] buf = new byte[1024];
+                int len;
+                while ((len = fi.read(buf)) > 0) {
+                    os.write(buf, 0, len);
+                }
+                fi.close();
+                os.close();
+
+                ps.setLong(1, this.id);
+                ps.setString(2, fileNames.get(i));
+                ps.setLong(3, created.getTime());
+                ps.setBlob(4, b);
+                ps.execute();
+            }
+        } finally {
+            ps.close();
+            c.close();
+        }
+    }
+
+    public ImageFile[] getImages() throws IOException {
+        if (images == null) {
+            try {
+                DB.DBResult r = DB.select("select name, created, file from files where id='" + id + "'");
+                List<ImageFile> imgs = new LinkedList<>();
+                while (r.resultSet.next()) {
+                    byte[] bytes = r.resultSet.getBytes(4);
+                    imgs.add(new ImageFile(this, r.resultSet.getString(1), new Date(r.resultSet.getLong(2)), ImageIO.read(new ByteArrayInputStream(bytes))));
+                }
+                r.close();
+                return images = imgs.toArray(new ImageFile[imgs.size()]);
+            } catch (SQLException ex) {
+                Log.l(ex);
+            }
+        }
+
+        return images;
     }
     
     public void save(Document DB){
