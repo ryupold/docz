@@ -6,8 +6,6 @@
 
 package docz;
 
-import java.awt.CardLayout;
-
 /**
  *
  * @author Michael
