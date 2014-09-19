@@ -10,6 +10,9 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  *
  * @author Michael
@@ -21,14 +24,54 @@ public abstract class DB {
     private DB() {
     }
 
+    public static String getSetting(String name, String defaultValue) {
+        String v = getSetting(name);
+        return v == null ? defaultValue : v;
+    }
+
+    public static String getSetting(String name) {
+        DBResult r = null;
+        try {
+            r = select("select value from settings where name='" + name + "';");
+
+            if (r != null) {
+                if (r.resultSet.next()) {
+                    return r.resultSet.getString(1);
+                }
+            }
+        } catch (SQLException ex) {
+            Log.l(ex);
+        } finally {
+            if (r != null) {
+                try {
+                    r.close();
+                } catch (SQLException ex) {
+                    Log.l(ex);
+                }
+            }
+        }
+        return null;
+    }
+
+    public static void setSetting(String name, String value) {
+        try {
+            if (DB.update("update settings set value='" + value + "' where name='" + name + "'") == 0) {
+
+                DB.insert("insert into settings(name, value) values('" + name + "','" + value + "')", false);
+            }
+        } catch (SQLException ex) {
+            Log.l(ex);
+        }
+    }
+
     public static Long insert(String sql, boolean returnAutoIncrementKeys) throws SQLException {
         Connection c = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
         c.setAutoCommit(false);
         Statement st = c.createStatement();
         long generatedKey = 0;
         st.execute(sql);
-        
-        if(returnAutoIncrementKeys){
+
+        if (returnAutoIncrementKeys) {
             ResultSet rs = st.executeQuery("SELECT last_insert_rowid()");
             if (rs.next()) {
                 generatedKey = rs.getLong(1);

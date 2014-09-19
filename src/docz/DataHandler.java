@@ -79,6 +79,12 @@ public class DataHandler {
                     + "file            blob             not null,"
                     + "FOREIGN KEY(id) REFERENCES entities(id)"
                     + ");", false);
+            
+            DB.insert("create table settings"
+                    + "("
+                    + "name             varchar(255) primary key,"
+                    + "value            text"
+                    + ");", false);
                             
             Log.l("... new DB file created.");
 

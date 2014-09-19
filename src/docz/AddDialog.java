@@ -62,7 +62,7 @@ public class AddDialog extends javax.swing.JDialog {
 
             @Override
             public void imageSelected(int pos) {
-                if(pos!=0){
+                if(pos>=0 && pos < files.size()){
                     try {
                         previewPanel.setImg(files.get(pos));
                     } catch (IOException ex) {
@@ -287,6 +287,8 @@ public class AddDialog extends javax.swing.JDialog {
                         .addContainerGap())))
         );
 
+        imgList.setPadding(0, 0, 5, 10);
+
         jTabbedPane1.addTab("+ Doc", jPanel1);
 
         jLabel6.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
@@ -441,7 +443,9 @@ public class AddDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_txtDocTitleActionPerformed
 
     private void btnDocAddFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDocAddFileActionPerformed
-        JFileChooser fc = new JFileChooser();
+        String lastPath = DB.getSetting("lastpath", "");
+        
+        JFileChooser fc = new JFileChooser(new File(lastPath));
 
         fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
         fc.setMultiSelectionEnabled(true);
@@ -467,12 +471,16 @@ public class AddDialog extends javax.swing.JDialog {
                 }
 
                 files.add(f);
+                lastPath = f.getParentFile().getPath();
             }
+            
+            DB.setSetting("lastpath", lastPath);
         }
     }//GEN-LAST:event_btnDocAddFileActionPerformed
 
     private void btnInstitutionLogoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnInstitutionLogoActionPerformed
-        JFileChooser fc = new JFileChooser();
+        String lastPath = DB.getSetting("lastpath", "");
+        JFileChooser fc = new JFileChooser(new File(lastPath));
         fc.setFileFilter(new FileNameExtensionFilter("Image files", "jpg", "jpeg", "bmp", "wbmp", "png", "gif"));
         fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
         fc.setMultiSelectionEnabled(false);
@@ -482,6 +490,7 @@ public class AddDialog extends javax.swing.JDialog {
             } catch (IOException ex) {
                 Log.l(ex);
             }
+            DB.setSetting("lastpath", fc.getSelectedFile().getParentFile().getPath());
         }
     }//GEN-LAST:event_btnInstitutionLogoActionPerformed
 
