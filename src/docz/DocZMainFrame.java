@@ -10,8 +10,6 @@ import java.awt.Component;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
@@ -20,13 +18,14 @@ import javax.swing.JPasswordField;
  *
  * @author Michael
  */
-public class DocZ extends javax.swing.JFrame {
+public class DocZMainFrame extends javax.swing.JFrame {
 
     /**
-     * Creates new form DocZ
+     * Creates new form DocZMainFrame
      */
-    public DocZ() {
+    public DocZMainFrame() {
         initComponents();
+        
         setTitle("DocZ");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         Log.l("DB file = " + DataHandler.instance);
@@ -90,19 +89,15 @@ public class DocZ extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jPanel1 = new javax.swing.JPanel();
         txtSearch = new javax.swing.JTextField();
         btnAdd = new javax.swing.JButton();
         ckbDocs = new javax.swing.JCheckBox();
         ckbRelations = new javax.swing.JCheckBox();
         ckbTags = new javax.swing.JCheckBox();
         ckbInstitutions = new javax.swing.JCheckBox();
-        contentPanel1 = new docz.ContentPanel();
+        contentPanel = new docz.ContentPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setPreferredSize(new java.awt.Dimension(1000, 787));
-
-        jPanel1.setBackground(new java.awt.Color(204, 204, 204));
 
         txtSearch.setFont(new java.awt.Font("Arial", 0, 18)); // NOI18N
         txtSearch.setToolTipText("Search...");
@@ -139,18 +134,20 @@ public class DocZ extends javax.swing.JFrame {
         ckbInstitutions.setSelected(true);
         ckbInstitutions.setText("Institutions");
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+        contentPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Search Results"));
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(btnAdd, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(txtSearch)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
                                 .addComponent(ckbDocs)
                                 .addGap(18, 18, 18)
                                 .addComponent(ckbRelations)
@@ -159,19 +156,19 @@ public class DocZ extends javax.swing.JFrame {
                             .addComponent(ckbTags))
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addGap(18, 18, 18)
-                .addComponent(contentPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(contentPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 833, Short.MAX_VALUE)
                 .addContainerGap())
         );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(contentPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(contentPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
                         .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(ckbDocs)
                             .addComponent(ckbRelations)
                             .addComponent(ckbInstitutions))
@@ -182,25 +179,28 @@ public class DocZ extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap(1302, Short.MAX_VALUE))
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
-        );
-
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void txtSearchInputMethodTextChanged(java.awt.event.InputMethodEvent evt) {//GEN-FIRST:event_txtSearchInputMethodTextChanged
+        //TODO???
+    }//GEN-LAST:event_txtSearchInputMethodTextChanged
+
+    private void txtSearchKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchKeyTyped
+        if (evt.getKeyChar() == '\n') {
+            try {
+                Entity[] findings = DataHandler.instance.search(txtSearch.getText().split(" "), ckbDocs.isSelected(), ckbInstitutions.isSelected(), ckbRelations.isSelected(), ckbTags.isSelected());
+                ((CardLayout) contentPanel.getLayout()).show(contentPanel, "card4");
+                for (Component c : contentPanel.getComponents()) {
+                    if (c instanceof SearchResultsPanel) {
+                        ((SearchResultsPanel) c).showResults(findings, null);
+                    }
+                }
+            } catch (SQLException ex) {
+                Log.l(ex);
+            }
+        }
+    }//GEN-LAST:event_txtSearchKeyTyped
 
     private void btnAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddActionPerformed
         AddDialog addDialog = new AddDialog(this, true);
@@ -208,27 +208,6 @@ public class DocZ extends javax.swing.JFrame {
         addDialog.dispose();
         System.gc();
     }//GEN-LAST:event_btnAddActionPerformed
-
-    private void txtSearchInputMethodTextChanged(java.awt.event.InputMethodEvent evt) {//GEN-FIRST:event_txtSearchInputMethodTextChanged
-        //TODO???
-    }//GEN-LAST:event_txtSearchInputMethodTextChanged
-
-    private void txtSearchKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchKeyTyped
-//        if (evt.getKeyChar() == '\n') {
-//            try {
-//                Entity[] findings = DataHandler.instance.search(txtSearch.getText().split(" "), ckbDocs.isSelected(), ckbInstitutions.isSelected(), ckbRelations.isSelected(), ckbTags.isSelected());
-//                ((CardLayout)contentPanel.getLayout()).show(contentPanel, "card4");
-//                for(Component c : contentPanel.getComponents()){
-//                    Log.l(c.getClass().getName());
-//                    if(c instanceof SearchResultsPanel){
-//                        ((SearchResultsPanel)c).showResults(findings, null);
-//                    }
-//                }
-//            } catch (SQLException ex) {
-//                Log.l(ex);
-//            }
-//        }
-    }//GEN-LAST:event_txtSearchKeyTyped
 
     /**
      * @param args the command line arguments
@@ -247,20 +226,20 @@ public class DocZ extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(DocZ.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(DocZMainFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(DocZ.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(DocZMainFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(DocZ.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(DocZMainFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(DocZ.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(DocZMainFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new DocZ().setVisible(true);
+                new DocZMainFrame().setVisible(true);
             }
         });
     }
@@ -271,8 +250,7 @@ public class DocZ extends javax.swing.JFrame {
     private javax.swing.JCheckBox ckbInstitutions;
     private javax.swing.JCheckBox ckbRelations;
     private javax.swing.JCheckBox ckbTags;
-    private docz.ContentPanel contentPanel1;
-    private javax.swing.JPanel jPanel1;
+    private docz.ContentPanel contentPanel;
     private javax.swing.JTextField txtSearch;
     // End of variables declaration//GEN-END:variables
 }

@@ -10,6 +10,8 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -18,7 +20,6 @@ import java.util.List;
 public class DataHandler {
 
     public static final DataHandler instance;
-    private static long lastID = 0;
 
     static {
 
@@ -26,18 +27,48 @@ public class DataHandler {
     }
 
     private DataHandler() {
-        File databaseFile = new File(DB.dbPath);
-        try {
-            Class.forName("org.sqlite.JDBC");
-        } catch (ClassNotFoundException ex) {
-            Log.l(ex);
-            Log.l("ERROR: no sqlite driver found");
-        }
+        init();
+    }
+    
+    public void init(){
+        File databaseFile = new File(DB.getDBPath());
+
         if (!databaseFile.exists()) {
-            createTables();
+            try {
+                if(testConnection()){
+                    createTables();
+                    Log.l("new DB file created successfully.");
+                }
+                else{
+                    Log.l("no DB file could be created, password is needed!");
+                }
+            } catch (SQLException ex) {
+                Log.l(ex);
+            }
         } else {
-            //TODO
-            Log.l("DB file loaded.");
+            try {
+                if(testConnection()){
+                    Log.l("DB file loaded successfully.");
+                }
+                else{
+                    Log.l("DB file loaded, password is needed!");
+                }
+            } catch (SQLException ex) {
+                Log.l(ex);
+            }
+        }
+    }
+    
+    public boolean testConnection() throws SQLException{
+        try {
+            DB.createConnection().close();
+            return true;
+        } catch (SQLException ex) {
+            Log.l("database not available");
+            throw ex;
+        }
+        catch(SecurityException se){
+            return false;
         }
     }
 
@@ -46,47 +77,47 @@ public class DataHandler {
 
             Log.l("first start...");
 
-            DB.insert("create table entities"
+            DB.insert("CREATE TABLE IF NOT EXISTS entities"
                     + "("
-                    + "id           integer    primary key AUTOINCREMENT,"
-                    + "title        text       not null,"
-                    + "description  text,"
-                    + "date         bigint,"
-                    + "created      bigint     not null,"
-                    + "type         integer    not null" //1 = Doc, 2=Institution
+                    + "id           IDENTITY   AUTO_INCREMENT   PRIMARY KEY,"
+                    + "title        VARCHAR       not null,"
+                    + "description  VARCHAR,"
+                    + "date         BIGINT,"
+                    + "created      BIGINT     not null,"
+                    + "type         INT        not null" //1 = Doc, 2=Institution
                     + ");", false);
 
-            DB.insert("create table tags"
+            DB.insert("create table IF NOT EXISTS tags"
                     + "("
-                    + "id         integer,"
-                    + "tag        char(255)       not null,"
-                    + "FOREIGN KEY(id) REFERENCES entities(id)"
+                    + "id         BIGINT,"
+                    + "tag        VARCHAR       not null,"
+                    + "FOREIGN KEY(id) REFERENCES entities(id) ON DELETE CASCADE"
                     + ");", false);
 
-            DB.insert("create table relations"
+            DB.insert("create table IF NOT EXISTS relations"
                     + "("
-                    + "title           text       not null,"
-                    + "description     text,"
-                    + "created         bigint     not null,"
-                    + "entity1         integer,"
-                    + "entity2         integer,"
-                    + "FOREIGN KEY(entity1) REFERENCES entities(id),"
-                    + "FOREIGN KEY(entity2) REFERENCES entities(id)"
+                    + "title           VARCHAR       not null,"
+                    + "description     VARCHAR,"
+                    + "created         BIGINT        not null,"
+                    + "entity1         BIGINT,"
+                    + "entity2         BIGINT,"
+                    + "FOREIGN KEY(entity2) REFERENCES entities(id) ON DELETE CASCADE,"
+                    + "FOREIGN KEY(entity2) REFERENCES entities(id) ON DELETE CASCADE"
                     + ");", false);
 
-            DB.insert("create table files"
+            DB.insert("create table IF NOT EXISTS files"
                     + "("
-                    + "id              integer,"
-                    + "name            text,"
-                    + "created         bigint           not null,"
-                    + "file            blob             not null,"
-                    + "FOREIGN KEY(id) REFERENCES entities(id)"
+                    + "id              BIGINT,"
+                    + "name            VARCHAR,"
+                    + "created         BIGINT           not null,"
+                    + "file            BLOB             not null,"
+                    + "FOREIGN KEY(id) REFERENCES entities(id) ON DELETE CASCADE"
                     + ");", false);
 
-            DB.insert("create table settings"
+            DB.insert("create table IF NOT EXISTS settings"
                     + "("
-                    + "name             varchar(255) primary key,"
-                    + "value            text"
+                    + "name             VARCHAR     primary key,"
+                    + "value            VARCHAR"
                     + ");", false);
 
             Log.l("... new DB file created.");
@@ -125,30 +156,22 @@ public class DataHandler {
 
     }
 
-    public synchronized long getNewID() {
-        return ++lastID;
-    }
-
-    public synchronized void updateLastID(long id) {
-        if (lastID < id) {
-            lastID = id;
-        }
-    }
-
+  
     /**
-     * currently only working for title, description, 
+     * currently only working for title, description,
+     *
      * @param searchWords
      * @param docsAllowed
      * @param institutionsAllowed
      * @param relationsAllowed
      * @param tagsAllowed
      * @return
-     * @throws SQLException 
+     * @throws SQLException
      */
     public Entity[] search(String[] searchWords, boolean docsAllowed, boolean institutionsAllowed, boolean relationsAllowed, boolean tagsAllowed) throws SQLException {
         List<Entity> resultTmp = new LinkedList<>();
 
-        if (!(docsAllowed | institutionsAllowed)) {
+        if (docsAllowed | institutionsAllowed) {
             String sql = "SELECT id, title, description, date, created, type FROM entities WHERE ";
             if (searchWords.length > 0) {
                 sql += "(";
@@ -160,7 +183,7 @@ public class DataHandler {
                     }
                 }
                 sql += ")";
-                
+
                 sql += " OR (";
                 {
                     sql += " description LIKE '%" + searchWords[0] + "%' ";
@@ -175,29 +198,29 @@ public class DataHandler {
             if (docsAllowed ^ institutionsAllowed) {
                 sql += (searchWords.length > 0 ? " AND " : "") + (docsAllowed ? "type='1'" : "type='2'");
             }
-
+            
             DB.DBResult r = DB.select(sql);
-            while(r.resultSet.next()){
+            while (r.resultSet.next()) {
                 long id = r.resultSet.getLong(1);
                 String title = r.resultSet.getString(2);
                 String description = r.resultSet.getString(3);
                 Date date = new Date(r.resultSet.getLong(4));
                 Date created = new Date(r.resultSet.getLong(5));
-                int type = r.resultSet.getInt(5);
+                int type = r.resultSet.getInt(6);
                 List<String> tags = new LinkedList<>();
+
+                String tmpSQL = "SELECT tag FROM tags where id='" + id + "'";
+                DB.DBResult tagR = DB.select(tmpSQL);
                 
-                DB.DBResult tagR = DB.select("SELECT tag FROM tags where id='"+id+"'");
-                while(tagR.resultSet.next()){
+                while (tagR.resultSet.next()) {
                     tags.add(tagR.resultSet.getString(1));
                 }
                 tagR.close();
-                
-                
-                if(type == 1){
-                    resultTmp.add(new Doc(lastID, title, description, tags, date, created));
-                }
-                else if(type == 2){
-                    resultTmp.add(new Institution(lastID, title, description, tags, created));
+
+                if (type == 1) {
+                    resultTmp.add(new Doc(id, title, description, tags, date, created));
+                } else if (type == 2) {
+                    resultTmp.add(new Institution(id, title, description, tags, created));
                 }
             }
             r.close();
@@ -207,4 +230,10 @@ public class DataHandler {
         return results;
     }
 
+    @Override
+    public String toString() {
+        return DB.getDBPath();
+    }
+
+    
 }

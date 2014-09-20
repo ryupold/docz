@@ -29,8 +29,7 @@ public class ContentPanel extends javax.swing.JPanel {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        pnlSearchResults = new javax.swing.JPanel();
-        pnlDocOverview = new javax.swing.JPanel();
+        pnlSearchResults = new SearchResultsPanel();
         pnlPreview = new javax.swing.JPanel();
         jPanel1 = new javax.swing.JPanel();
         lblPreviewTitle = new javax.swing.JLabel();
@@ -38,6 +37,7 @@ public class ContentPanel extends javax.swing.JPanel {
         jScrollPane1 = new javax.swing.JScrollPane();
         txaPreviewDescription = new javax.swing.JTextArea();
         jLabel1 = new javax.swing.JLabel();
+        pnlDocOverview = new javax.swing.JPanel();
 
         setLayout(new java.awt.CardLayout());
 
@@ -53,19 +53,6 @@ public class ContentPanel extends javax.swing.JPanel {
         );
 
         add(pnlSearchResults, "card4");
-
-        javax.swing.GroupLayout pnlDocOverviewLayout = new javax.swing.GroupLayout(pnlDocOverview);
-        pnlDocOverview.setLayout(pnlDocOverviewLayout);
-        pnlDocOverviewLayout.setHorizontalGroup(
-            pnlDocOverviewLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 980, Short.MAX_VALUE)
-        );
-        pnlDocOverviewLayout.setVerticalGroup(
-            pnlDocOverviewLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 697, Short.MAX_VALUE)
-        );
-
-        add(pnlDocOverview, "card2");
 
         jPanel1.setBackground(new java.awt.Color(0, 0, 0));
 
@@ -128,6 +115,19 @@ public class ContentPanel extends javax.swing.JPanel {
         );
 
         add(pnlPreview, "card3");
+
+        javax.swing.GroupLayout pnlDocOverviewLayout = new javax.swing.GroupLayout(pnlDocOverview);
+        pnlDocOverview.setLayout(pnlDocOverviewLayout);
+        pnlDocOverviewLayout.setHorizontalGroup(
+            pnlDocOverviewLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 980, Short.MAX_VALUE)
+        );
+        pnlDocOverviewLayout.setVerticalGroup(
+            pnlDocOverviewLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 697, Short.MAX_VALUE)
+        );
+
+        add(pnlDocOverview, "card2");
     }// </editor-fold>//GEN-END:initComponents
 
 

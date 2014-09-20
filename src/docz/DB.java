@@ -5,11 +5,14 @@
  */
 package docz;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -19,7 +22,25 @@ import java.util.logging.Logger;
  */
 public abstract class DB {
 
-    public static final String dbPath = "db.sqlite";
+    private static final String dbPath = "db/db";
+    private static String pw = null;
+    
+    protected static void setPW(String pw){
+        DB.pw = pw;
+    }
+
+    public static final String getDBPath() {
+        return new File(dbPath).getAbsolutePath();
+    }
+
+    static {
+        try {
+            Class.forName("org.h2.Driver");
+        } catch (ClassNotFoundException ex) {
+            Log.l(ex);
+            Log.l("ERROR: no sqlite driver found");
+        }
+    }
 
     private DB() {
     }
@@ -64,29 +85,33 @@ public abstract class DB {
         }
     }
 
-    public static Long insert(String sql, boolean returnAutoIncrementKeys) throws SQLException {
-        Connection c = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
+    public static List<Long> insert(String sql, boolean returnAutoIncrementKeys) throws SQLException {
+        Connection c = createConnection();
         c.setAutoCommit(false);
         Statement st = c.createStatement();
-        long generatedKey = 0;
-        st.execute(sql);
+        st.execute(sql, returnAutoIncrementKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
 
+        List<Long> generatedKeys = null;
+        
         if (returnAutoIncrementKeys) {
-            ResultSet rs = st.executeQuery("SELECT last_insert_rowid()");
-            if (rs.next()) {
-                generatedKey = rs.getLong(1);
+             generatedKeys = new LinkedList<>();
+            try (ResultSet grs = st.getGeneratedKeys()) {
+                while(grs.next()){
+                    generatedKeys.add(grs.getLong(1));
+                }
             }
         }
+        
         c.commit();
         st.close();
         c.close();
 
-        return returnAutoIncrementKeys ? generatedKey : null;
+        return generatedKeys;
     }
 
     public static int update(String sql) throws SQLException {
 
-        Connection c = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
+        Connection c = createConnection();
         Statement st = c.createStatement();
 
         int updatedRows = st.executeUpdate(sql);
@@ -99,7 +124,7 @@ public abstract class DB {
 
     public static DBResult select(String sql) throws SQLException {
 
-        Connection c = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
+        Connection c = createConnection();
         Statement st = c.createStatement();
 
         ResultSet rs = st.executeQuery(sql);
@@ -108,12 +133,16 @@ public abstract class DB {
     }
 
     public static Connection createConnection() throws SQLException {
-
-        Connection c = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
-        return c;
+        if(pw != null)
+        {
+            Connection c = DriverManager.getConnection("jdbc:h2:file:" + new File(dbPath).getAbsolutePath() +";CIPHER=AES", "sa", pw+" "+pw);
+            return c;
+        }
+        
+        throw new SecurityException("no password entered!");
     }
 
-    public static class DBResult {
+    public static class DBResult implements AutoCloseable{
 
         public final Connection connection;
         public final Statement statement;

@@ -108,7 +108,7 @@ public class Entity {
             date = created;
         }
         try {
-            Long id = DB.insert("insert into entities(title, description, date, created, type) values('" + title + "', '" + description + "', '" + date.getTime() + "', '" + created.getTime() + "', '" + type + "');", true);
+            Long id = DB.insert("insert into entities(title, description, date, created, type) values('" + title + "', '" + description + "', '" + date.getTime() + "', '" + created.getTime() + "', '" + type + "');", true).get(0);
 
             if (id != null) {
                 for (String tag : tags) {
@@ -222,17 +222,18 @@ public class Entity {
      */
     public Image getThumbnail(int preferedWidth, int preferedHeight) throws SQLException {
         DB.DBResult r = DB.select("select name, file from files where id='" + id + "' and ("
-                + "name like '%.png' or"
-                + "name like '%.jpg' or"
-                + "name like '%.jpeg' or"
-                + "name like '%.bmp' or"
-                + "name like '%.wbmp' or"
+                + "name like '%.png' or "
+                + "name like '%.jpg' or "
+                + "name like '%.jpeg' or "
+                + "name like '%.bmp' or "
+                + "name like '%.wbmp' or "
                 + "name like '%.gif'"
-                + ") limit 1;");
+                + ") limit 1;");        
+        
         try {
 
             if (r.resultSet.next()) {
-                byte[] buffer = r.resultSet.getBytes(1);
+                byte[] buffer = r.resultSet.getBytes(2);
                 ByteArrayInputStream bais = new ByteArrayInputStream(buffer);
                 try {
                     BufferedImage img = ImageIO.read(bais);

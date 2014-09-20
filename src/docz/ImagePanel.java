@@ -70,8 +70,13 @@ public class ImagePanel extends JPanel {
         this.imgFile = imgFile;
         if (imgFile != null) {
             BufferedImage img = ImageIO.read(imgFile);
-            preferedSize = ScaleImage.fitToRect(new ScaleImage.Rectangle(0, 0, getWidth(), getHeight()), (BufferedImage) img);
-            this.scaledImg = ScaleImage.scale((BufferedImage) img, preferedSize.width, preferedSize.heigth);
+            if(img != null){
+                preferedSize = ScaleImage.fitToRect(new ScaleImage.Rectangle(0, 0, getWidth(), getHeight()), (BufferedImage) img);
+                this.scaledImg = ScaleImage.scale((BufferedImage) img, preferedSize.width, preferedSize.heigth);
+            }else{
+                scaledImg = null;
+                this.imgFile = null;
+            }
         }
         repaint();
     }
