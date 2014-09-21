@@ -6,7 +6,6 @@
 package docz;
 
 import de.realriu.riulib.helpers.ScaleImage;
-import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -19,31 +18,30 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 /**
  *
  * @author Michael
  */
-public class SearchResultsPanel extends JPanel {
+public class ImageList extends javax.swing.JPanel {
 
-    private Entity[] resultEntities;
-    private Image[] thumbnails;
+    private Thumbnail[] thumbnails;
+    private Image[] images;
     private String[] names;
     private ScaleImage.Rectangle[] rects;
     private ScaleImage.Rectangle[] bounds;
     private int hoveredIndex = -1, selectedIndex = -1;
-    private int prefW = 150, prefH = 150, paddingLR = 10, paddingTB = 30;
-    private ContentPanel contentPanel;
+    private int preferedWidth = 150, preferedHeight = 150, paddingLR = 20, paddingTB = 30;
 
-    public void setContentPanel(ContentPanel contentPanel) {
-        this.contentPanel = contentPanel;
-    }
+    private ImageListListener listener;
 
-    public SearchResultsPanel() {
+    /**
+     * Creates new form ImageList
+     */
+    public ImageList() {
+        initComponents();
+
         addMouseMotionListener(new MouseAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
@@ -55,6 +53,7 @@ public class SearchResultsPanel extends JPanel {
                                 && p.y > bounds[i].y && p.y < bounds[i].y + bounds[i].heigth) {
                             hit = true;
                             hoveredIndex = i;
+                            listener.imageHovered(hoveredIndex);
                         }
                     }
 
@@ -74,12 +73,9 @@ public class SearchResultsPanel extends JPanel {
                 if (hoveredIndex >= 0) {
                     if (hoveredIndex != selectedIndex) {
                         selectedIndex = hoveredIndex;
-                    } else if (contentPanel != null) {
-                        try {
-                            //((CardLayout) contentPanel.getLayout()).show(contentPanel, "card4");
-                            contentPanel.showPreview(resultEntities[selectedIndex]);
-                        } catch (SQLException ex) {
-                            Log.l(ex);
+                    } else {
+                        if (listener != null) {
+                            listener.imageSelected(selectedIndex);
                         }
                     }
                 }
@@ -87,18 +83,41 @@ public class SearchResultsPanel extends JPanel {
         });
     }
 
-    public void showResults(Entity[] resultEntities) throws SQLException {
-        this.resultEntities = resultEntities;
+    public void setImageListListener(ImageListListener listener) {
+        this.listener = listener;
+    }
 
-        thumbnails = new Image[resultEntities.length];
-        rects = new ScaleImage.Rectangle[thumbnails.length];
-        bounds = new ScaleImage.Rectangle[thumbnails.length];
-        names = new String[thumbnails.length];
+    public ImageListListener getImageListListener() {
+        return this.listener;
+    }
 
-        for (int i = 0; i < resultEntities.length; i++) {
-            thumbnails[i] = resultEntities[i].getThumbnail(prefW, prefH);
-            rects[i] = ScaleImage.fitToRect(new ScaleImage.Rectangle(0, 0, prefW, prefH), (BufferedImage) thumbnails[i]);
-            names[i] = resultEntities[i].getTitle();
+    public static interface ImageListListener {
+
+        void imageHovered(int index);
+
+        void imageSelected(int index);
+    }
+
+    public void setPreferedWidth(int preferedWidth) {
+        this.preferedWidth = preferedWidth;
+    }
+
+    public void setPreferedHeight(int preferedHeight) {
+        this.preferedHeight = preferedHeight;
+    }
+
+    public void setThumbnails(Thumbnail[] thumbnails) throws Exception {
+        this.thumbnails = thumbnails;
+
+        images = new Image[thumbnails.length];
+        rects = new ScaleImage.Rectangle[images.length];
+        bounds = new ScaleImage.Rectangle[images.length];
+        names = new String[images.length];
+
+        for (int i = 0; i < thumbnails.length; i++) {
+            images[i] = thumbnails[i].getThumbnail(preferedWidth, preferedHeight);
+            rects[i] = ScaleImage.fitToRect(new ScaleImage.Rectangle(0, 0, preferedWidth, preferedHeight), (BufferedImage) images[i]);
+            names[i] = thumbnails[i].getTitle();
         }
 
         if (getParent().getParent() instanceof JScrollPane) {
@@ -120,13 +139,25 @@ public class SearchResultsPanel extends JPanel {
         recalcPositions();
     }
 
+    public Thumbnail[] getThumbnails() {
+        return thumbnails;
+    }
+
+    public int getSelectedIndex() {
+        return selectedIndex;
+    }
+
+    public int getHoveredIndex() {
+        return hoveredIndex;
+    }
+
     private void recalcPositions() throws SQLException {
         if (thumbnails.length > 0) {
-            for (int i = 0; i < resultEntities.length; i++) {
-                int imgsPerRow = Math.max((int) (1f * getParent().getWidth() / (prefW + 2 * paddingLR)), 1);
-                int x = (i % imgsPerRow) * (prefW + 2 * paddingLR);
-                int y = (i / imgsPerRow) * (prefH + 2 * paddingTB);
-                bounds[i] = new ScaleImage.Rectangle(x, y, prefW, prefH);
+            for (int i = 0; i < thumbnails.length; i++) {
+                int imgsPerRow = Math.max((int) (1f * getParent().getWidth() / (preferedWidth + 2 * paddingLR)), 1);
+                int x = (i % imgsPerRow) * (preferedWidth + 2 * paddingLR);
+                int y = (i / imgsPerRow) * (preferedHeight + 2 * paddingTB);
+                bounds[i] = new ScaleImage.Rectangle(x, y, preferedWidth, preferedHeight);
             }
 
             Rectangle r = new Rectangle(bounds[0].x, bounds[0].y, bounds[bounds.length - 1].x - bounds[0].x + bounds[bounds.length - 1].width, bounds[bounds.length - 1].y - bounds[0].y + bounds[bounds.length - 1].heigth);
@@ -139,10 +170,10 @@ public class SearchResultsPanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        if (thumbnails != null && thumbnails.length > 0 && names != null && rects != null) {
-            for (int i = 0; i < thumbnails.length; i++) {
+        if (images != null && names != null && rects != null) {
+            for (int i = 0; i < images.length; i++) {
                 g.drawRect(bounds[i].x, bounds[i].y, bounds[i].width, bounds[i].heigth);
-                g.drawImage(thumbnails[i], bounds[i].x + rects[i].x, bounds[i].y + rects[i].y, this);
+                g.drawImage(images[i], bounds[i].x + rects[i].x, bounds[i].y + rects[i].y, this);
             }
         }
 
@@ -159,4 +190,27 @@ public class SearchResultsPanel extends JPanel {
         }
     }
 
+    /**
+     * This method is called from within the constructor to initialize the form. WARNING: Do NOT modify this code. The content of this method
+     * is always regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+        this.setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 890, Short.MAX_VALUE)
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 597, Short.MAX_VALUE)
+        );
+    }// </editor-fold>//GEN-END:initComponents
+
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // End of variables declaration//GEN-END:variables
 }

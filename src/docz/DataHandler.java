@@ -55,6 +55,10 @@ public class DataHandler {
             return false;
         }
     }
+    
+    public void updateEntity(Entity entityWithNewValues){
+        
+    }
 
     private void createTables() {
         try {

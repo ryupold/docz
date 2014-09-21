@@ -428,9 +428,7 @@ public class AddDialog extends javax.swing.JDialog {
                 for (String t : tagArray) {
                     tags.add(t.trim().toLowerCase());
                 }
-                DataHandler.instance.addDoc(Doc.createDoc(txtDocTitle.getText(), txtDocDescription.getText(), tags, DateFormat.getDateInstance().parse(lblDocDate.getText()), files));
-
-                DataHandler.instance.save();
+                Doc.createDoc(txtDocTitle.getText(), txtDocDescription.getText(), tags, DateFormat.getDateInstance().parse(lblDocDate.getText()), files);
                 setVisible(false);
             } catch (ParseException | SQLException | IOException ex) {
                 Log.l(ex);
@@ -506,9 +504,7 @@ public class AddDialog extends javax.swing.JDialog {
                 
                 List<File> logo = new ArrayList<>();
                 logo.add(imgPanel.getImg());
-                DataHandler.instance.addInstitution(Institution.createInstitution(txtInstitutionTitle.getText(), txtInstitutionDescription.getText(), tags, logo));
-                
-                DataHandler.instance.save();
+                Institution.createInstitution(txtInstitutionTitle.getText(), txtInstitutionDescription.getText(), tags, logo);
                 setVisible(false);
             } catch (IOException | SQLException ex) {
                 Log.l(ex);

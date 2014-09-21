@@ -153,21 +153,18 @@ public class DocZMainFrame extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btnAdd, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(txtSearch)
+                    .addComponent(btnAdd, javax.swing.GroupLayout.PREFERRED_SIZE, 233, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 233, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(ckbDocs)
-                                .addGap(18, 18, 18)
-                                .addComponent(ckbRelations)
-                                .addGap(18, 18, 18)
-                                .addComponent(ckbInstitutions))
-                            .addComponent(ckbTags)
-                            .addComponent(btnChangePW))
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addGap(18, 18, 18)
-                .addComponent(contentPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 833, Short.MAX_VALUE)
+                        .addComponent(ckbDocs)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(ckbRelations)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(ckbInstitutions))
+                    .addComponent(ckbTags)
+                    .addComponent(btnChangePW))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(contentPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 841, Short.MAX_VALUE)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -203,8 +200,7 @@ public class DocZMainFrame extends javax.swing.JFrame {
         if (evt.getKeyChar() == '\n') {
             try {
                 Entity[] findings = DataHandler.instance.search(txtSearch.getText().split(" "), ckbDocs.isSelected(), ckbInstitutions.isSelected(), ckbRelations.isSelected(), ckbTags.isSelected());
-                ((CardLayout) contentPanel.getLayout()).show(contentPanel, "card2");
-                contentPanel.getSearchResultPanel().showResults(findings, null);                    
+                contentPanel.showResults(findings);                    
             } catch (SQLException ex) {
                 Log.l(ex);
             }

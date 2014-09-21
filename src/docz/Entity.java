@@ -11,7 +11,6 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
-import java.awt.image.RescaleOp;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -22,21 +21,17 @@ import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.text.AttributedCharacterIterator;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.imageio.ImageIO;
-import org.w3c.dom.Document;
 
 /**
  *
  * @author Michael
  */
-public class Entity {
+public class Entity implements Thumbnail{
 
     protected long id;
     protected int type = 0;
@@ -75,6 +70,21 @@ public class Entity {
 
     public String[] getTags() {
         return tags.toArray(new String[tags.size()]);
+    }
+    
+    public String getTagsAsString(){
+        String tagsString = "";
+        boolean first = true;
+        for(String t : tags){
+            if(first){
+                first = false;
+            }
+            else{
+                tagsString += ", ";
+                        }
+                tagsString += t;
+        }        
+        return tagsString;
     }
 
     public void setTags(String... tags) {

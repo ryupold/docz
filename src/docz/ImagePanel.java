@@ -39,7 +39,12 @@ public class ImagePanel extends JPanel {
             @Override
             public void componentResized(ComponentEvent e) {
                 try {
-                    setImg(imgFile);
+                    if(imgFile != null){
+                        setImg(imgFile);
+                    }
+                    else{
+                        repaint();
+                    }
                 } catch (IOException ex) {
                     Log.l(ex);
                 }
@@ -66,6 +71,12 @@ public class ImagePanel extends JPanel {
         return imgFile;
     }
 
+    public Image getScaledImg() {
+        return scaledImg;
+    }
+    
+    
+
     public void setImg(File imgFile) throws IOException {
         this.imgFile = imgFile;
         if (imgFile != null) {
@@ -78,6 +89,13 @@ public class ImagePanel extends JPanel {
                 this.imgFile = null;
             }
         }
+        repaint();
+    }
+    
+    
+    public void setImg(Image img){
+        scaledImg = img;
+        preferedSize = ScaleImage.fitToRect(new ScaleImage.Rectangle(0, 0, getWidth(), getHeight()), (BufferedImage) img);
         repaint();
     }
 
