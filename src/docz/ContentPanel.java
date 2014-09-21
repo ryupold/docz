@@ -6,8 +6,12 @@
 package docz;
 
 import java.awt.CardLayout;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.text.DateFormat;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.border.TitledBorder;
@@ -51,8 +55,8 @@ public class ContentPanel extends javax.swing.JPanel {
         txaPreviewDescription.setText(currentEntity.getDescription());
         txtTags.setText(currentEntity.getTagsAsString());
         lblPreviewDate.setText(DateFormat.getDateInstance().format(currentEntity.getDate()));
-        lblPreviewCreated.setText("created: "+DateFormat.getDateInstance().format(currentEntity.created));
-        
+        lblPreviewCreated.setText("created: " + DateFormat.getDateInstance().format(currentEntity.created));
+
         ((CardLayout) getLayout()).show(this, "card4");
     }
 
@@ -297,27 +301,47 @@ public class ContentPanel extends javax.swing.JPanel {
 
     private void btnEditSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEditSaveActionPerformed
         editMode = !editMode;
-        
+
         txtPreviewTitle.setEditable(editMode);
         txaPreviewDescription.setEditable(editMode);
         txtTags.setEditable(editMode);
         btnChangeDate.setEnabled(editMode);
-        
-        
-        if(editMode){//save action
+
+        if (editMode) {//save action
             btnEditSave.setText("save");
-        }
-        else{ //save action
+        } else { //save action
             btnEditSave.setText("edit");
+
+            if (txtPreviewTitle.getText().trim().length() > 0) {
+                try {
+                    List<String> tags = new ArrayList<>();
+                    String[] tagArray = txtTags.getText().split(",");
+                    for (String t : tagArray) {
+                        tags.add(t.trim().toLowerCase());
+                    }
+
+                    currentEntity.setTitle(txtPreviewTitle.getText().trim());
+                    currentEntity.setDescription(txaPreviewDescription.getText());
+                    currentEntity.setTags(tags);
+                    currentEntity.setDate(DateFormat.getDateInstance().parse(lblPreviewDate.getText()));
+                } catch (ParseException ex) {
+                    Log.l(ex);
+                }
+            }
+
+            DataHandler.instance.updateEntity(currentEntity);
         }
-        
-        
-        
+
+
     }//GEN-LAST:event_btnEditSaveActionPerformed
 
     private void btnChangeDateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnChangeDateActionPerformed
-        JDatePanel datePanel = (JDatePanelImpl)JDateComponentFactory.createJDatePanel();
+        JDatePanel datePanel = (JDatePanelImpl) JDateComponentFactory.createJDatePanel();
         int okCxl = JOptionPane.showConfirmDialog(null, datePanel, "Datum auswählen", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (okCxl == JOptionPane.OK_OPTION) {
+            DateModel<?> dm = ((JDatePanel) datePanel).getModel();
+            lblPreviewDate.setText(dm.getDay() + "." + (1 + dm.getMonth()) + "." + dm.getYear());
+        }
     }//GEN-LAST:event_btnChangeDateActionPerformed
 
 

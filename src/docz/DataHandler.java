@@ -57,7 +57,21 @@ public class DataHandler {
     }
     
     public void updateEntity(Entity entityWithNewValues){
-        
+        try {
+            if(DB.update("update entities set "
+                    + "title='"+entityWithNewValues.title+"', "
+                    + "description='"+entityWithNewValues.description+"', "
+                    + "date='"+entityWithNewValues.date.getTime()+"' "
+                    + "where id='"+entityWithNewValues.id+"';"
+            ) > 0){
+                DB.update("delete from tags where id='"+entityWithNewValues.id+"'");
+                for(String t : entityWithNewValues.tags){
+                    DB.insert("insert into tags(id, tag) values('"+entityWithNewValues.id+"', '"+t+"');", false);
+                }
+            }
+        } catch (SQLException ex) {
+            Log.l(ex);
+        }
     }
 
     private void createTables() {

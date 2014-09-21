@@ -71,6 +71,10 @@ public class Entity implements Thumbnail{
     public String[] getTags() {
         return tags.toArray(new String[tags.size()]);
     }
+
+    public void setDate(Date date) {
+        this.date = date;
+    }
     
     public String getTagsAsString(){
         String tagsString = "";
