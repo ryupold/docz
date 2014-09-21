@@ -12,8 +12,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 
 /**
@@ -42,19 +40,19 @@ public abstract class Resources {
 //            nopaypal = ImageIO.read(new File("nopaypal.jpg"));
 //            loading = ImageIO.read(new File("loading.png"));            
             file = "loading.png";
-            loadingTmp = ImageIO.read(DocZ.class.getResource("/loading.png"));
+            loadingTmp = ImageIO.read(DocZMainFrame.class.getResource("/loading.png"));
             file = "nofiles.png";
-            nofilesTmp = ImageIO.read(DocZ.class.getResource("/nofiles.png"));
+            nofilesTmp = ImageIO.read(DocZMainFrame.class.getResource("/nofiles.png"));
             file = "pdf.png";
-            pdfTmp = ImageIO.read(DocZ.class.getResource("/pdf.png"));
+            pdfTmp = ImageIO.read(DocZMainFrame.class.getResource("/pdf.png"));
             file = "otherfile.png";
-            otherfileTmp = ImageIO.read(DocZ.class.getResource("/otherfile.png"));
+            otherfileTmp = ImageIO.read(DocZMainFrame.class.getResource("/otherfile.png"));
             file = "doc.png";
-            docTmp = ImageIO.read(DocZ.class.getResource("/doc.png"));
+            docTmp = ImageIO.read(DocZMainFrame.class.getResource("/doc.png"));
             file = "institution.png";
-            institutionTmp = ImageIO.read(DocZ.class.getResource("/institution.png"));
+            institutionTmp = ImageIO.read(DocZMainFrame.class.getResource("/institution.png"));
             file = "relation.png";
-            relationTmp = ImageIO.read(DocZ.class.getResource("/relation.png"));
+            relationTmp = ImageIO.read(DocZMainFrame.class.getResource("/relation.png"));
         } catch (IOException ex) {
             Log.l(ex);
         }

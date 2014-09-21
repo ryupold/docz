@@ -29,45 +29,29 @@ public class DataHandler {
     private DataHandler() {
         init();
     }
-    
-    public void init(){
-        File databaseFile = new File(DB.getDBPath());
 
-        if (!databaseFile.exists()) {
-            try {
-                if(testConnection()){
-                    createTables();
-                    Log.l("new DB file created successfully.");
-                }
-                else{
-                    Log.l("no DB file could be created, password is needed!");
-                }
-            } catch (SQLException ex) {
-                Log.l(ex);
+    public void init() {
+        File databaseFile = new File(DB.getDBPath());
+        
+        try {
+            if (testConnection()) {
+                createTables();
+                Log.l("connection to database established successfully.");
+            } else {
+                Log.l("no DB file could be created, password is needed!");
             }
-        } else {
-            try {
-                if(testConnection()){
-                    Log.l("DB file loaded successfully.");
-                }
-                else{
-                    Log.l("DB file loaded, password is needed!");
-                }
-            } catch (SQLException ex) {
-                Log.l(ex);
-            }
+        } catch (SQLException ex) {
+            Log.l(ex);
         }
     }
-    
-    public boolean testConnection() throws SQLException{
+
+    public boolean testConnection() throws SQLException {
         try {
             DB.createConnection().close();
             return true;
         } catch (SQLException ex) {
-            Log.l("database not available");
             throw ex;
-        }
-        catch(SecurityException se){
+        } catch (SecurityException se) {
             return false;
         }
     }
@@ -128,35 +112,6 @@ public class DataHandler {
         }
     }
 
-    public synchronized void addDoc(Doc doc) {
-
-    }
-
-    public synchronized void addRelation(Relation relation) {
-
-    }
-
-    public synchronized void addInstitution(Institution institution) {
-
-    }
-
-    public synchronized void removeDoc(Doc doc) {
-
-    }
-
-    public synchronized void removeRelation(Relation relation) {
-
-    }
-
-    public synchronized void removeInstitution(Institution institution) {
-
-    }
-
-    public synchronized void save() {
-
-    }
-
-  
     /**
      * currently only working for title, description,
      *
@@ -198,7 +153,7 @@ public class DataHandler {
             if (docsAllowed ^ institutionsAllowed) {
                 sql += (searchWords.length > 0 ? " AND " : "") + (docsAllowed ? "type='1'" : "type='2'");
             }
-            
+
             DB.DBResult r = DB.select(sql);
             while (r.resultSet.next()) {
                 long id = r.resultSet.getLong(1);
@@ -211,7 +166,7 @@ public class DataHandler {
 
                 String tmpSQL = "SELECT tag FROM tags where id='" + id + "'";
                 DB.DBResult tagR = DB.select(tmpSQL);
-                
+
                 while (tagR.resultSet.next()) {
                     tags.add(tagR.resultSet.getString(1));
                 }
@@ -235,5 +190,4 @@ public class DataHandler {
         return DB.getDBPath();
     }
 
-    
 }

@@ -13,6 +13,8 @@ import java.sql.SQLException;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
+import javax.swing.JScrollPane;
+import org.h2.tools.ChangeFileEncryption;
 
 /**
  *
@@ -96,6 +98,7 @@ public class DocZMainFrame extends javax.swing.JFrame {
         ckbTags = new javax.swing.JCheckBox();
         ckbInstitutions = new javax.swing.JCheckBox();
         contentPanel = new docz.ContentPanel();
+        btnChangePW = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -136,6 +139,13 @@ public class DocZMainFrame extends javax.swing.JFrame {
 
         contentPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Search Results"));
 
+        btnChangePW.setText("Change database PW");
+        btnChangePW.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnChangePWActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -153,7 +163,8 @@ public class DocZMainFrame extends javax.swing.JFrame {
                                 .addComponent(ckbRelations)
                                 .addGap(18, 18, 18)
                                 .addComponent(ckbInstitutions))
-                            .addComponent(ckbTags))
+                            .addComponent(ckbTags)
+                            .addComponent(btnChangePW))
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addGap(18, 18, 18)
                 .addComponent(contentPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 833, Short.MAX_VALUE)
@@ -174,6 +185,8 @@ public class DocZMainFrame extends javax.swing.JFrame {
                             .addComponent(ckbInstitutions))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(ckbTags)
+                        .addGap(18, 18, 18)
+                        .addComponent(btnChangePW)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(btnAdd)))
                 .addContainerGap())
@@ -190,12 +203,8 @@ public class DocZMainFrame extends javax.swing.JFrame {
         if (evt.getKeyChar() == '\n') {
             try {
                 Entity[] findings = DataHandler.instance.search(txtSearch.getText().split(" "), ckbDocs.isSelected(), ckbInstitutions.isSelected(), ckbRelations.isSelected(), ckbTags.isSelected());
-                ((CardLayout) contentPanel.getLayout()).show(contentPanel, "card4");
-                for (Component c : contentPanel.getComponents()) {
-                    if (c instanceof SearchResultsPanel) {
-                        ((SearchResultsPanel) c).showResults(findings, null);
-                    }
-                }
+                ((CardLayout) contentPanel.getLayout()).show(contentPanel, "card2");
+                contentPanel.getSearchResultPanel().showResults(findings, null);                    
             } catch (SQLException ex) {
                 Log.l(ex);
             }
@@ -208,6 +217,14 @@ public class DocZMainFrame extends javax.swing.JFrame {
         addDialog.dispose();
         System.gc();
     }//GEN-LAST:event_btnAddActionPerformed
+
+    private void btnChangePWActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnChangePWActionPerformed
+        ChangePassword pwDialog = new ChangePassword(this, true);
+        pwDialog.setVisible(true);
+        pwDialog.dispose();
+        System.gc();
+        DataHandler.instance.init();
+    }//GEN-LAST:event_btnChangePWActionPerformed
 
     /**
      * @param args the command line arguments
@@ -246,6 +263,7 @@ public class DocZMainFrame extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAdd;
+    private javax.swing.JButton btnChangePW;
     private javax.swing.JCheckBox ckbDocs;
     private javax.swing.JCheckBox ckbInstitutions;
     private javax.swing.JCheckBox ckbRelations;

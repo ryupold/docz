@@ -15,6 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.h2.tools.ChangeFileEncryption;
 
 /**
  *
@@ -24,8 +25,8 @@ public abstract class DB {
 
     private static final String dbPath = "db/db";
     private static String pw = null;
-    
-    protected static void setPW(String pw){
+
+    protected static void setPW(String pw) {
         DB.pw = pw;
     }
 
@@ -92,16 +93,16 @@ public abstract class DB {
         st.execute(sql, returnAutoIncrementKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
 
         List<Long> generatedKeys = null;
-        
+
         if (returnAutoIncrementKeys) {
-             generatedKeys = new LinkedList<>();
+            generatedKeys = new LinkedList<>();
             try (ResultSet grs = st.getGeneratedKeys()) {
-                while(grs.next()){
+                while (grs.next()) {
                     generatedKeys.add(grs.getLong(1));
                 }
             }
         }
-        
+
         c.commit();
         st.close();
         c.close();
@@ -133,16 +134,33 @@ public abstract class DB {
     }
 
     public static Connection createConnection() throws SQLException {
-        if(pw != null)
-        {
-            Connection c = DriverManager.getConnection("jdbc:h2:file:" + new File(dbPath).getAbsolutePath() +";CIPHER=AES", "sa", pw+" "+pw);
+        if (pw != null) {
+            Connection c = DriverManager.getConnection("jdbc:h2:file:" + new File(dbPath).getAbsolutePath() + ";CIPHER=AES", "sa", pw + " " + "password");
             return c;
         }
-        
+
         throw new SecurityException("no password entered!");
     }
 
-    public static class DBResult implements AutoCloseable{
+    public static boolean changePW(String oldPW, String newPW) throws SQLException {
+        if (oldPW != null && newPW != null) {
+            try {
+                ChangeFileEncryption.execute(new File(DB.getDBPath()).getParent(), null, "AES", oldPW.toCharArray(), newPW.toCharArray(), false);
+                DB.setPW(newPW);
+                return true;
+            } catch (SQLException sqlex) {
+                if (sqlex.getMessage().contains("Encryption error")) {
+                    return false;
+                } else {
+                    throw sqlex;
+                }
+            }
+        }
+
+        throw new SecurityException("no password entered!");
+    }
+
+    public static class DBResult implements AutoCloseable {
 
         public final Connection connection;
         public final Statement statement;

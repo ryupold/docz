@@ -6,18 +6,24 @@
 
 package docz;
 
+import java.awt.CardLayout;
+
 /**
  *
  * @author Michael
  */
 public class ContentPanel extends javax.swing.JPanel {
-
+    
+    public SearchResultsPanel getSearchResultPanel(){
+        return (SearchResultsPanel)pnlSearchResults;
+    }
+    
     /**
      * Creates new form ContentPanel
      */
     public ContentPanel() {
         initComponents();
-        
+        getSearchResultPanel().setContentPanel(this);
     }
 
     /**
@@ -29,7 +35,9 @@ public class ContentPanel extends javax.swing.JPanel {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jScrollPane2 = new javax.swing.JScrollPane();
         pnlSearchResults = new SearchResultsPanel();
+        jScrollPane3 = new javax.swing.JScrollPane();
         pnlPreview = new javax.swing.JPanel();
         jPanel1 = new javax.swing.JPanel();
         lblPreviewTitle = new javax.swing.JLabel();
@@ -37,9 +45,12 @@ public class ContentPanel extends javax.swing.JPanel {
         jScrollPane1 = new javax.swing.JScrollPane();
         txaPreviewDescription = new javax.swing.JTextArea();
         jLabel1 = new javax.swing.JLabel();
+        jScrollPane4 = new javax.swing.JScrollPane();
         pnlDocOverview = new javax.swing.JPanel();
 
         setLayout(new java.awt.CardLayout());
+
+        jScrollPane2.setHorizontalScrollBar(null);
 
         javax.swing.GroupLayout pnlSearchResultsLayout = new javax.swing.GroupLayout(pnlSearchResults);
         pnlSearchResults.setLayout(pnlSearchResultsLayout);
@@ -52,7 +63,9 @@ public class ContentPanel extends javax.swing.JPanel {
             .addGap(0, 697, Short.MAX_VALUE)
         );
 
-        add(pnlSearchResults, "card4");
+        jScrollPane2.setViewportView(pnlSearchResults);
+
+        add(jScrollPane2, "card2");
 
         jPanel1.setBackground(new java.awt.Color(0, 0, 0));
 
@@ -64,7 +77,7 @@ public class ContentPanel extends javax.swing.JPanel {
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 489, Short.MAX_VALUE)
+            .addGap(0, 508, Short.MAX_VALUE)
         );
 
         lblPreviewTitle.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
@@ -92,7 +105,7 @@ public class ContentPanel extends javax.swing.JPanel {
                     .addComponent(jScrollPane1)
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(pnlPreviewLayout.createSequentialGroup()
-                        .addComponent(lblPreviewTitle, javax.swing.GroupLayout.DEFAULT_SIZE, 705, Short.MAX_VALUE)
+                        .addComponent(lblPreviewTitle, javax.swing.GroupLayout.DEFAULT_SIZE, 713, Short.MAX_VALUE)
                         .addGap(18, 18, 18)
                         .addComponent(lblPreviewDate, javax.swing.GroupLayout.PREFERRED_SIZE, 227, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -114,7 +127,11 @@ public class ContentPanel extends javax.swing.JPanel {
                 .addContainerGap())
         );
 
-        add(pnlPreview, "card3");
+        jScrollPane3.setViewportView(pnlPreview);
+
+        add(jScrollPane3, "card3");
+
+        jScrollPane4.setDoubleBuffered(true);
 
         javax.swing.GroupLayout pnlDocOverviewLayout = new javax.swing.GroupLayout(pnlDocOverview);
         pnlDocOverview.setLayout(pnlDocOverviewLayout);
@@ -127,7 +144,9 @@ public class ContentPanel extends javax.swing.JPanel {
             .addGap(0, 697, Short.MAX_VALUE)
         );
 
-        add(pnlDocOverview, "card2");
+        jScrollPane4.setViewportView(pnlDocOverview);
+
+        add(jScrollPane4, "card4");
     }// </editor-fold>//GEN-END:initComponents
 
 
@@ -135,6 +154,9 @@ public class ContentPanel extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JLabel lblPreviewDate;
     private javax.swing.JLabel lblPreviewTitle;
     private javax.swing.JPanel pnlDocOverview;

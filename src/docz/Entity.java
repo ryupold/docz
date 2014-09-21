@@ -7,8 +7,11 @@ package docz;
 
 import de.realriu.riulib.helpers.ScaleImage;
 import de.realriu.riulib.helpers.ScaleImage.Rectangle;
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.awt.image.RescaleOp;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,6 +22,7 @@ import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.text.AttributedCharacterIterator;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
@@ -211,8 +215,7 @@ public class Entity {
     }
 
     /**
-     * returns a representive thumbnail of the Doc by taking one of the attached
-     * image files. if there is no image linked to this document,
+     * returns a representive thumbnail of the Doc by taking one of the attached image files. if there is no image linked to this document,
      * Resources.img_other is returned.
      *
      * @param preferedWidth
@@ -228,8 +231,8 @@ public class Entity {
                 + "name like '%.bmp' or "
                 + "name like '%.wbmp' or "
                 + "name like '%.gif'"
-                + ") limit 1;");        
-        
+                + ") limit 1;");
+
         try {
 
             if (r.resultSet.next()) {
@@ -250,7 +253,21 @@ public class Entity {
                     }
                 }
             } else {
-                return Resources.getImg_otherfile();
+                r.close();
+                r = DB.select("select name from files where id='" + id + "' limit 1;");
+                if (r.resultSet.next()) {
+                    BufferedImage img = new BufferedImage(preferedWidth, preferedHeight/4, BufferedImage.TYPE_4BYTE_ABGR);
+                    Graphics2D g = (Graphics2D)img.getGraphics();
+//                    g.setColor(Color.black);
+//                    g.fillRect(0, 0, img.getWidth(), img.getHeight());
+                    g.setColor(Color.red);
+                    g.drawString(r.resultSet.getString(1), 10, img.getHeight()/2 + 5);
+                    //Rectangle newSize = ScaleImage.fitToRect(preferedWidth, preferedHeight, img);
+                    //img = ScaleImage.scale(img, newSize.width, newSize.heigth);
+                    return img;
+                } else {
+                    return Resources.getImg_nofiles();
+                }
             }
         } finally {
             r.close();
