@@ -3,16 +3,14 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/D:/Stuff/Proggen/DocZ/build.xml</file>
-            <file>file:/D:/Stuff/Proggen/DocZ/src/docz/ContentPanel.java</file>
-            <file>file:/D:/Stuff/Proggen/DocZ/src/docz/ImagePanel.java</file>
-            <file>file:/D:/Stuff/Proggen/DocZ/src/docz/SearchResultsPanel.java</file>
-            <file>file:/D:/Stuff/Proggen/DocZ/src/docz/DocZMainFrame.java</file>
-            <file>file:/D:/Stuff/Proggen/DocZ/src/docz/Entity.java</file>
-            <file>file:/D:/Stuff/Proggen/DocZ/src/docz/DB.java</file>
-            <file>file:/D:/Stuff/Proggen/DocZ/src/docz/AddDialog.java</file>
-            <file>file:/D:/Stuff/Proggen/DocZ/src/docz/ImageList.java</file>
-            <file>file:/D:/Stuff/Proggen/DocZ/src/docz/DataHandler.java</file>
+            <file>file:/C:/Stuff/Proggn/DocZ/src/docz/Resources.java</file>
+            <file>file:/C:/Stuff/Proggn/DocZ/src/docz/DataHandler.java</file>
+            <file>file:/C:/Stuff/Proggn/DocZ/src/docz/AddDialog.java</file>
+            <file>file:/C:/Stuff/Proggn/DocZ/src/docz/SearchResultsPanel.java</file>
+            <file>file:/C:/Stuff/Proggn/DocZ/src/docz/DB.java</file>
+            <file>file:/C:/Stuff/Proggn/DocZ/src/docz/ContentPanel.java</file>
+            <file>file:/C:/Stuff/Proggn/DocZ/src/docz/ImagePanel.java</file>
+            <file>file:/C:/Stuff/Proggn/DocZ/src/docz/Entity.java</file>
         </group>
     </open-files>
 </project-private>

@@ -31,7 +31,7 @@ import javax.imageio.ImageIO;
  *
  * @author Michael
  */
-public class Entity implements Thumbnail{
+public class Entity implements Thumbnail {
 
     protected long id;
     protected int type = 0;
@@ -75,19 +75,18 @@ public class Entity implements Thumbnail{
     public void setDate(Date date) {
         this.date = date;
     }
-    
-    public String getTagsAsString(){
+
+    public String getTagsAsString() {
         String tagsString = "";
         boolean first = true;
-        for(String t : tags){
-            if(first){
+        for (String t : tags) {
+            if (first) {
                 first = false;
-            }
-            else{
+            } else {
                 tagsString += ", ";
-                        }
-                tagsString += t;
-        }        
+            }
+            tagsString += t;
+        }
         return tagsString;
     }
 
@@ -108,7 +107,7 @@ public class Entity implements Thumbnail{
         int fn = 0;
         for (File file : files) {
             fn = 0;
-            while (fileNames.contains(file.getName())) {
+            while (fileNames.contains((fn == 0 ? "" : "d" + fn + "_") + file.getName())) {
                 fn++;
             }
 
@@ -217,8 +216,35 @@ public class Entity implements Thumbnail{
             DB.DBResult r = DB.select("select name, created, file from files where id='" + id + "'");
             List<ImageFile> imgs = new LinkedList<>();
             while (r.resultSet.next()) {
-                byte[] bytes = r.resultSet.getBytes(4);
+                byte[] bytes = r.resultSet.getBytes(3);
                 imgs.add(new ImageFile(this, r.resultSet.getString(1), new Date(r.resultSet.getLong(2)), ImageIO.read(new ByteArrayInputStream(bytes))));
+            }
+            r.close();
+            return images = imgs.toArray(new ImageFile[imgs.size()]);
+        } catch (SQLException ex) {
+            Log.l(ex);
+            return null;
+        }
+    }
+
+    public ImageFile[] getThumbnails(int preferedWidth, int preferedHeight) throws IOException {
+        try {
+            DB.DBResult r = DB.select("select name, created, file from files where id='" + id + "'");
+            List<ImageFile> imgs = new LinkedList<>();
+            while (r.resultSet.next()) {
+                BufferedImage sImg;
+                try{
+                byte[] bytes = r.resultSet.getBytes(3);
+                ByteArrayInputStream bias = new ByteArrayInputStream(bytes);
+                sImg = ImageIO.read(bias);
+                bias.close();
+                Rectangle rec = ScaleImage.fitToRect(preferedWidth, preferedHeight, sImg);
+                sImg = ScaleImage.scale(sImg, rec.width, rec.heigth);
+                }catch(IllegalArgumentException iae){
+                    sImg = Resources.createImageWithText(r.resultSet.getString(1), preferedWidth, preferedHeight/2);
+                }
+                imgs.add(new ImageFile(this, r.resultSet.getString(1), new Date(r.resultSet.getLong(2)), sImg));
+                
             }
             r.close();
             return images = imgs.toArray(new ImageFile[imgs.size()]);
@@ -270,12 +296,12 @@ public class Entity implements Thumbnail{
                 r.close();
                 r = DB.select("select name from files where id='" + id + "' limit 1;");
                 if (r.resultSet.next()) {
-                    BufferedImage img = new BufferedImage(preferedWidth, preferedHeight/4, BufferedImage.TYPE_4BYTE_ABGR);
-                    Graphics2D g = (Graphics2D)img.getGraphics();
+                    BufferedImage img = new BufferedImage(preferedWidth, preferedHeight / 4, BufferedImage.TYPE_4BYTE_ABGR);
+                    Graphics2D g = (Graphics2D) img.getGraphics();
 //                    g.setColor(Color.black);
 //                    g.fillRect(0, 0, img.getWidth(), img.getHeight());
                     g.setColor(Color.red);
-                    g.drawString(r.resultSet.getString(1), 10, img.getHeight()/2 + 5);
+                    g.drawString(r.resultSet.getString(1), 10, img.getHeight() / 2 + 5);
                     //Rectangle newSize = ScaleImage.fitToRect(preferedWidth, preferedHeight, img);
                     //img = ScaleImage.scale(img, newSize.width, newSize.heigth);
                     return img;
@@ -285,6 +311,33 @@ public class Entity implements Thumbnail{
             }
         } finally {
             r.close();
+        }
+    }
+
+    public Image getThumbnail(String name, int preferedWidth, int preferedHeight) throws SQLException {
+        try (DB.DBResult r = DB.select("select name, file from files where id='" + id + "' and name='" + name + "'")) {
+
+            if (r.resultSet.next()) {
+                String fileName = r.resultSet.getString(1);
+                if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".bmp") || fileName.endsWith(".wbmp") || fileName.endsWith(".gif") || fileName.endsWith(".png")) {
+                    try {
+                        byte[] buffer = r.resultSet.getBytes(2);
+                        ByteArrayInputStream bais = new ByteArrayInputStream(buffer);
+                        BufferedImage img = ImageIO.read(bais);
+                        Rectangle newSize = ScaleImage.fitToRect(preferedWidth, preferedHeight, img);
+                        img = ScaleImage.scale(img, newSize.width, newSize.heigth);
+                        bais.close();
+                        return img;
+                    } catch (IOException ex) {
+                        return Resources.createImageWithText(name, preferedWidth, preferedHeight);
+                    }
+                }
+                else{
+                    return Resources.createImageWithText(name, preferedWidth, preferedHeight);
+                }
+            } else {
+                return Resources.getImg_nofiles();
+            }
         }
     }
 

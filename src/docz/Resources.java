@@ -5,7 +5,10 @@
  */
 package docz;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -143,6 +146,24 @@ public abstract class Resources {
             Log.l(ex);
             return false;
         }
+    }
+
+    public static BufferedImage createImageWithText(String text, int x, int y, int width, int height, Color textColor, Color background) {
+        BufferedImage img = new BufferedImage(width, height / 4, BufferedImage.TYPE_4BYTE_ABGR);
+        Graphics2D g = (Graphics2D) img.getGraphics();
+        g.setColor(background);
+        g.fillRect(0, 0, width, height);
+        g.setColor(textColor);
+        g.drawString(text, x, y);
+        return img;
+    }
+    
+    public static BufferedImage createImageWithText(String text, int width, int height, Color textColor, Color background) {
+        return createImageWithText(text, 10, height / 2 + 5, width, height, textColor, background);
+    }
+    
+    public static BufferedImage createImageWithText(String text, int width, int height) {
+        return createImageWithText(text, 10, height / 2 + 5, width, height, Color.red, Color.black);
     }
 
 }
