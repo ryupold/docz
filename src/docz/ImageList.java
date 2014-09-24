@@ -53,7 +53,9 @@ public class ImageList extends javax.swing.JPanel {
                                 && p.y > bounds[i].y && p.y < bounds[i].y + bounds[i].heigth) {
                             hit = true;
                             hoveredIndex = i;
-                            listener.imageHovered(hoveredIndex);
+                            if (listener != null) {
+                                listener.imageHovered(hoveredIndex);
+                            }
                         }
                     }
 
@@ -174,6 +176,9 @@ public class ImageList extends javax.swing.JPanel {
             for (int i = 0; i < images.length; i++) {
                 g.drawRect(bounds[i].x, bounds[i].y, bounds[i].width, bounds[i].heigth);
                 g.drawImage(images[i], bounds[i].x + rects[i].x, bounds[i].y + rects[i].y, this);
+                double shorteningFactor = g.getFontMetrics().stringWidth(names[i])*1.0/preferedWidth;
+                names[i] = shorteningFactor <= 1.0 ? names[i] : (names[i].length()>= (int)(names.length/shorteningFactor) ? names[i].substring(0, (int)(names.length/shorteningFactor)) : names[i]);
+                g.drawString(names[i], bounds[i].x, bounds[i].y + bounds[i].heigth + 12);
             }
         }
 
