@@ -14,15 +14,11 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
@@ -435,8 +431,10 @@ public class ContentPanel extends javax.swing.JPanel {
     private void btnRemoveFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRemoveFileActionPerformed
         if (fileList.getSelectedImageIndex() >= 0) {
             try {
-                DB.update("delete from files where name='" + fileList.getImageTitle(fileList.getSelectedImageIndex()) + "';");
-                fileList.removeImage(fileList.getSelectedImageIndex());
+                if (currentEntity.removeFile(fileList.getImageTitle(fileList.getSelectedImageIndex()))) {
+                    fileList.removeImage(fileList.getSelectedImageIndex());
+                }
+
             } catch (SQLException ex) {
                 Log.l(ex);
             }
@@ -477,42 +475,8 @@ public class ContentPanel extends javax.swing.JPanel {
                         g.drawString(f.getName(), 10, img.getHeight() / 2 + 5);
                     }
 
-                    //generate unique file name
-                    String fileName = f.getName();
-                    List<String> fileNames = new ArrayList<>(currentEntity.getImages().length);
-                    for (ImageFile ifile : currentEntity.getImages()) {
-                        fileNames.add(ifile.name);
-                    }
-
-                    int fn = 0;
-                    while (fileNames.contains((fn == 0 ? "" : "d" + fn + "_") + fileName)) {
-                        fn++;
-                    }
-
-                    if (fn == 0) {
-                        fileNames.add(fileName);
-                    } else {
-                        fileNames.add("d" + fn + "_" + fileName);
-                    }
-
-                    //write file to DB
-                    Connection c = DB.createConnection();
-                    PreparedStatement ps = c.prepareStatement("insert into files(id, name, created, file) values(?, ?, ?, ?)");
-                    FileInputStream fi = new FileInputStream(f);
-                    byte[] buf = new byte[fi.available()];
-                    fi.read(buf);
-                    fi.close();
-
-                    ps.setLong(1, currentEntity.id);
-                    ps.setString(2, f.getName());
-                    ps.setLong(3, new Date().getTime());
-                    ps.setBytes(4, buf);
-                    ps.execute();
-
-                    ps.close();
-
                     //add image to file list
-                    fileList.addImage(img, fileName);
+                    fileList.addImage(img, currentEntity.addFiles(f)[0]);
 
                     lastPath = f.getParentFile().getPath();
                 } catch (Exception ex) {

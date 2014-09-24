@@ -10,8 +10,6 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -32,7 +30,7 @@ public class DataHandler {
 
     public void init() {
         File databaseFile = new File(DB.getDBPath());
-        
+
         try {
             if (testConnection()) {
                 createTables();
@@ -55,18 +53,18 @@ public class DataHandler {
             return false;
         }
     }
-    
-    public void updateEntity(Entity entityWithNewValues){
+
+    public void updateEntity(Entity entityWithNewValues) {
         try {
-            if(DB.update("update entities set "
-                    + "title='"+entityWithNewValues.title+"', "
-                    + "description='"+entityWithNewValues.description+"', "
-                    + "date='"+entityWithNewValues.date.getTime()+"' "
-                    + "where id='"+entityWithNewValues.id+"';"
-            ) > 0){
-                DB.update("delete from tags where id='"+entityWithNewValues.id+"'");
-                for(String t : entityWithNewValues.tags){
-                    DB.insert("insert into tags(id, tag) values('"+entityWithNewValues.id+"', '"+t+"');", false);
+            if (DB.update("update entities set "
+                    + "title='" + entityWithNewValues.title + "', "
+                    + "description='" + entityWithNewValues.description + "', "
+                    + "date='" + entityWithNewValues.date.getTime() + "' "
+                    + "where id='" + entityWithNewValues.id + "';"
+            ) > 0) {
+                DB.update("delete from tags where id='" + entityWithNewValues.id + "'");
+                for (String t : entityWithNewValues.tags) {
+                    DB.insert("insert into tags(id, tag) values('" + entityWithNewValues.id + "', '" + t + "');", false);
                 }
             }
         } catch (SQLException ex) {
@@ -129,6 +127,7 @@ public class DataHandler {
             Log.l(ex);
         }
     }
+
 
     /**
      * currently only working for title, description,

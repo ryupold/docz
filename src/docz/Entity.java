@@ -166,9 +166,15 @@ public class Entity implements Thumbnail {
         return DB.update("delete from files where name='" + name + "' and id='" + this.id + "'") > 0;
     }
 
-    public void addFiles(File... files) throws SQLException, IOException {
+    public String[] addFiles(File... files) throws SQLException, IOException {
 
         List<String> fileNames = new ArrayList<>();
+        try (DB.DBResult r = DB.select("SELECT name from files where id='" + id + "';")) {
+            while(r.resultSet.next()){
+                fileNames.add(r.resultSet.getString(1));
+            }
+        }
+        
         int fn = 0;
         for (File file : files) {
             fn = 0;
@@ -209,6 +215,8 @@ public class Entity implements Thumbnail {
             ps.close();
             c.close();
         }
+        
+        return fileNames.toArray(new String[fileNames.size()]);
     }
 
     public ImageFile[] getImages() throws IOException {
@@ -233,18 +241,18 @@ public class Entity implements Thumbnail {
             List<ImageFile> imgs = new LinkedList<>();
             while (r.resultSet.next()) {
                 BufferedImage sImg;
-                try{
-                byte[] bytes = r.resultSet.getBytes(3);
-                ByteArrayInputStream bias = new ByteArrayInputStream(bytes);
-                sImg = ImageIO.read(bias);
-                bias.close();
-                Rectangle rec = ScaleImage.fitToRect(preferedWidth, preferedHeight, sImg);
-                sImg = ScaleImage.scale(sImg, rec.width, rec.heigth);
-                }catch(IllegalArgumentException iae){
-                    sImg = Resources.createImageWithText(r.resultSet.getString(1), preferedWidth, preferedHeight/2);
+                try {
+                    byte[] bytes = r.resultSet.getBytes(3);
+                    ByteArrayInputStream bias = new ByteArrayInputStream(bytes);
+                    sImg = ImageIO.read(bias);
+                    bias.close();
+                    Rectangle rec = ScaleImage.fitToRect(preferedWidth, preferedHeight, sImg);
+                    sImg = ScaleImage.scale(sImg, rec.width, rec.heigth);
+                } catch (IllegalArgumentException iae) {
+                    sImg = Resources.createImageWithText(r.resultSet.getString(1), preferedWidth, preferedHeight / 2);
                 }
                 imgs.add(new ImageFile(this, r.resultSet.getString(1), new Date(r.resultSet.getLong(2)), sImg));
-                
+
             }
             r.close();
             return images = imgs.toArray(new ImageFile[imgs.size()]);
@@ -331,8 +339,7 @@ public class Entity implements Thumbnail {
                     } catch (IOException ex) {
                         return Resources.createImageWithText(name, preferedWidth, preferedHeight);
                     }
-                }
-                else{
+                } else {
                     return Resources.createImageWithText(name, preferedWidth, preferedHeight);
                 }
             } else {
