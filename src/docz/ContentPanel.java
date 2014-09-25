@@ -45,7 +45,29 @@ public class ContentPanel extends javax.swing.JPanel {
      */
     public ContentPanel() {
         initComponents();
-        getSearchResultPanel().setContentPanel(this);
+        imlSearchResults.setImageListListener(new ImageList.ImageListListener() {
+
+            @Override
+            public void imageHovered(int index) {
+                
+            }
+
+            @Override
+            public void imageSelected(int index) {
+                
+            }
+
+            @Override
+            public void doubleClicked(int index) {
+                try {
+                    showPreview((Entity)imlSearchResults.getThumbnails()[imlSearchResults.getSelectedIndex()]);
+                } catch (SQLException ex) {
+                    Log.l(ex);
+                }
+            }
+        });
+        
+        
         fileList.addImageListListener(new ImageListAdapter<Image>() {
 
             @Override
@@ -63,12 +85,9 @@ public class ContentPanel extends javax.swing.JPanel {
         });
     }
 
-    private SearchResultsPanel getSearchResultPanel() {
-        return (SearchResultsPanel) pnlSearchResults;
-    }
 
-    public void showResults(Entity[] resultEntities) throws SQLException {
-        getSearchResultPanel().showResults(resultEntities);
+    public void showResults(Entity[] resultEntities) throws SQLException, Exception {
+        imlSearchResults.setThumbnails(resultEntities);
         ((CardLayout) getLayout()).show(this, "card2");
     }
 
@@ -109,7 +128,7 @@ public class ContentPanel extends javax.swing.JPanel {
 
         jRadioButton1 = new javax.swing.JRadioButton();
         scrSearchResults = new javax.swing.JScrollPane();
-        pnlSearchResults = new SearchResultsPanel();
+        imlSearchResults = new docz.ImageList();
         pnlDocOverview = new javax.swing.JPanel();
         pnlPreview = imgPreview = new ImagePanel();
         imgListPreviewFiles = fileList = new ScaledImageList(Alignment.Horizontal, true, 150, 150);
@@ -139,18 +158,18 @@ public class ContentPanel extends javax.swing.JPanel {
 
         scrSearchResults.setHorizontalScrollBar(null);
 
-        javax.swing.GroupLayout pnlSearchResultsLayout = new javax.swing.GroupLayout(pnlSearchResults);
-        pnlSearchResults.setLayout(pnlSearchResultsLayout);
-        pnlSearchResultsLayout.setHorizontalGroup(
-            pnlSearchResultsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        javax.swing.GroupLayout imlSearchResultsLayout = new javax.swing.GroupLayout(imlSearchResults);
+        imlSearchResults.setLayout(imlSearchResultsLayout);
+        imlSearchResultsLayout.setHorizontalGroup(
+            imlSearchResultsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 1078, Short.MAX_VALUE)
         );
-        pnlSearchResultsLayout.setVerticalGroup(
-            pnlSearchResultsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        imlSearchResultsLayout.setVerticalGroup(
+            imlSearchResultsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 846, Short.MAX_VALUE)
         );
 
-        scrSearchResults.setViewportView(pnlSearchResults);
+        scrSearchResults.setViewportView(imlSearchResults);
 
         add(scrSearchResults, "card2");
 
@@ -499,6 +518,7 @@ public class ContentPanel extends javax.swing.JPanel {
     private javax.swing.JButton btnRemoveRelation;
     private javax.swing.JPanel imgListPreviewFiles;
     private docz.ImageList imlRelatedWith;
+    private docz.ImageList imlSearchResults;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JRadioButton jRadioButton1;
     private javax.swing.JScrollPane jScrollPane1;
@@ -508,7 +528,6 @@ public class ContentPanel extends javax.swing.JPanel {
     private javax.swing.JLabel lblRelationTitle;
     private javax.swing.JPanel pnlDocOverview;
     private javax.swing.JPanel pnlPreview;
-    private javax.swing.JPanel pnlSearchResults;
     private javax.swing.JScrollPane scrRelatedWith;
     private javax.swing.JScrollPane scrSearchResults;
     private javax.swing.JTextArea txaPreviewDescription;

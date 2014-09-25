@@ -14,4 +14,5 @@ import java.awt.Image;
 public interface Thumbnail {
     Image getThumbnail(int preferedWidth, int preferedHeight) throws Exception;
     String getTitle();
+    String getDescription();
 }
