@@ -32,7 +32,7 @@ public class Institution extends Entity {
     }
 
     public static Institution createInstitution(String title, String description, List<String> tags, List<File> files) throws SQLException, FileNotFoundException, IOException {
-        return new Institution(Entity.createEntity(title, description, tags, null, files, 2));
+        return new Institution(DataHandler.instance.createEntity(title, description, tags, null, files, 2));
     }
 
     @Override

@@ -33,7 +33,7 @@ public class Doc extends Entity {
     }
 
     public static Doc createDoc(String title, String description, List<String> tags, Date date, List<File> files) throws SQLException, FileNotFoundException, IOException {
-        return new Doc(Entity.createEntity(title, description, tags, date, files, 1));
+        return new Doc(DataHandler.instance.createEntity(title, description, tags, date, files, 1));
     }
 
     @Override
