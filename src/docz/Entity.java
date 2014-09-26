@@ -16,8 +16,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -38,7 +36,7 @@ public class Entity implements Thumbnail {
     protected String title, description;
     protected List<String> tags;
     protected Date date, created;
-    protected ImageFile[] images;
+    //protected ImageFile[] images;
 
     public Date getCreated() {
         return created;
@@ -170,11 +168,11 @@ public class Entity implements Thumbnail {
 
         List<String> fileNames = new ArrayList<>();
         try (DB.DBResult r = DB.select("SELECT name from files where id='" + id + "';")) {
-            while(r.resultSet.next()){
+            while (r.resultSet.next()) {
                 fileNames.add(r.resultSet.getString(1));
             }
         }
-        
+
         int fn = 0;
         for (File file : files) {
             fn = 0;
@@ -193,42 +191,62 @@ public class Entity implements Thumbnail {
         PreparedStatement ps = c.prepareStatement("insert into files(id, name, created, file) values(?, ?, ?, ?)");
         try {
             for (int i = 0; i < files.length; i++) {
-
-                Blob b = c.createBlob();
-                OutputStream os = b.setBinaryStream(0);
                 FileInputStream fi = new FileInputStream(files[i]);
-                byte[] buf = new byte[1024];
-                int len;
-                while ((len = fi.read(buf)) > 0) {
-                    os.write(buf, 0, len);
-                }
-                fi.close();
-                os.close();
-
                 ps.setLong(1, this.id);
                 ps.setString(2, fileNames.get(i));
                 ps.setLong(3, created.getTime());
-                ps.setBlob(4, b);
+                ps.setBinaryStream(4, fi);
                 ps.execute();
             }
         } finally {
             ps.close();
             c.close();
         }
-        
+
         return fileNames.toArray(new String[fileNames.size()]);
     }
 
-    public ImageFile[] getImages() throws IOException {
+    public int countFiles() throws IOException {
+        int count = 0;
         try {
-            DB.DBResult r = DB.select("select name, created, file from files where id='" + id + "'");
-            List<ImageFile> imgs = new LinkedList<>();
-            while (r.resultSet.next()) {
-                byte[] bytes = r.resultSet.getBytes(3);
-                imgs.add(new ImageFile(this, r.resultSet.getString(1), new Date(r.resultSet.getLong(2)), ImageIO.read(new ByteArrayInputStream(bytes))));
+            DB.DBResult r = DB.select("SELECT COUNT(*) FROM files WHERE id='" + id + "'");
+
+            if (r.resultSet.next()) {
+                count = r.resultSet.getInt(1);
             }
             r.close();
-            return images = imgs.toArray(new ImageFile[imgs.size()]);
+        } catch (SQLException ex) {
+            Log.l(ex);
+        }
+        return count;
+    }
+
+    public String[] getFileNames() throws IOException {
+        try {
+            DB.DBResult r = DB.select("select name, created from files where id='" + id + "';");
+            List<String> names = new ArrayList<>();
+            while (r.resultSet.next()) {
+                names.add(r.resultSet.getString(1));
+
+            }
+            r.close();
+            return names.toArray(new String[names.size()]);
+        } catch (SQLException ex) {
+            Log.l(ex);
+            return null;
+        }
+    }
+    
+    public byte[] getFile(String name) throws IOException {
+        try {
+            DB.DBResult r = DB.select("select name, created, file from files where id='" + id + "' AND name='" + name + "'");
+            byte[] bytes = null;
+            if (r.resultSet.next()) {
+                bytes = r.resultSet.getBytes(3);
+
+            }
+            r.close();
+            return bytes;
         } catch (SQLException ex) {
             Log.l(ex);
             return null;
@@ -255,7 +273,7 @@ public class Entity implements Thumbnail {
 
             }
             r.close();
-            return images = imgs.toArray(new ImageFile[imgs.size()]);
+            return imgs.toArray(new ImageFile[imgs.size()]);
         } catch (SQLException ex) {
             Log.l(ex);
             return null;

@@ -13,7 +13,9 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.DateFormat;
@@ -49,30 +51,30 @@ public class ContentPanel extends javax.swing.JPanel {
 
             @Override
             public void imageHovered(int index) {
-                
+
             }
 
             @Override
             public void imageSelected(int index) {
-                
+
             }
 
             @Override
             public void doubleClicked(int index) {
                 try {
-                    showPreview((Entity)imlSearchResults.getThumbnails()[imlSearchResults.getSelectedIndex()]);
+                    showPreview((Entity) imlSearchResults.getThumbnails()[imlSearchResults.getSelectedIndex()]);
                 } catch (SQLException ex) {
                     Log.l(ex);
                 }
             }
         });
-        
-        
+
         fileList.addImageListListener(new ImageListAdapter<Image>() {
 
             @Override
             public void imageSelected(int pos) {
                 btnRemoveFile.setEnabled(pos >= 0);
+                btnExportFile.setEnabled(pos >= 0);
                 if (pos >= 0) {
                     try {
                         imgPreview.setImg(currentEntity.getThumbnail(fileList.getTitle(pos),
@@ -84,7 +86,6 @@ public class ContentPanel extends javax.swing.JPanel {
             }
         });
     }
-
 
     public void showResults(Entity[] resultEntities) throws SQLException, Exception {
         imlSearchResults.setThumbnails(resultEntities);
@@ -131,7 +132,6 @@ public class ContentPanel extends javax.swing.JPanel {
         imlSearchResults = new docz.ImageList();
         pnlDocOverview = new javax.swing.JPanel();
         pnlPreview = imgPreview = new ImagePanel();
-        imgListPreviewFiles = fileList = new ScaledImageList(Alignment.Horizontal, true, 150, 150);
         jScrollPane2 = new javax.swing.JScrollPane();
         txaPreviewDescription = new javax.swing.JTextArea();
         btnGoBack = new javax.swing.JButton();
@@ -151,6 +151,8 @@ public class ContentPanel extends javax.swing.JPanel {
         txtPreviewTitle = new javax.swing.JTextField();
         btnAddFile = new javax.swing.JButton();
         btnRemoveFile = new javax.swing.JButton();
+        btnExportFile = new javax.swing.JButton();
+        imgListPreviewFiles = fileList = new ScaledImageList(Alignment.Horizontal, true, 150, 150);
 
         jRadioButton1.setText("jRadioButton1");
 
@@ -175,31 +177,16 @@ public class ContentPanel extends javax.swing.JPanel {
 
         pnlPreview.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "TITLE", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Arial", 1, 16))); // NOI18N
 
-        javax.swing.GroupLayout imgListPreviewFilesLayout = new javax.swing.GroupLayout(imgListPreviewFiles);
-        imgListPreviewFiles.setLayout(imgListPreviewFilesLayout);
-        imgListPreviewFilesLayout.setHorizontalGroup(
-            imgListPreviewFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
-        );
-        imgListPreviewFilesLayout.setVerticalGroup(
-            imgListPreviewFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 100, Short.MAX_VALUE)
-        );
-
         javax.swing.GroupLayout pnlPreviewLayout = new javax.swing.GroupLayout(pnlPreview);
         pnlPreview.setLayout(pnlPreviewLayout);
         pnlPreviewLayout.setHorizontalGroup(
             pnlPreviewLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(imgListPreviewFiles, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGap(0, 487, Short.MAX_VALUE)
         );
         pnlPreviewLayout.setVerticalGroup(
             pnlPreviewLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlPreviewLayout.createSequentialGroup()
-                .addGap(0, 603, Short.MAX_VALUE)
-                .addComponent(imgListPreviewFiles, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGap(0, 0, Short.MAX_VALUE)
         );
-
-        fileList.setPadding(0, 0, 0, 12);
 
         txaPreviewDescription.setEditable(false);
         txaPreviewDescription.setBackground(getBackground());
@@ -288,7 +275,7 @@ public class ContentPanel extends javax.swing.JPanel {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(scrRelatedWith, javax.swing.GroupLayout.DEFAULT_SIZE, 497, Short.MAX_VALUE)
+                    .addComponent(scrRelatedWith, javax.swing.GroupLayout.DEFAULT_SIZE, 500, Short.MAX_VALUE)
                     .addComponent(lblRelationTitle, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING))
                 .addContainerGap())
@@ -301,7 +288,7 @@ public class ContentPanel extends javax.swing.JPanel {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
-                .addComponent(scrRelatedWith, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                .addComponent(scrRelatedWith, javax.swing.GroupLayout.DEFAULT_SIZE, 457, Short.MAX_VALUE))
         );
 
         txtPreviewTitle.setEditable(false);
@@ -326,6 +313,26 @@ public class ContentPanel extends javax.swing.JPanel {
             }
         });
 
+        btnExportFile.setFont(new java.awt.Font("Arial", 1, 11)); // NOI18N
+        btnExportFile.setText("export");
+        btnExportFile.setEnabled(false);
+        btnExportFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnExportFileActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout imgListPreviewFilesLayout = new javax.swing.GroupLayout(imgListPreviewFiles);
+        imgListPreviewFiles.setLayout(imgListPreviewFilesLayout);
+        imgListPreviewFilesLayout.setHorizontalGroup(
+            imgListPreviewFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 0, Short.MAX_VALUE)
+        );
+        imgListPreviewFilesLayout.setVerticalGroup(
+            imgListPreviewFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 100, Short.MAX_VALUE)
+        );
+
         javax.swing.GroupLayout pnlDocOverviewLayout = new javax.swing.GroupLayout(pnlDocOverview);
         pnlDocOverview.setLayout(pnlDocOverviewLayout);
         pnlDocOverviewLayout.setHorizontalGroup(
@@ -337,12 +344,16 @@ public class ContentPanel extends javax.swing.JPanel {
                         .addContainerGap()
                         .addGroup(pnlDocOverviewLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(pnlPreview, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(txtPreviewTitle, javax.swing.GroupLayout.DEFAULT_SIZE, 496, Short.MAX_VALUE)
+                            .addComponent(txtPreviewTitle, javax.swing.GroupLayout.DEFAULT_SIZE, 499, Short.MAX_VALUE)
                             .addGroup(pnlDocOverviewLayout.createSequentialGroup()
                                 .addComponent(btnAddFile)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(btnRemoveFile)))))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(btnRemoveFile)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(btnExportFile)
+                                .addGap(0, 0, Short.MAX_VALUE))
+                            .addComponent(imgListPreviewFiles, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(pnlDocOverviewLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane2)
                     .addComponent(txtTags)
@@ -350,7 +361,7 @@ public class ContentPanel extends javax.swing.JPanel {
                         .addComponent(btnAddRelation)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(btnRemoveRelation)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 233, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 236, Short.MAX_VALUE)
                         .addComponent(btnEditSave)
                         .addGap(18, 18, 18)
                         .addComponent(lblPreviewCreated))
@@ -389,11 +400,16 @@ public class ContentPanel extends javax.swing.JPanel {
                     .addGroup(pnlDocOverviewLayout.createSequentialGroup()
                         .addComponent(pnlPreview, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(imgListPreviewFiles, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
                         .addGroup(pnlDocOverviewLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(btnAddFile)
-                            .addComponent(btnRemoveFile))))
+                            .addComponent(btnRemoveFile)
+                            .addComponent(btnExportFile))))
                 .addContainerGap())
         );
+
+        fileList.setPadding(0, 0, 0, 12);
 
         add(pnlDocOverview, "card4");
     }// </editor-fold>//GEN-END:initComponents
@@ -507,12 +523,42 @@ public class ContentPanel extends javax.swing.JPanel {
         }
     }//GEN-LAST:event_btnAddFileActionPerformed
 
+    private void btnExportFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExportFileActionPerformed
+        if (fileList.getSelectedImageIndex() >= 0) {
+            String lastPath = DB.getSetting("lastpath", "");
+
+            JFileChooser fc = new JFileChooser(new File(lastPath));
+
+            fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            fc.setMultiSelectionEnabled(false);
+            fc.setSelectedFile(new File(lastPath+File.pathSeparator+fileList.getImageTitle(fileList.getSelectedImageIndex())));
+            if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+                try {
+                    ByteArrayInputStream bais = new ByteArrayInputStream(currentEntity.getFile(fileList.getImageTitle(fileList.getSelectedImageIndex())));
+                    FileOutputStream fos = new FileOutputStream(fc.getSelectedFile());
+                    byte[] buffer = new byte[1024];
+                    while (bais.read(buffer) > 0) {
+                        fos.write(buffer);
+                    }
+                    bais.close();
+                    fos.close();
+
+                } catch (IOException ex) {
+                    Log.l(ex);
+                }
+            }
+
+            DB.setSetting("lastpath", lastPath);
+        }
+    }//GEN-LAST:event_btnExportFileActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAddFile;
     private javax.swing.JButton btnAddRelation;
     private javax.swing.JButton btnChangeDate;
     private javax.swing.JButton btnEditSave;
+    private javax.swing.JButton btnExportFile;
     private javax.swing.JButton btnGoBack;
     private javax.swing.JButton btnRemoveFile;
     private javax.swing.JButton btnRemoveRelation;

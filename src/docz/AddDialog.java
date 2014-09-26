@@ -35,6 +35,8 @@ public class AddDialog extends javax.swing.JDialog {
     private ScaledImageList imgList;
     private List<File> files = new ArrayList<>();
     private ImagePanel imgPanel, previewPanel;
+    private List<Entity> relations = new ArrayList<Entity>();
+    
 
     /**
      * Creates new form AddDialog
@@ -108,8 +110,13 @@ public class AddDialog extends javax.swing.JDialog {
         btnInstitutionLogo = new javax.swing.JButton();
         btnInstitutionSave = new javax.swing.JButton();
         jLabel7 = new javax.swing.JLabel();
+        splitSimilarRelatives = new javax.swing.JSplitPane();
         jScrollPane2 = new javax.swing.JScrollPane();
         imlSimilarEntities = new docz.ImageList();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        imlRelated = new docz.ImageList();
+        btnRemoveFromRelations = new javax.swing.JButton();
+        btnAddToRelations = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -207,7 +214,7 @@ public class AddDialog extends javax.swing.JDialog {
         imgPanelPreview.setLayout(imgPanelPreviewLayout);
         imgPanelPreviewLayout.setHorizontalGroup(
             imgPanelPreviewLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 273, Short.MAX_VALUE)
+            .addGap(0, 384, Short.MAX_VALUE)
         );
         imgPanelPreviewLayout.setVerticalGroup(
             imgPanelPreviewLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -387,7 +394,7 @@ public class AddDialog extends javax.swing.JDialog {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(btnInstitutionLogo)
                                 .addGap(0, 0, Short.MAX_VALUE))
-                            .addComponent(txtInstitutionTags, javax.swing.GroupLayout.DEFAULT_SIZE, 700, Short.MAX_VALUE)))
+                            .addComponent(txtInstitutionTags, javax.swing.GroupLayout.DEFAULT_SIZE, 811, Short.MAX_VALUE)))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(btnInstitutionSave)))
@@ -422,7 +429,11 @@ public class AddDialog extends javax.swing.JDialog {
         jTabbedPane1.addTab("+ Institution", jPanel2);
 
         jLabel7.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
-        jLabel7.setText("similar to...");
+        jLabel7.setText("similarities / relations");
+
+        splitSimilarRelatives.setDividerLocation(300);
+        splitSimilarRelatives.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
+        splitSimilarRelatives.setDoubleBuffered(true);
 
         jScrollPane2.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
@@ -439,6 +450,36 @@ public class AddDialog extends javax.swing.JDialog {
 
         jScrollPane2.setViewportView(imlSimilarEntities);
 
+        splitSimilarRelatives.setTopComponent(jScrollPane2);
+
+        jScrollPane3.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+
+        javax.swing.GroupLayout imlRelatedLayout = new javax.swing.GroupLayout(imlRelated);
+        imlRelated.setLayout(imlRelatedLayout);
+        imlRelatedLayout.setHorizontalGroup(
+            imlRelatedLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 447, Short.MAX_VALUE)
+        );
+        imlRelatedLayout.setVerticalGroup(
+            imlRelatedLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 635, Short.MAX_VALUE)
+        );
+
+        jScrollPane3.setViewportView(imlRelated);
+
+        splitSimilarRelatives.setRightComponent(jScrollPane3);
+
+        btnRemoveFromRelations.setText("-");
+        btnRemoveFromRelations.setEnabled(false);
+        btnRemoveFromRelations.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnRemoveFromRelationsActionPerformed(evt);
+            }
+        });
+
+        btnAddToRelations.setText("+");
+        btnAddToRelations.setEnabled(false);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -447,18 +488,26 @@ public class AddDialog extends javax.swing.JDialog {
                 .addComponent(jTabbedPane1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel7, javax.swing.GroupLayout.DEFAULT_SIZE, 339, Short.MAX_VALUE)
-                    .addComponent(jScrollPane2))
+                    .addComponent(splitSimilarRelatives)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 195, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnAddToRelations)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnRemoveFromRelations)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jTabbedPane1)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGap(23, 23, 23)
-                .addComponent(jLabel7)
+                .addGap(20, 20, 20)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel7)
+                    .addComponent(btnRemoveFromRelations)
+                    .addComponent(btnAddToRelations))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2)
+                .addComponent(splitSimilarRelatives)
                 .addContainerGap())
         );
 
@@ -576,6 +625,10 @@ public class AddDialog extends javax.swing.JDialog {
         showSimilarEntities(txtDocTags.getText(), false, true);
     }//GEN-LAST:event_txtDocTagsActionPerformed
 
+    private void btnRemoveFromRelationsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRemoveFromRelationsActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnRemoveFromRelationsActionPerformed
+
     private void showSimilarEntities(String[] searchWords, boolean byTitleAndDescription, boolean byTags) {
         try {
             imlSimilarEntities.setThumbnails(DataHandler.instance.search(searchWords, byTitleAndDescription, byTitleAndDescription, byTitleAndDescription, byTags));
@@ -637,15 +690,18 @@ public class AddDialog extends javax.swing.JDialog {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.ButtonGroup addButtonGroup;
+    private javax.swing.JButton btnAddToRelations;
     private javax.swing.JButton btnDocAddFile;
     private javax.swing.JButton btnDocRemoveFile;
     private javax.swing.JButton btnDocSave;
     private javax.swing.JButton btnInstitutionLogo;
     private javax.swing.JButton btnInstitutionSave;
+    private javax.swing.JButton btnRemoveFromRelations;
     private javax.swing.JPanel datePicker;
     private javax.swing.JPanel imgListDocFiles;
     private javax.swing.JPanel imgLogo;
     private javax.swing.JPanel imgPanelPreview;
+    private docz.ImageList imlRelated;
     private docz.ImageList imlSimilarEntities;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
@@ -661,8 +717,10 @@ public class AddDialog extends javax.swing.JDialog {
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JLabel lblDocDate;
+    private javax.swing.JSplitPane splitSimilarRelatives;
     private javax.swing.JTextArea txaDocDescription;
     private javax.swing.JTextField txtDocTags;
     private javax.swing.JTextField txtDocTitle;

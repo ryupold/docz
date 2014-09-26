@@ -5,16 +5,12 @@
  */
 package docz;
 
-import java.awt.CardLayout;
-import java.awt.Component;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.SQLException;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
-import javax.swing.JScrollPane;
-import org.h2.tools.ChangeFileEncryption;
 
 /**
  *
@@ -201,7 +197,7 @@ public class DocZMainFrame extends javax.swing.JFrame {
             try {
                 Entity[] findings = DataHandler.instance.search(txtSearch.getText().split(" "), ckbDocs.isSelected(), ckbInstitutions.isSelected(), ckbRelations.isSelected(), ckbTags.isSelected());
                 contentPanel.showResults(findings);                    
-            } catch (SQLException ex) {
+            } catch (Exception ex) {
                 Log.l(ex);
             }
         }

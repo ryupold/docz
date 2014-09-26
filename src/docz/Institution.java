@@ -29,7 +29,6 @@ public class Institution extends Entity {
         this.tags = tags;
         this.date = created;
         this.created = created;
-        this.images = null;
     }
 
     public static Institution createInstitution(String title, String description, List<String> tags, List<File> files) throws SQLException, FileNotFoundException, IOException {

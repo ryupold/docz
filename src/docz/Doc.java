@@ -30,7 +30,6 @@ public class Doc extends Entity {
         this.tags = tags;
         this.date = date;
         this.created = created;
-        this.images = null;
     }
 
     public static Doc createDoc(String title, String description, List<String> tags, Date date, List<File> files) throws SQLException, FileNotFoundException, IOException {
