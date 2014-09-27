@@ -130,7 +130,7 @@ public class ImageList extends javax.swing.JPanel {
         descriptions = new String[images.length];
 
         for (int i = 0; i < thumbnails.length; i++) {
-            images[i] = thumbnails[i].getThumbnail(preferedWidth, preferedHeight);
+            images[i] = thumbnails[i].getThumbnail(preferedWidth, preferedHeight, null);
             rects[i] = ScaleImage.fitToRect(new ScaleImage.Rectangle(0, 0, preferedWidth, preferedHeight), (BufferedImage) images[i]);
             names[i] = thumbnails[i].getTitle();
             descriptions[i] = thumbnails[i].getDescription();
@@ -185,7 +185,8 @@ public class ImageList extends javax.swing.JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-
+        
+        try{
         if (images != null && names != null && rects != null) {
             for (int i = 0; i < images.length; i++) {
                 g.drawRect(bounds[i].x, bounds[i].y, bounds[i].width, bounds[i].heigth);
@@ -208,6 +209,9 @@ public class ImageList extends javax.swing.JPanel {
             g.setColor(Color.cyan);
             g.drawRect(bounds[selectedIndex].x, bounds[selectedIndex].y, bounds[selectedIndex].width, bounds[selectedIndex].heigth);
             g.drawRect(bounds[selectedIndex].x - 1, bounds[selectedIndex].y - 1, bounds[selectedIndex].width + 2, bounds[selectedIndex].heigth + 2);
+        }
+        }catch(Exception e){
+            Log.l(e, false);
         }
     }
 

@@ -7,6 +7,7 @@ package docz;
 
 import de.realriu.riulib.helpers.ScaleImage;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
@@ -22,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 
 /**
@@ -31,6 +34,7 @@ import javax.imageio.ImageIO;
 public class DataHandler {
 
     public static final DataHandler instance;
+    public static final int DEFAULT_LIMIT = 50;
 
     static {
 
@@ -109,6 +113,7 @@ public class DataHandler {
 
             DB.insert("create table IF NOT EXISTS relations"
                     + "("
+                    + "id              IDENTITY   AUTO_INCREMENT   PRIMARY KEY,"
                     + "title           VARCHAR       not null,"
                     + "description     VARCHAR,"
                     + "created         BIGINT        not null,"
@@ -140,7 +145,7 @@ public class DataHandler {
             Log.l(ex);
         }
     }
-    
+
     public Entity createEntity(String title, String description, List<String> tags, Date date, List<File> files, int type) throws SQLException, FileNotFoundException, IOException {
         //generate unique file names
         List<String> fileNames = new ArrayList<>();
@@ -201,7 +206,37 @@ public class DataHandler {
             c.close();
         }
     }
-    
+
+    public boolean deleteEntity(Entity entity) {
+        try {
+            return DB.update("DELETE FROM entities WHERE id='" + entity.getID() + "'") > 0;
+        } catch (SQLException ex) {
+            Log.l(ex);
+            return false;
+        }
+    }
+
+    public Relation createRelation(String title, String description, Entity entity1, Entity entity2) throws SQLException {
+        Connection c = DB.createConnection();
+        Date created = new Date();
+        try {
+            Long id = DB.insert("insert into relations(title, description, created, entity1, entity2) values('" + title + "', '" + description + "', '" + created.getTime() + "', '" + entity1.id + "', '" + entity2.id + "');", true).get(0);
+
+            return new Relation(id, title, description, created, entity1, entity2);
+        } finally {
+            c.close();
+        }
+    }
+
+    public boolean deleteRelation(Relation relation) {
+        try {
+            return DB.update("DELETE FROM relations WHERE id='" + relation.getID() + "'") > 0;
+        } catch (SQLException ex) {
+            Log.l(ex);
+            return false;
+        }
+    }
+
     public boolean removeFile(Entity entity, String name) throws SQLException {
         return DB.update("delete from files where name='" + name + "' and id='" + entity.id + "'") > 0;
     }
@@ -248,6 +283,53 @@ public class DataHandler {
         return fileNames.toArray(new String[fileNames.size()]);
     }
 
+    public Entity getEntityByID(long id) {
+        try {
+            DB.DBResult rEntity = DB.select("SELECT id, title, description, date, created, type FROM entities WHERE id='" + id + "';");
+            if (rEntity.resultSet.next()) {
+                DB.DBResult rTags = DB.select("SELECT tag FROM tags WHERE id='" + id + "'");
+                Entity e = null;
+
+                List<String> tags = new LinkedList<>();
+                while (rTags.resultSet.next()) {
+                    tags.add(rTags.resultSet.getString(1));
+                }
+
+                if (rEntity.resultSet.getInt(6) == 1) {
+                    e = new Doc(rEntity.resultSet.getLong(1), rEntity.resultSet.getString(2), rEntity.resultSet.getString(3), tags, new Date(rEntity.resultSet.getLong(4)), new Date(rEntity.resultSet.getLong(5)));
+                } else if (rEntity.resultSet.getInt(6) == 2) {
+                    e = new Institution(rEntity.resultSet.getLong(1), rEntity.resultSet.getString(2), rEntity.resultSet.getString(3), tags, new Date(rEntity.resultSet.getLong(5)));
+                }
+
+                rEntity.close();
+                rTags.close();
+
+                return e;
+            }
+        } catch (SQLException ex) {
+            Log.l(ex);
+        }
+
+        return null;
+    }
+
+    public Relation[] getRelations(Entity entity) {
+        Relation[] relations = null;
+        try {
+            DB.DBResult r = DB.select("SELECT id, title, description, created, entity1, entity2 FROM relations WHERE entity1='" + entity.getID() + "' OR entity2='" + entity.getID() + "'");
+            List<Relation> tmpRelations = new LinkedList<>();
+            while (r.resultSet.next()) {
+                tmpRelations.add(new Relation(r.resultSet.getLong(1), r.resultSet.getString(2), r.resultSet.getString(3), new Date(r.resultSet.getLong(4)), getEntityByID(r.resultSet.getLong(5)), getEntityByID(r.resultSet.getLong(6))));
+            }
+            r.close();
+            relations = tmpRelations.toArray(new Relation[tmpRelations.size()]);
+        } catch (SQLException ex) {
+            Log.l(ex);
+        }
+
+        return relations;
+    }
+
     public int countFiles(Entity entity) throws IOException {
         int count = 0;
         try {
@@ -278,7 +360,7 @@ public class DataHandler {
             return null;
         }
     }
-    
+
     public byte[] getFile(Entity entity, String name) throws IOException {
         try {
             DB.DBResult r = DB.select("select name, created, file from files where id='" + entity.id + "' AND name='" + name + "'");
@@ -295,7 +377,7 @@ public class DataHandler {
         }
     }
 
-    public ImageFile[] getThumbnails(Entity entity, int preferedWidth, int preferedHeight) throws IOException {
+    public ImageFile[] getThumbnails(Entity entity, int preferedWidth, int preferedHeight, Font font) throws IOException {
         try {
             DB.DBResult r = DB.select("select name, created, file from files where id='" + entity.id + "'");
             List<ImageFile> imgs = new LinkedList<>();
@@ -309,7 +391,7 @@ public class DataHandler {
                     ScaleImage.Rectangle rec = ScaleImage.fitToRect(preferedWidth, preferedHeight, sImg);
                     sImg = ScaleImage.scale(sImg, rec.width, rec.heigth);
                 } catch (IllegalArgumentException iae) {
-                    sImg = Resources.createImageWithText(r.resultSet.getString(1), preferedWidth, preferedHeight / 2);
+                    sImg = Resources.createImageWithText(r.resultSet.getString(1), preferedWidth, preferedHeight / 2, font);
                 }
                 imgs.add(new ImageFile(entity, r.resultSet.getString(1), new Date(r.resultSet.getLong(2)), sImg));
 
@@ -331,7 +413,7 @@ public class DataHandler {
      * @return
      * @throws SQLException
      */
-    public Image getThumbnail(Entity entity, int preferedWidth, int preferedHeight) throws SQLException {
+    public Image getThumbnail(Entity entity, int preferedWidth, int preferedHeight, Font font) throws SQLException {
         DB.DBResult r = DB.select("select name, file from files where id='" + entity.id + "' and ("
                 + "name like '%.png' or "
                 + "name like '%.jpg' or "
@@ -352,7 +434,7 @@ public class DataHandler {
                     img = ScaleImage.scale(img, newSize.width, newSize.heigth);
                     return img;
                 } catch (IOException ex) {
-                    return Resources.getImg_otherfile();
+                    return Resources.createImageWithText(entity.title, preferedWidth, preferedHeight, font);
                 } finally {
                     try {
                         bais.close();
@@ -364,15 +446,7 @@ public class DataHandler {
                 r.close();
                 r = DB.select("select name from files where id='" + entity.id + "' limit 1;");
                 if (r.resultSet.next()) {
-                    BufferedImage img = new BufferedImage(preferedWidth, preferedHeight / 4, BufferedImage.TYPE_4BYTE_ABGR);
-                    Graphics2D g = (Graphics2D) img.getGraphics();
-//                    g.setColor(Color.black);
-//                    g.fillRect(0, 0, img.getWidth(), img.getHeight());
-                    g.setColor(Color.red);
-                    g.drawString(r.resultSet.getString(1), 10, img.getHeight() / 2 + 5);
-                    //Rectangle newSize = ScaleImage.fitToRect(preferedWidth, preferedHeight, img);
-                    //img = ScaleImage.scale(img, newSize.width, newSize.heigth);
-                    return img;
+                    return Resources.createImageWithText(entity.title, preferedWidth, preferedHeight, font);
                 } else {
                     return Resources.getImg_nofiles();
                 }
@@ -382,7 +456,7 @@ public class DataHandler {
         }
     }
 
-    public Image getThumbnail(Entity entity, String name, int preferedWidth, int preferedHeight) throws SQLException {
+    public Image getThumbnail(Entity entity, String name, int preferedWidth, int preferedHeight, Font font) throws SQLException {
         try (DB.DBResult r = DB.select("select name, file from files where id='" + entity.id + "' and name='" + name + "'")) {
 
             if (r.resultSet.next()) {
@@ -397,10 +471,10 @@ public class DataHandler {
                         bais.close();
                         return img;
                     } catch (IOException ex) {
-                        return Resources.createImageWithText(name, preferedWidth, preferedHeight);
+                        return Resources.createImageWithText(name, preferedWidth, preferedHeight, font);
                     }
                 } else {
-                    return Resources.createImageWithText(name, preferedWidth, preferedHeight);
+                    return Resources.createImageWithText(name, preferedWidth, preferedHeight, font);
                 }
             } else {
                 return Resources.getImg_nofiles();
@@ -408,18 +482,11 @@ public class DataHandler {
         }
     }
 
-    /**
-     * currently only working for title, description,
-     *
-     * @param searchWords
-     * @param docsAllowed
-     * @param institutionsAllowed
-     * @param relationsAllowed
-     * @param tagsAllowed
-     * @return
-     * @throws SQLException
-     */
     public Entity[] search(String[] searchWords, boolean docsAllowed, boolean institutionsAllowed, boolean relationsAllowed, boolean tagsAllowed) throws SQLException {
+        return search(searchWords, docsAllowed, institutionsAllowed, relationsAllowed, tagsAllowed, DEFAULT_LIMIT);
+    }
+
+    public Entity[] search(String[] searchWords, boolean docsAllowed, boolean institutionsAllowed, boolean relationsAllowed, boolean tagsAllowed, int limit) throws SQLException {
         List<Entity> resultTmp = new LinkedList<>();
 
         if (docsAllowed | institutionsAllowed) {
@@ -448,6 +515,10 @@ public class DataHandler {
 
             if (docsAllowed ^ institutionsAllowed) {
                 sql += (searchWords.length > 0 ? " AND " : "") + (docsAllowed ? "type='1'" : "type='2'");
+            }
+
+            if (limit > 0) {
+                sql += " LIMIT " + limit;
             }
 
             DB.DBResult r = DB.select(sql);

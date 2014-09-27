@@ -5,6 +5,7 @@
  */
 package docz;
 
+import java.awt.Font;
 import java.awt.Image;
 
 /**
@@ -12,7 +13,7 @@ import java.awt.Image;
  * @author Michael
  */
 public interface Thumbnail {
-    Image getThumbnail(int preferedWidth, int preferedHeight) throws Exception;
+    Image getThumbnail(int preferedWidth, int preferedHeight, Font font) throws Exception;
     String getTitle();
     String getDescription();
 }

@@ -8,6 +8,7 @@ package docz;
 import de.realriu.riulib.helpers.ScaleImage;
 import de.realriu.riulib.helpers.ScaleImage.Rectangle;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
@@ -37,6 +38,14 @@ public class Entity implements Thumbnail {
     protected List<String> tags;
     protected Date date, created;
     //protected ImageFile[] images;
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public long getId() {
+        return id;
+    }    
 
     public Date getCreated() {
         return created;
@@ -100,8 +109,8 @@ public class Entity implements Thumbnail {
     }
 
     @Override
-    public Image getThumbnail(int preferedWidth, int preferedHeight) throws Exception {
-        return DataHandler.instance.getThumbnail(this, preferedWidth, preferedHeight);
+    public Image getThumbnail(int preferedWidth, int preferedHeight, Font font) throws Exception {
+        return DataHandler.instance.getThumbnail(this, preferedWidth, preferedHeight, font);
     }
 
     

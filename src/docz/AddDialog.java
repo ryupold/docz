@@ -8,6 +8,7 @@ package docz;
 import de.realriu.riulib.gui.imagelist.AbstractImageList.Alignment;
 import de.realriu.riulib.gui.imagelist.ImageListAdapter;
 import de.realriu.riulib.gui.imagelist.ScaledImageList;
+import java.awt.Font;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -17,10 +18,16 @@ import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import net.sourceforge.jdatepicker.DateModel;
 import net.sourceforge.jdatepicker.JDatePanel;
@@ -35,8 +42,8 @@ public class AddDialog extends javax.swing.JDialog {
     private ScaledImageList imgList;
     private List<File> files = new ArrayList<>();
     private ImagePanel imgPanel, previewPanel;
-    private List<Entity> relations = new ArrayList<Entity>();
-    
+    private final List<Relation> relations = new ArrayList<>();
+    private Entity tmpEntity = new Entity();
 
     /**
      * Creates new form AddDialog
@@ -67,6 +74,42 @@ public class AddDialog extends javax.swing.JDialog {
                         Log.l(ex);
                     }
                 }
+            }
+        });
+
+        imlSimilarEntities.setImageListListener(new ImageList.ImageListListener() {
+
+            @Override
+            public void imageHovered(int index) {
+
+            }
+
+            @Override
+            public void imageSelected(int index) {
+                btnAddToRelations.setEnabled(index >= 0);
+            }
+
+            @Override
+            public void doubleClicked(int index) {
+
+            }
+        });
+
+        imlRelated.setImageListListener(new ImageList.ImageListListener() {
+
+            @Override
+            public void imageHovered(int index) {
+
+            }
+
+            @Override
+            public void imageSelected(int index) {
+                btnRemoveFromRelations.setEnabled(index >= 0);
+            }
+
+            @Override
+            public void doubleClicked(int index) {
+
             }
         });
     }
@@ -479,6 +522,11 @@ public class AddDialog extends javax.swing.JDialog {
 
         btnAddToRelations.setText("+");
         btnAddToRelations.setEnabled(false);
+        btnAddToRelations.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAddToRelationsActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -526,13 +574,24 @@ public class AddDialog extends javax.swing.JDialog {
                 for (String t : tagArray) {
                     tags.add(t.trim().toLowerCase());
                 }
-                Doc.createDoc(txtDocTitle.getText(), txaDocDescription.getText(), tags, DateFormat.getDateInstance().parse(lblDocDate.getText()), files);
+                Doc d = Doc.createDoc(txtDocTitle.getText(), txaDocDescription.getText(), tags, DateFormat.getDateInstance().parse(lblDocDate.getText()), files);
+                createRelations(relations, d);
                 setVisible(false);
             } catch (ParseException | SQLException | IOException ex) {
                 Log.l(ex);
             }
         }
     }//GEN-LAST:event_btnDocSaveActionPerformed
+
+    private void createRelations(Collection<Relation> rels, Entity entity1) {
+        for (Relation r : rels) {
+            try {
+                DataHandler.instance.createRelation(r.getTitle(), r.getDescription(), entity1, r.getEntity2());
+            } catch (Exception e) {
+                Log.l(e);
+            }
+        }
+    }
 
     private void txtDocTitleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtDocTitleActionPerformed
         // TODO add your handling code here:
@@ -602,7 +661,8 @@ public class AddDialog extends javax.swing.JDialog {
 
                 List<File> logo = new ArrayList<>();
                 logo.add(imgPanel.getImg());
-                Institution.createInstitution(txtInstitutionTitle.getText(), txtInstitutionDescription.getText(), tags, logo);
+                Institution i = Institution.createInstitution(txtInstitutionTitle.getText(), txtInstitutionDescription.getText(), tags, logo);
+                createRelations(relations, i);
                 setVisible(false);
             } catch (IOException | SQLException ex) {
                 Log.l(ex);
@@ -626,21 +686,47 @@ public class AddDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_txtDocTagsActionPerformed
 
     private void btnRemoveFromRelationsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRemoveFromRelationsActionPerformed
-        // TODO add your handling code here:
+        if (imlRelated.getSelectedIndex() >= 0) {
+            Relation r = (Relation) imlRelated.getThumbnails()[imlRelated.getSelectedIndex()];
+            relations.remove(r);
+            try {
+                imlRelated.setThumbnails(relations.toArray(new Relation[relations.size()]));
+            } catch (Exception ex) {
+                Log.l(ex);
+            }
+        }
     }//GEN-LAST:event_btnRemoveFromRelationsActionPerformed
+
+    private void btnAddToRelationsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddToRelationsActionPerformed
+        try {
+            AddRelationMessageBox addRelation;
+            if (JOptionPane.showConfirmDialog(this, addRelation = new AddRelationMessageBox(imlSimilarEntities.getThumbnails()[imlSimilarEntities.getSelectedIndex()].getThumbnail(450, 400, new Font("Arial", Font.BOLD, 20))), "Enter Relation details", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
+                Relation newRelation = new Relation(-1, addRelation.getTitle(), addRelation.getDescription(), new Date(), tmpEntity, (Entity) imlSimilarEntities.getThumbnails()[imlSimilarEntities.getSelectedIndex()]);
+                relations.add(newRelation);
+                try {
+                    imlRelated.setThumbnails(relations.toArray(new Relation[relations.size()]));
+                } catch (Exception ex) {
+                    Log.l(ex);
+                }
+            }
+        } catch (Exception ex) {
+            Log.l(ex);
+        }
+    }//GEN-LAST:event_btnAddToRelationsActionPerformed
 
     private void showSimilarEntities(String[] searchWords, boolean byTitleAndDescription, boolean byTags) {
         try {
-            imlSimilarEntities.setThumbnails(DataHandler.instance.search(searchWords, byTitleAndDescription, byTitleAndDescription, byTitleAndDescription, byTags));
+            imlSimilarEntities.setThumbnails(DataHandler.instance.search(searchWords, byTitleAndDescription, byTitleAndDescription, byTitleAndDescription, byTags, DataHandler.DEFAULT_LIMIT));
         } catch (Exception ex) {
             Log.l(ex);
         }
     }
-    
+
     private void showSimilarEntities(String longSearchString, boolean byTitleAndDescription, boolean byTags) {
         try {
             String[] searchWords = longSearchString.split(" ");
-            imlSimilarEntities.setThumbnails(DataHandler.instance.search(searchWords, byTitleAndDescription, byTitleAndDescription, byTitleAndDescription, byTags));
+            imlSimilarEntities.setThumbnails(DataHandler.instance.search(searchWords, byTitleAndDescription, byTitleAndDescription, false, byTags, DataHandler.DEFAULT_LIMIT));
+            imlSimilarEntities.repaint();
         } catch (Exception ex) {
             Log.l(ex);
         }

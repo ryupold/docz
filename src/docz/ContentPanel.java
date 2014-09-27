@@ -10,6 +10,7 @@ import de.realriu.riulib.gui.imagelist.ImageListAdapter;
 import de.realriu.riulib.gui.imagelist.ScaledImageList;
 import java.awt.CardLayout;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
@@ -22,6 +23,8 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -62,10 +65,33 @@ public class ContentPanel extends javax.swing.JPanel {
             @Override
             public void doubleClicked(int index) {
                 try {
-                    showPreview((Entity) imlSearchResults.getThumbnails()[imlSearchResults.getSelectedIndex()]);
+                    showPreview((Entity) imlSearchResults.getThumbnails()[imlSearchResults.getSelectedIndex()], true);
                 } catch (SQLException ex) {
                     Log.l(ex);
                 }
+            }
+        });
+        
+        imlRelatedWith.setImageListListener(new ImageList.ImageListListener() {
+
+            @Override
+            public void imageHovered(int index) {
+
+            }
+
+            @Override
+            public void imageSelected(int index) {
+                btnRemoveRelation.setEnabled(editMode && index >= 0);
+                if(index >= 0){
+                    lblRelationTitle.setText(imlRelatedWith.getThumbnails()[index].getTitle());
+                    txaRelationDescription.setText(imlRelatedWith.getThumbnails()[index].getDescription());
+                    imgRelation.setImg(Resources.createRelationThumbnail((Relation)imlRelatedWith.getThumbnails()[index]));
+                }
+            }
+
+            @Override
+            public void doubleClicked(int index) {
+               
             }
         });
 
@@ -73,13 +99,14 @@ public class ContentPanel extends javax.swing.JPanel {
 
             @Override
             public void imageSelected(int pos) {
-                btnRemoveFile.setEnabled(pos >= 0);
+                btnRemoveFile.setEnabled(pos >= 0 && editMode);
                 btnExportFile.setEnabled(pos >= 0);
                 if (pos >= 0) {
                     try {
                         String title = fileList.getTitle(pos);
+                        Font font = new Font("Arial", Font.PLAIN, 30);
                         Image img = DataHandler.instance.getThumbnail(currentEntity, title,
-                                (int) (imgPreview.getWidth() * 1.5), (int) (imgPreview.getHeight() * 1.5));
+                                (int) (imgPreview.getWidth() * 1.5), (int) (imgPreview.getHeight() * 1.5), font);
                         imgPreview.setImg(img);
                     } catch (SQLException ex) {
                         Log.l(ex);
@@ -94,17 +121,52 @@ public class ContentPanel extends javax.swing.JPanel {
         ((CardLayout) getLayout()).show(this, "card2");
     }
 
-    public void showPreview(Entity entity) throws SQLException {
+    public void showPreview(Entity entity, boolean stopEditMode) throws SQLException {
+        if(stopEditMode) {
+            editMode = false;
+        }
+        
+        if (editMode) {//save action
+            btnEditSave.setText("save");
+        } else { //save action
+            btnEditSave.setText("edit");
+        }
+
+        lblRelationTitle.setText("");
+        txaRelationDescription.setText("");
+        
+        File tmp = null;
+        try {
+            imgRelation.setImg(tmp);
+        } catch (IOException ex) {
+            Log.l(ex);
+        }
+        
+        
+        txtPreviewTitle.setEditable(editMode);
+        txaPreviewDescription.setEditable(editMode);
+        txtTags.setEditable(editMode);
+        btnChangeDate.setEnabled(editMode);
+        btnAddFile.setEnabled(editMode);
+        btnRemoveFile.setEnabled(editMode && fileList.getSelectedImageIndex() >= 0);
+        btnAddRelation.setEnabled(editMode);
+        btnRemoveRelation.setEnabled(editMode && imlRelatedWith.getSelectedIndex()>=0);
+        
+        //set current entity
         currentEntity = entity;
+        
+        
         ((TitledBorder) imgPreview.getBorder()).setTitle(currentEntity.getTitle());
         txtPreviewTitle.setText(currentEntity.getTitle());
         txaPreviewDescription.setText(currentEntity.getDescription());
         txtTags.setText(currentEntity.getTagsAsString());
         lblPreviewDate.setText(DateFormat.getDateInstance().format(currentEntity.getDate()));
         lblPreviewCreated.setText("created: " + DateFormat.getDateInstance().format(currentEntity.created));
+        
+        //load files attached to this entity
         try {
             fileList.clear();
-            ImageFile[] files = DataHandler.instance.getThumbnails(currentEntity, 150, 150);
+            ImageFile[] files = DataHandler.instance.getThumbnails(currentEntity, 150, 150, new Font("Arial", Font.PLAIN, 20));
             for (ImageFile iF : files) {
                 fileList.addImage(iF.image, iF.name);
             }
@@ -112,9 +174,16 @@ public class ContentPanel extends javax.swing.JPanel {
                     255 - fileList.getBackground().getGreen(), 255 - fileList.getBackground().getBlue()));
             if (files.length > 0) {
                 imgPreview.setImg(DataHandler.instance.getThumbnail(currentEntity, fileList.getTitle(0),
-                        (int) (imgPreview.getWidth() * 1.5), (int) (imgPreview.getHeight() * 1.5)));
+                        (int) (imgPreview.getWidth() * 1.5), (int) (imgPreview.getHeight() * 1.5), null));
             }
         } catch (IOException ex) {
+            Log.l(ex);
+        }
+        
+        try {
+            //load related entities
+            imlRelatedWith.setThumbnails(DataHandler.instance.getRelations(currentEntity));
+        } catch (Exception ex) {
             Log.l(ex);
         }
 
@@ -150,11 +219,13 @@ public class ContentPanel extends javax.swing.JPanel {
         txaRelationDescription = new javax.swing.JTextArea();
         scrRelatedWith = new javax.swing.JScrollPane();
         imlRelatedWith = new docz.ImageList();
+        imgRelation = new docz.ImagePanel();
         txtPreviewTitle = new javax.swing.JTextField();
         btnAddFile = new javax.swing.JButton();
         btnRemoveFile = new javax.swing.JButton();
         btnExportFile = new javax.swing.JButton();
         imgListPreviewFiles = fileList = new ScaledImageList(Alignment.Horizontal, true, 150, 150);
+        btnDeleteEntity = new javax.swing.JButton();
 
         jRadioButton1.setText("jRadioButton1");
 
@@ -183,7 +254,7 @@ public class ContentPanel extends javax.swing.JPanel {
         pnlPreview.setLayout(pnlPreviewLayout);
         pnlPreviewLayout.setHorizontalGroup(
             pnlPreviewLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 487, Short.MAX_VALUE)
+            .addGap(0, 493, Short.MAX_VALUE)
         );
         pnlPreviewLayout.setVerticalGroup(
             pnlPreviewLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -210,9 +281,19 @@ public class ContentPanel extends javax.swing.JPanel {
 
         btnAddRelation.setFont(new java.awt.Font("Arial", 1, 11)); // NOI18N
         btnAddRelation.setText("+");
+        btnAddRelation.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAddRelationActionPerformed(evt);
+            }
+        });
 
         btnRemoveRelation.setFont(new java.awt.Font("Arial", 1, 11)); // NOI18N
         btnRemoveRelation.setText("-");
+        btnRemoveRelation.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnRemoveRelationActionPerformed(evt);
+            }
+        });
 
         txtTags.setEditable(false);
         txtTags.setBackground(getBackground());
@@ -241,7 +322,7 @@ public class ContentPanel extends javax.swing.JPanel {
 
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("relation details"));
 
-        lblRelationTitle.setText("RELATION TITLE");
+        lblRelationTitle.setText(" ");
 
         txaRelationDescription.setEditable(false);
         txaRelationDescription.setBackground(getBackground());
@@ -249,7 +330,7 @@ public class ContentPanel extends javax.swing.JPanel {
         txaRelationDescription.setFont(new java.awt.Font("Arial", 0, 13)); // NOI18N
         txaRelationDescription.setLineWrap(true);
         txaRelationDescription.setRows(5);
-        txaRelationDescription.setText("RELATION DESCRIPTION\nasdasd");
+        txaRelationDescription.setText(" ");
         txaRelationDescription.setWrapStyleWord(true);
         jScrollPane1.setViewportView(txaRelationDescription);
 
@@ -270,16 +351,28 @@ public class ContentPanel extends javax.swing.JPanel {
 
         scrRelatedWith.setViewportView(imlRelatedWith);
 
+        javax.swing.GroupLayout imgRelationLayout = new javax.swing.GroupLayout(imgRelation);
+        imgRelation.setLayout(imgRelationLayout);
+        imgRelationLayout.setHorizontalGroup(
+            imgRelationLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 0, Short.MAX_VALUE)
+        );
+        imgRelationLayout.setVerticalGroup(
+            imgRelationLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 100, Short.MAX_VALUE)
+        );
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+            .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(scrRelatedWith, javax.swing.GroupLayout.DEFAULT_SIZE, 500, Short.MAX_VALUE)
-                    .addComponent(lblRelationTitle, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(scrRelatedWith, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 517, Short.MAX_VALUE)
+                    .addComponent(lblRelationTitle, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1)
+                    .addComponent(imgRelation, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -289,8 +382,10 @@ public class ContentPanel extends javax.swing.JPanel {
                 .addComponent(lblRelationTitle)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(scrRelatedWith, javax.swing.GroupLayout.DEFAULT_SIZE, 457, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 9, Short.MAX_VALUE)
+                .addComponent(imgRelation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(scrRelatedWith, javax.swing.GroupLayout.PREFERRED_SIZE, 395, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         txtPreviewTitle.setEditable(false);
@@ -335,6 +430,15 @@ public class ContentPanel extends javax.swing.JPanel {
             .addGap(0, 100, Short.MAX_VALUE)
         );
 
+        btnDeleteEntity.setFont(new java.awt.Font("Arial", 0, 11)); // NOI18N
+        btnDeleteEntity.setText("delete");
+        btnDeleteEntity.setEnabled(false);
+        btnDeleteEntity.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDeleteEntityActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout pnlDocOverviewLayout = new javax.swing.GroupLayout(pnlDocOverview);
         pnlDocOverview.setLayout(pnlDocOverviewLayout);
         pnlDocOverviewLayout.setHorizontalGroup(
@@ -346,7 +450,7 @@ public class ContentPanel extends javax.swing.JPanel {
                         .addContainerGap()
                         .addGroup(pnlDocOverviewLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(pnlPreview, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(txtPreviewTitle, javax.swing.GroupLayout.DEFAULT_SIZE, 499, Short.MAX_VALUE)
+                            .addComponent(txtPreviewTitle, javax.swing.GroupLayout.DEFAULT_SIZE, 505, Short.MAX_VALUE)
                             .addGroup(pnlDocOverviewLayout.createSequentialGroup()
                                 .addComponent(btnAddFile)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -363,7 +467,9 @@ public class ContentPanel extends javax.swing.JPanel {
                         .addComponent(btnAddRelation)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(btnRemoveRelation)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 236, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnDeleteEntity)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnEditSave)
                         .addGap(18, 18, 18)
                         .addComponent(lblPreviewCreated))
@@ -398,7 +504,8 @@ public class ContentPanel extends javax.swing.JPanel {
                             .addComponent(btnAddRelation)
                             .addComponent(btnRemoveRelation)
                             .addComponent(lblPreviewCreated, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(btnEditSave)))
+                            .addComponent(btnEditSave)
+                            .addComponent(btnDeleteEntity)))
                     .addGroup(pnlDocOverviewLayout.createSequentialGroup()
                         .addComponent(pnlPreview, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -427,6 +534,12 @@ public class ContentPanel extends javax.swing.JPanel {
         txaPreviewDescription.setEditable(editMode);
         txtTags.setEditable(editMode);
         btnChangeDate.setEnabled(editMode);
+        btnAddFile.setEnabled(editMode);
+        btnRemoveFile.setEnabled(editMode);
+        btnAddRelation.setEnabled(editMode);
+        btnRemoveRelation.setEnabled(editMode && imlRelatedWith.getSelectedIndex() >= 0);
+        btnDeleteEntity.setEnabled(editMode);
+        btnDeleteEntity.setForeground(editMode ? new Color(204, 0, 0) : Color.black);
 
         if (editMode) {//save action
             btnEditSave.setText("save");
@@ -452,8 +565,6 @@ public class ContentPanel extends javax.swing.JPanel {
 
             DataHandler.instance.updateEntity(currentEntity);
         }
-
-
     }//GEN-LAST:event_btnEditSaveActionPerformed
 
     private void btnChangeDateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnChangeDateActionPerformed
@@ -488,6 +599,7 @@ public class ContentPanel extends javax.swing.JPanel {
         fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
         fc.setMultiSelectionEnabled(true);
         if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            
             for (File f : fc.getSelectedFiles()) {
                 try {
                     String filename = f.getAbsolutePath().toLowerCase();
@@ -516,13 +628,16 @@ public class ContentPanel extends javax.swing.JPanel {
 
                     //add image to file list
                     fileList.addImage(img, DataHandler.instance.addFiles(currentEntity, f)[0]);
-
+                    
+                    //save file in DB
+                    DataHandler.instance.addFiles(currentEntity, f);
+                    
                     lastPath = f.getParentFile().getPath();
                 } catch (Exception ex) {
                     Log.l(ex);
                 }
             }
-
+            
             DB.setSetting("lastpath", lastPath);
         }
     }//GEN-LAST:event_btnAddFileActionPerformed
@@ -556,17 +671,45 @@ public class ContentPanel extends javax.swing.JPanel {
         }
     }//GEN-LAST:event_btnExportFileActionPerformed
 
+    private void btnAddRelationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddRelationActionPerformed
+        AddRelationDialog addRelationDialog = new AddRelationDialog(null, currentEntity);
+        addRelationDialog.setVisible(true);
+        addRelationDialog.dispose();
+        System.gc();
+        try {
+            showPreview(currentEntity, false);
+        } catch (SQLException ex) {
+            Log.l(ex);
+        }
+    }//GEN-LAST:event_btnAddRelationActionPerformed
+
+    private void btnDeleteEntityActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteEntityActionPerformed
+        if(JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, "This will delete this entity and all its relations, files and tags", "Delete entity "+currentEntity.getTitle(), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE)){
+            DataHandler.instance.deleteEntity(currentEntity);
+            currentEntity = null;
+            ((CardLayout) getLayout()).show(this, "card2");
+        }
+    }//GEN-LAST:event_btnDeleteEntityActionPerformed
+
+    private void btnRemoveRelationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRemoveRelationActionPerformed
+        if(JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, "Do you really want to delete the relation: "+imlRelatedWith.getThumbnails()[imlRelatedWith.getSelectedIndex()].getTitle(), "Delete Relation ", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE)){
+            DataHandler.instance.deleteRelation((Relation)imlRelatedWith.getThumbnails()[imlRelatedWith.getSelectedIndex()]);
+        }
+    }//GEN-LAST:event_btnRemoveRelationActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAddFile;
     private javax.swing.JButton btnAddRelation;
     private javax.swing.JButton btnChangeDate;
+    private javax.swing.JButton btnDeleteEntity;
     private javax.swing.JButton btnEditSave;
     private javax.swing.JButton btnExportFile;
     private javax.swing.JButton btnGoBack;
     private javax.swing.JButton btnRemoveFile;
     private javax.swing.JButton btnRemoveRelation;
     private javax.swing.JPanel imgListPreviewFiles;
+    private docz.ImagePanel imgRelation;
     private docz.ImageList imlRelatedWith;
     private docz.ImageList imlSearchResults;
     private javax.swing.JPanel jPanel1;

@@ -6,6 +6,7 @@
 package docz;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
@@ -147,23 +148,40 @@ public abstract class Resources {
             return false;
         }
     }
+    
+    public static BufferedImage createRelationThumbnail(Entity entity1, Entity entity2, String title){
+        return (BufferedImage)Resources.getImg_relation();
+    }
+    
+    public static BufferedImage createRelationThumbnail(Relation relation){
+        return (BufferedImage)Resources.getImg_relation();
+    }
 
-    public static BufferedImage createImageWithText(String text, int x, int y, int width, int height, Color textColor, Color background) {
-        BufferedImage img = new BufferedImage(width, height / 4, BufferedImage.TYPE_4BYTE_ABGR);
+    public static BufferedImage createImageWithText(String text, int x, int y, int width, int height, Font font, Color textColor, Color background) {
+        BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
         Graphics2D g = (Graphics2D) img.getGraphics();
         g.setColor(background);
         g.fillRect(0, 0, width, height);
         g.setColor(textColor);
+        if(font != null) g.setFont(font);
         g.drawString(text, x, y);
         return img;
     }
-    
+            
     public static BufferedImage createImageWithText(String text, int width, int height, Color textColor, Color background) {
-        return createImageWithText(text, 10, height / 2 + 5, width, height, textColor, background);
+        return createImageWithText(text, 10, (int)(height / 2f + 5), width, height, null, textColor, background);
     }
     
     public static BufferedImage createImageWithText(String text, int width, int height) {
-        return createImageWithText(text, 10, height / 2 + 5, width, height, Color.red, Color.black);
+        return createImageWithText(text, 10, (int)(height / 2f + 5), width, height, null, Color.red, Color.black);
+    }
+    
+    public static BufferedImage createImageWithText(String text, int width, int height, Font font, Color textColor, Color background) {
+        return createImageWithText(text, 10, (int)(height / 2f + 5), width, height, font, textColor, background);
+    }
+    
+    public static BufferedImage createImageWithText(String text, int width, int height, Font font) {
+        return createImageWithText(text, 10, (int)(height / 2f + 5), width, height, font, Color.red, Color.black);
     }
 
 }
