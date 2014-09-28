@@ -18,6 +18,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -29,6 +30,8 @@ import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.border.TitledBorder;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import net.sourceforge.jdatepicker.DateModel;
 import net.sourceforge.jdatepicker.JDateComponentFactory;
 import net.sourceforge.jdatepicker.JDatePanel;
@@ -71,7 +74,7 @@ public class ContentPanel extends javax.swing.JPanel {
                 }
             }
         });
-        
+
         imlRelatedWith.setImageListListener(new ImageList.ImageListListener() {
 
             @Override
@@ -82,16 +85,22 @@ public class ContentPanel extends javax.swing.JPanel {
             @Override
             public void imageSelected(int index) {
                 btnRemoveRelation.setEnabled(editMode && index >= 0);
-                if(index >= 0){
+                if (index >= 0) {
                     lblRelationTitle.setText(imlRelatedWith.getThumbnails()[index].getTitle());
                     txaRelationDescription.setText(imlRelatedWith.getThumbnails()[index].getDescription());
-                    imgRelation.setImg(Resources.createRelationThumbnail((Relation)imlRelatedWith.getThumbnails()[index]));
+                    imgRelation.setImg(Resources.createRelationThumbnail((Relation) imlRelatedWith.getThumbnails()[index]));
                 }
             }
 
             @Override
             public void doubleClicked(int index) {
-               
+                if (((Relation) imlRelatedWith.getThumbnails()[index]).getEntity2() != null) {
+                    try {
+                        showPreview(((Relation) imlRelatedWith.getThumbnails()[index]).getEntity2(), true);
+                    } catch (SQLException ex) {
+                        Log.l(ex);
+                    }
+                }
             }
         });
 
@@ -122,10 +131,10 @@ public class ContentPanel extends javax.swing.JPanel {
     }
 
     public void showPreview(Entity entity, boolean stopEditMode) throws SQLException {
-        if(stopEditMode) {
+        if (stopEditMode) {
             editMode = false;
         }
-        
+
         if (editMode) {//save action
             btnEditSave.setText("save");
         } else { //save action
@@ -134,15 +143,14 @@ public class ContentPanel extends javax.swing.JPanel {
 
         lblRelationTitle.setText("");
         txaRelationDescription.setText("");
-        
+
         File tmp = null;
         try {
             imgRelation.setImg(tmp);
         } catch (IOException ex) {
             Log.l(ex);
         }
-        
-        
+
         txtPreviewTitle.setEditable(editMode);
         txaPreviewDescription.setEditable(editMode);
         txtTags.setEditable(editMode);
@@ -150,19 +158,18 @@ public class ContentPanel extends javax.swing.JPanel {
         btnAddFile.setEnabled(editMode);
         btnRemoveFile.setEnabled(editMode && fileList.getSelectedImageIndex() >= 0);
         btnAddRelation.setEnabled(editMode);
-        btnRemoveRelation.setEnabled(editMode && imlRelatedWith.getSelectedIndex()>=0);
-        
+        btnRemoveRelation.setEnabled(editMode && imlRelatedWith.getSelectedIndex() >= 0);
+
         //set current entity
         currentEntity = entity;
-        
-        
+
         ((TitledBorder) imgPreview.getBorder()).setTitle(currentEntity.getTitle());
         txtPreviewTitle.setText(currentEntity.getTitle());
         txaPreviewDescription.setText(currentEntity.getDescription());
         txtTags.setText(currentEntity.getTagsAsString());
         lblPreviewDate.setText(DateFormat.getDateInstance().format(currentEntity.getDate()));
         lblPreviewCreated.setText("created: " + DateFormat.getDateInstance().format(currentEntity.created));
-        
+
         //load files attached to this entity
         try {
             fileList.clear();
@@ -179,7 +186,7 @@ public class ContentPanel extends javax.swing.JPanel {
         } catch (IOException ex) {
             Log.l(ex);
         }
-        
+
         try {
             //load related entities
             imlRelatedWith.setThumbnails(DataHandler.instance.getRelations(currentEntity));
@@ -582,7 +589,7 @@ public class ContentPanel extends javax.swing.JPanel {
                 if (DataHandler.instance.removeFile(currentEntity, fileList.getImageTitle(fileList.getSelectedImageIndex()))) {
                     fileList.removeImage(fileList.getSelectedImageIndex());
                 }
-                
+
                 btnRemoveFile.setEnabled(fileList.getSelectedImageIndex() >= 0);
                 btnExportFile.setEnabled(fileList.getSelectedImageIndex() >= 0);
             } catch (SQLException ex) {
@@ -593,78 +600,131 @@ public class ContentPanel extends javax.swing.JPanel {
 
     private void btnAddFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddFileActionPerformed
         String lastPath = DB.getSetting("lastpath", "");
-
-        JFileChooser fc = new JFileChooser(new File(lastPath));
+        final JFileChooser fc = new JFileChooser(new File(lastPath));
 
         fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
         fc.setMultiSelectionEnabled(true);
         if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            
-            for (File f : fc.getSelectedFiles()) {
-                try {
-                    String filename = f.getAbsolutePath().toLowerCase();
-                    BufferedImage img;
-                    if ((filename.endsWith(".jpg")
-                            || filename.endsWith(".jpeg")
-                            || filename.endsWith(".png")
-                            || filename.endsWith(".bmp")
-                            || filename.endsWith(".wbmp")
-                            || filename.endsWith(".gif"))) {
+            WaitDialog wait = new WaitDialog(null, new WaitDialog.AsyncProcess("Adding files...") {
+
+                @Override
+                public void start() throws Exception {
+                    int progress = 1;
+                    for (File f : fc.getSelectedFiles()) {
                         try {
-                            img = ImageIO.read(f);
-                        } catch (IOException ex) {
-                            img = new BufferedImage(fileList.getHeight(), fileList.getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
-                            Graphics2D g = (Graphics2D) img.getGraphics();
-                            g.setColor(Color.red);
-                            g.drawString(f.getName(), 10, img.getHeight() / 2 + 5);
+                            String filename = f.getAbsolutePath().toLowerCase();
+                            processing(((float) progress / (float) fc.getSelectedFiles().length), filename);
+                            BufferedImage img;
+                            if ((filename.endsWith(".jpg")
+                                    || filename.endsWith(".jpeg")
+                                    || filename.endsWith(".png")
+                                    || filename.endsWith(".bmp")
+                                    || filename.endsWith(".wbmp")
+                                    || filename.endsWith(".gif"))) {
+                                try {
+                                    img = ImageIO.read(f);
+                                } catch (IOException ex) {
+                                    img = Resources.createImageWithText(f.getName(), fileList.getHeight(), fileList.getHeight());
+                                }
+
+                            } else {
+                                img = Resources.createImageWithText(f.getName(), fileList.getHeight(), fileList.getHeight());
+                            }
+
+                            //save file in DB                            
+                            //add image to file list
+                            fileList.addImage(img, DataHandler.instance.addFiles(currentEntity, f)[0]);
+
+                            progress++;
+                        } catch (Exception ex) {
+                            Log.l(ex);
                         }
-
-                    } else {
-                        img = new BufferedImage(fileList.getHeight(), fileList.getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
-                        Graphics2D g = (Graphics2D) img.getGraphics();
-                        g.setColor(Color.red);
-                        g.drawString(f.getName(), 10, img.getHeight() / 2 + 5);
                     }
-
-                    //add image to file list
-                    fileList.addImage(img, DataHandler.instance.addFiles(currentEntity, f)[0]);
-                    
-                    //save file in DB
-                    DataHandler.instance.addFiles(currentEntity, f);
-                    
-                    lastPath = f.getParentFile().getPath();
-                } catch (Exception ex) {
-                    Log.l(ex);
                 }
+
+                @Override
+                public void finished(boolean success) {
+
+                }
+
+                @Override
+                public void cancel() {
+
+                }
+            }, false);
+
+            if (fc.getSelectedFiles().length > 0) {
+                lastPath = fc.getSelectedFiles()[0].getParentFile().getPath();
             }
-            
             DB.setSetting("lastpath", lastPath);
         }
+
+
     }//GEN-LAST:event_btnAddFileActionPerformed
 
     private void btnExportFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExportFileActionPerformed
         if (fileList.getSelectedImageIndex() >= 0) {
             String lastPath = DB.getSetting("lastpath", "");
 
-            JFileChooser fc = new JFileChooser(new File(lastPath));
+            final JFileChooser fc = new JFileChooser(new File(lastPath));
+
+            String fileExtension = "";
+            if (fileList.getImageTitle(fileList.getSelectedImageIndex()).lastIndexOf(".") >= 0) {
+                fileExtension = fileList.getImageTitle(fileList.getSelectedImageIndex()).substring(fileList.getImageTitle(fileList.getSelectedImageIndex()).lastIndexOf("."));
+            }
 
             fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
             fc.setMultiSelectionEnabled(false);
+            fc.setFileFilter(new FileNameExtensionFilter(fileExtension+" files", fileExtension));
             fc.setSelectedFile(new File(lastPath + File.separator + fileList.getImageTitle(fileList.getSelectedImageIndex())));
+            final boolean[] abort = new boolean[]{false};
             if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-                try {
-                    ByteArrayInputStream bais = new ByteArrayInputStream(DataHandler.instance.getFile(currentEntity, fileList.getImageTitle(fileList.getSelectedImageIndex())));
-                    FileOutputStream fos = new FileOutputStream(fc.getSelectedFile());
-                    byte[] buffer = new byte[1024];
-                    while (bais.read(buffer) > 0) {
-                        fos.write(buffer);
-                    }
-                    bais.close();
-                    fos.close();
 
-                } catch (IOException ex) {
-                    Log.l(ex);
-                }
+                WaitDialog wait = new WaitDialog(null, new WaitDialog.AsyncProcess("exporting file to " + fc.getSelectedFile().getAbsolutePath()) {
+
+                    @Override
+                    public void start() throws Exception {
+                        try {
+                            long bytesRead = 0;
+                            long fileSize = 0;
+                            DB.DBResult r = DB.select("SELECT name, created, file, size FROM files WHERE id='" + currentEntity.id + "' AND name='" + fileList.getImageTitle(fileList.getSelectedImageIndex()) + "'");
+                            InputStream byteStream = null;
+                            FileOutputStream fos = new FileOutputStream(fc.getSelectedFile());
+
+                            if (r.resultSet.next()) {
+                                byteStream = r.resultSet.getBinaryStream(3);
+                                fileSize = r.resultSet.getLong(4);
+                            }
+
+                            byte[] buffer = new byte[1024];
+                            int tmpCount = 0;
+                            while (!abort[0] && (tmpCount = byteStream.read(buffer)) > 0) {
+                                bytesRead += tmpCount;
+                                fos.write(buffer);
+                                double percent = (double) bytesRead / (double) fileSize;
+                                processing((double) bytesRead / (double) fileSize, (((int)(percent*1000.0))/10.0)+"%");
+                            }
+                            byteStream.close();
+                            fos.close();
+                            r.close();
+                            if (abort[0]) {
+                                fc.getSelectedFile().delete();
+                            }
+                        } catch (IOException ex) {
+                            Log.l(ex);
+                        }
+                    }
+
+                    @Override
+                    public void finished(boolean success) {
+
+                    }
+
+                    @Override
+                    public void cancel() {
+                        abort[0] = true;
+                    }
+                }, true);
             }
 
             DB.setSetting("lastpath", lastPath);
@@ -684,7 +744,7 @@ public class ContentPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_btnAddRelationActionPerformed
 
     private void btnDeleteEntityActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteEntityActionPerformed
-        if(JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, "This will delete this entity and all its relations, files and tags", "Delete entity "+currentEntity.getTitle(), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE)){
+        if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, "This will delete this entity and all its relations, files and tags", "Delete entity " + currentEntity.getTitle(), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE)) {
             DataHandler.instance.deleteEntity(currentEntity);
             currentEntity = null;
             ((CardLayout) getLayout()).show(this, "card2");
@@ -692,8 +752,8 @@ public class ContentPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_btnDeleteEntityActionPerformed
 
     private void btnRemoveRelationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRemoveRelationActionPerformed
-        if(JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, "Do you really want to delete the relation: "+imlRelatedWith.getThumbnails()[imlRelatedWith.getSelectedIndex()].getTitle(), "Delete Relation ", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE)){
-            DataHandler.instance.deleteRelation((Relation)imlRelatedWith.getThumbnails()[imlRelatedWith.getSelectedIndex()]);
+        if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, "Do you really want to delete the relation: " + imlRelatedWith.getThumbnails()[imlRelatedWith.getSelectedIndex()].getTitle(), "Delete Relation ", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE)) {
+            DataHandler.instance.deleteRelation((Relation) imlRelatedWith.getThumbnails()[imlRelatedWith.getSelectedIndex()]);
         }
     }//GEN-LAST:event_btnRemoveRelationActionPerformed
 

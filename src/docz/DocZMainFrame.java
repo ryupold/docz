@@ -214,7 +214,6 @@ public class DocZMainFrame extends javax.swing.JFrame {
 
     private void btnAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddActionPerformed
         AddDialog addDialog = new AddDialog(this, true);
-        addDialog.setVisible(true);
         addDialog.dispose();
         System.gc();
     }//GEN-LAST:event_btnAddActionPerformed

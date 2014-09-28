@@ -16,6 +16,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -26,6 +28,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
+import net.sourceforge.javaocr.ocr.PixelImage;
+import net.sourceforge.javaocr.ocrPlugins.mseOCR.OCRScanner;
 
 /**
  *
@@ -129,6 +133,8 @@ public class DataHandler {
                     + "name            VARCHAR,"
                     + "created         BIGINT           not null,"
                     + "file            BLOB             not null,"
+                    + "size            BIGINT           not null,"
+                    + "ocr             BLOB,"
                     + "FOREIGN KEY(id) REFERENCES entities(id) ON DELETE CASCADE"
                     + ");", false);
 
@@ -147,23 +153,7 @@ public class DataHandler {
     }
 
     public Entity createEntity(String title, String description, List<String> tags, Date date, List<File> files, int type) throws SQLException, FileNotFoundException, IOException {
-        //generate unique file names
-        List<String> fileNames = new ArrayList<>();
-        int fn = 0;
-        for (File file : files) {
-            fn = 0;
-            while (fileNames.contains((fn == 0 ? "" : "d" + fn + "_") + file.getName())) {
-                fn++;
-            }
-
-            if (fn == 0) {
-                fileNames.add(file.getName());
-            } else {
-                fileNames.add("d" + fn + "_" + file.getName());
-            }
-        }
-
-        Connection c = DB.createConnection();
+       Connection c = DB.createConnection();
 
         Date created = new Date();
         if (date == null) {
@@ -176,29 +166,17 @@ public class DataHandler {
                 for (String tag : tags) {
                     DB.insert("insert into tags(id, tag) values('" + id + "', '" + tag + "');", false);
                 }
-
-                PreparedStatement ps = c.prepareStatement("insert into files(id, name, created, file) values(?, ?, ?, ?)");
-                for (int i = 0; i < files.size(); i++) {
-                    FileInputStream fi = new FileInputStream(files.get(i));
-                    byte[] buf = new byte[fi.available()];
-                    fi.read(buf);
-                    fi.close();
-
-                    ps.setLong(1, id);
-                    ps.setString(2, fileNames.get(i));
-                    ps.setLong(3, created.getTime());
-                    ps.setBytes(4, buf);
-                    ps.execute();
-                }
-                ps.close();
-
+                
+                Entity entity = null;
                 if (type == 1) {
-                    return new Doc(id, title, description, tags, date, created);
+                    entity = new Doc(id, title, description, tags, date, created);
                 } else if (type == 2) {
-                    return new Institution(id, title, description, tags, created);
-                } else {
-                    return null;
+                    entity = new Institution(id, title, description, tags, created);
                 }
+                
+                addFiles(entity, files.toArray(new File[files.size()]));
+
+                return entity;
             } else {
                 return null;
             }
@@ -244,6 +222,7 @@ public class DataHandler {
     public String[] addFiles(Entity entity, File... files) throws SQLException, IOException {
 
         List<String> fileNames = new ArrayList<>();
+        List<String> newFileNames = new ArrayList<>();
         try (DB.DBResult r = DB.select("SELECT name from files where id='" + entity.id + "';")) {
             while (r.resultSet.next()) {
                 fileNames.add(r.resultSet.getString(1));
@@ -253,26 +232,31 @@ public class DataHandler {
         int fn = 0;
         for (File file : files) {
             fn = 0;
-            while (fileNames.contains(file.getName())) {
+            while (fn == 0 ? fileNames.contains(file.getName()) : fileNames.contains("d" + fn + "_" + file.getName())) {
                 fn++;
             }
 
             if (fn == 0) {
                 fileNames.add(file.getName());
+                newFileNames.add(file.getName());
             } else {
                 fileNames.add("d" + fn + "_" + file.getName());
+                newFileNames.add("d" + fn + "_" + file.getName());
             }
         }
         Date created = new Date();
         Connection c = DB.createConnection();
-        PreparedStatement ps = c.prepareStatement("insert into files(id, name, created, file) values(?, ?, ?, ?)");
+        PreparedStatement ps = c.prepareStatement("insert into files(id, name, created, file, size, ocr) values(?, ?, ?, ?, ?, ?)");
         try {
             for (int i = 0; i < files.length; i++) {
                 FileInputStream fi = new FileInputStream(files[i]);
+                ByteArrayInputStream ocrStream = new ByteArrayInputStream(DataHandler.instance.getOCR(files[i]).getBytes());
                 ps.setLong(1, entity.id);
-                ps.setString(2, fileNames.get(i));
+                ps.setString(2, newFileNames.get(i));
                 ps.setLong(3, created.getTime());
                 ps.setBinaryStream(4, fi);
+                ps.setLong(5, fi.getChannel().size());
+                ps.setBinaryStream(6, ocrStream);
                 ps.execute();
             }
         } finally {
@@ -280,7 +264,7 @@ public class DataHandler {
             c.close();
         }
 
-        return fileNames.toArray(new String[fileNames.size()]);
+        return newFileNames.toArray(new String[fileNames.size()]);
     }
 
     public Entity getEntityByID(long id) {
@@ -361,19 +345,16 @@ public class DataHandler {
         }
     }
 
-    public byte[] getFile(Entity entity, String name) throws IOException {
+    public void writeFileToStream(Entity entity, String name, OutputStream output) throws IOException {
         try {
             DB.DBResult r = DB.select("select name, created, file from files where id='" + entity.id + "' AND name='" + name + "'");
-            byte[] bytes = null;
+            InputStream byteStream = null;
             if (r.resultSet.next()) {
-                bytes = r.resultSet.getBytes(3);
-
+                byteStream = r.resultSet.getBinaryStream(3);
             }
             r.close();
-            return bytes;
         } catch (SQLException ex) {
             Log.l(ex);
-            return null;
         }
     }
 
@@ -384,10 +365,8 @@ public class DataHandler {
             while (r.resultSet.next()) {
                 BufferedImage sImg;
                 try {
-                    byte[] bytes = r.resultSet.getBytes(3);
-                    ByteArrayInputStream bias = new ByteArrayInputStream(bytes);
-                    sImg = ImageIO.read(bias);
-                    bias.close();
+                    InputStream byteStream = r.resultSet.getBinaryStream(3);
+                    sImg = ImageIO.read(byteStream);
                     ScaleImage.Rectangle rec = ScaleImage.fitToRect(preferedWidth, preferedHeight, sImg);
                     sImg = ScaleImage.scale(sImg, rec.width, rec.heigth);
                 } catch (IllegalArgumentException iae) {
@@ -426,21 +405,14 @@ public class DataHandler {
         try {
 
             if (r.resultSet.next()) {
-                byte[] buffer = r.resultSet.getBytes(2);
-                ByteArrayInputStream bais = new ByteArrayInputStream(buffer);
+                InputStream byteStream = r.resultSet.getBinaryStream(2);
                 try {
-                    BufferedImage img = ImageIO.read(bais);
+                    BufferedImage img = ImageIO.read(byteStream);
                     ScaleImage.Rectangle newSize = ScaleImage.fitToRect(preferedWidth, preferedHeight, img);
                     img = ScaleImage.scale(img, newSize.width, newSize.heigth);
                     return img;
                 } catch (IOException ex) {
                     return Resources.createImageWithText(entity.title, preferedWidth, preferedHeight, font);
-                } finally {
-                    try {
-                        bais.close();
-                    } catch (IOException ex) {
-                        Log.l(ex);
-                    }
                 }
             } else {
                 r.close();
@@ -463,12 +435,10 @@ public class DataHandler {
                 String fileName = r.resultSet.getString(1);
                 if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".bmp") || fileName.endsWith(".wbmp") || fileName.endsWith(".gif") || fileName.endsWith(".png")) {
                     try {
-                        byte[] buffer = r.resultSet.getBytes(2);
-                        ByteArrayInputStream bais = new ByteArrayInputStream(buffer);
-                        BufferedImage img = ImageIO.read(bais);
+                        InputStream byteStream = r.resultSet.getBinaryStream(2);
+                        BufferedImage img = ImageIO.read(byteStream);
                         ScaleImage.Rectangle newSize = ScaleImage.fitToRect(preferedWidth, preferedHeight, img);
                         img = ScaleImage.scale(img, newSize.width, newSize.heigth);
-                        bais.close();
                         return img;
                     } catch (IOException ex) {
                         return Resources.createImageWithText(name, preferedWidth, preferedHeight, font);
@@ -495,7 +465,7 @@ public class DataHandler {
                 sql += "(";
                 sql += "(";
                 {
-                    sql += " title LIKE '%" + searchWords[0] + "%' ";
+                    sql += " LOWER(title) LIKE LOWER('%" + searchWords[0] + "%') ";
                     for (int i = 1; i < searchWords.length; i++) {
                         sql += " OR title LIKE '%" + searchWords[i] + "%' ";
                     }
@@ -504,9 +474,9 @@ public class DataHandler {
 
                 sql += " OR (";
                 {
-                    sql += " description LIKE '%" + searchWords[0] + "%' ";
+                    sql += " LOWER(description) LIKE LOWER('%" + searchWords[0] + "%') ";
                     for (int i = 1; i < searchWords.length; i++) {
-                        sql += " OR description LIKE '%" + searchWords[i] + "%' ";
+                        sql += " OR LOWER(description) LIKE LOWER('%" + searchWords[i] + "%') ";
                     }
                 }
                 sql += ")";
@@ -555,6 +525,36 @@ public class DataHandler {
     @Override
     public String toString() {
         return DB.getDBPath();
+    }
+
+    /**
+     * deactivated until I find a way to load a pretrained OCR library
+     * @param file
+     * @return 
+     */
+    public String getOCR(File file){
+//        OCRScanner scanner = new OCRScanner();
+//        String filename = file.getAbsolutePath().toLowerCase();
+//        if ((filename.endsWith(".jpg")
+//                || filename.endsWith(".jpeg")
+//                || filename.endsWith(".png")
+//                || filename.endsWith(".bmp")
+//                || filename.endsWith(".wbmp")
+//                || filename.endsWith(".gif"))) {
+//            try {
+//                Image img = ImageIO.read(file);
+//                String ocr = scanner.scan(img, 0, 0, 0, 0, null);
+//                if(ocr != null) ocr = ocr.trim();
+//                Log.l("OCR: "+ocr);
+//                return ocr;
+//                
+//            } catch (IOException ex) {
+//                Log.l(ex);
+//            }
+//        }
+//        
+//        Log.l("OCR: nothing");
+        return "";
     }
 
 }

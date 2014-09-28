@@ -112,6 +112,8 @@ public class AddDialog extends javax.swing.JDialog {
 
             }
         });
+
+        setVisible(true);
     }
 
     /**
@@ -568,18 +570,41 @@ public class AddDialog extends javax.swing.JDialog {
 
     private void btnDocSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDocSaveActionPerformed
         if (txtDocTitle.getText().trim().length() > 0 && imgList.count() > 0) {
-            try {
-                List<String> tags = new ArrayList<>();
-                String[] tagArray = txtDocTags.getText().split(",");
-                for (String t : tagArray) {
-                    tags.add(t.trim().toLowerCase());
+            WaitDialog waitDialog = new WaitDialog(null, new WaitDialog.AsyncProcess("Adding new Doc") {
+
+                @Override
+                public void start() throws Exception {
+                    try {
+                        processing(0.0f, "analysing tags...");
+                        List<String> tags = new ArrayList<>();
+                        String[] tagArray = txtDocTags.getText().split(",");
+                        for (String t : tagArray) {
+                            tags.add(t.trim().toLowerCase());
+                        }
+                        processing(0.1f, "saving doc data & files...");
+                        Doc d = Doc.createDoc(txtDocTitle.getText(), txaDocDescription.getText(), tags, DateFormat.getDateInstance().parse(lblDocDate.getText()), files);
+                        processing(0.9f, "adding relations...");
+                        createRelations(relations, d);
+                        processing(1f, "finished...");
+                    } catch (SQLException | IOException | ParseException ex) {
+                        Log.l(ex);
+                        throw ex;
+                    }
                 }
-                Doc d = Doc.createDoc(txtDocTitle.getText(), txaDocDescription.getText(), tags, DateFormat.getDateInstance().parse(lblDocDate.getText()), files);
-                createRelations(relations, d);
-                setVisible(false);
-            } catch (ParseException | SQLException | IOException ex) {
-                Log.l(ex);
-            }
+
+                @Override
+                public void finished(boolean success) {
+                    AddDialog.this.setVisible(false);
+                }
+
+                @Override
+                public void cancel() {
+                    Log.l("adding Doc cannot be stopped");
+                }
+            }, false);
+
+            waitDialog.dispose();
+            System.gc();
         }
     }//GEN-LAST:event_btnDocSaveActionPerformed
 
@@ -600,33 +625,56 @@ public class AddDialog extends javax.swing.JDialog {
     private void btnDocAddFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDocAddFileActionPerformed
         String lastPath = DB.getSetting("lastpath", "");
 
-        JFileChooser fc = new JFileChooser(new File(lastPath));
+        final JFileChooser fc = new JFileChooser(new File(lastPath));
 
         fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
         fc.setMultiSelectionEnabled(true);
         if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            for (File f : fc.getSelectedFiles()) {
-                String filename = f.getAbsolutePath().toLowerCase();
-                if ((filename.endsWith(".jpg")
-                        || filename.endsWith(".jpeg")
-                        || filename.endsWith(".png")
-                        || filename.endsWith(".bmp")
-                        || filename.endsWith(".wbmp")
-                        || filename.endsWith(".gif"))) {
-                    try {
-                        imgList.addImage(ImageIO.read(f), f.getName());
-                    } catch (IOException ex) {
-                        Log.l(ex);
+
+            WaitDialog wait = new WaitDialog(null, new WaitDialog.AsyncProcess("Loading files...") {
+
+                @Override
+                public void start() throws Exception {
+                    int progress = 1;
+                    for (File f : fc.getSelectedFiles()) {
+                        String filename = f.getAbsolutePath().toLowerCase();
+                        processing(((float)progress/(float)fc.getSelectedFiles().length), filename);
+                        if ((filename.endsWith(".jpg")
+                                || filename.endsWith(".jpeg")
+                                || filename.endsWith(".png")
+                                || filename.endsWith(".bmp")
+                                || filename.endsWith(".wbmp")
+                                || filename.endsWith(".gif"))) {
+                            try {
+                                imgList.addImage(ImageIO.read(f), f.getName());
+                            } catch (IOException ex) {
+                                Log.l(ex);
+                            }
+                        } else if (filename.endsWith(".pdf")) {
+                            Image pdf = Resources.getImg_pdf();
+                            imgList.addImage(pdf, f.getName());
+                        } else {
+                            imgList.addImage(Resources.getImg_otherfile(), f.getName());
+                        }
+
+                        files.add(f);
+                        progress++;
                     }
-                } else if (filename.endsWith(".pdf")) {
-                    Image pdf = Resources.getImg_pdf();
-                    imgList.addImage(pdf, f.getName());
-                } else {
-                    imgList.addImage(Resources.getImg_otherfile(), f.getName());
                 }
 
-                files.add(f);
-                lastPath = f.getParentFile().getPath();
+                @Override
+                public void finished(boolean success) {
+
+                }
+
+                @Override
+                public void cancel() {
+
+                }
+            }, false);
+
+            if (fc.getSelectedFiles().length > 0) {
+                lastPath = fc.getSelectedFiles()[0].getParentFile().getPath();
             }
 
             DB.setSetting("lastpath", lastPath);
@@ -651,22 +699,45 @@ public class AddDialog extends javax.swing.JDialog {
 
     private void btnInstitutionSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnInstitutionSaveActionPerformed
         if (txtInstitutionTitle.getText().trim().length() > 0) {
+            WaitDialog waitDialog = new WaitDialog(null, new WaitDialog.AsyncProcess("Adding new Institution") {
 
-            try {
-                List<String> tags = new ArrayList<>();
-                String[] tagArray = txtInstitutionTags.getText().split(",");
-                for (String t : tagArray) {
-                    tags.add(t.trim().toLowerCase());
+                @Override
+                public void start() throws Exception {
+                    try {
+                        processing(0.0f, "analysing tags...");
+                        List<String> tags = new ArrayList<>();
+                        String[] tagArray = txtInstitutionTags.getText().split(",");
+                        for (String t : tagArray) {
+                            tags.add(t.trim().toLowerCase());
+                        }
+
+                        List<File> logo = new ArrayList<>();
+                        logo.add(imgPanel.getImg());
+                        processing(0.1f, "saving institution data & logo...");
+                        Institution i = Institution.createInstitution(txtInstitutionTitle.getText(), txtInstitutionDescription.getText(), tags, logo);
+                        processing(0.9f, "creating relations...");
+                        createRelations(relations, i);
+                        processing(1f, "finished...");
+                        setVisible(false);
+                    } catch (IOException | SQLException ex) {
+                        Log.l(ex);
+                    }
                 }
 
-                List<File> logo = new ArrayList<>();
-                logo.add(imgPanel.getImg());
-                Institution i = Institution.createInstitution(txtInstitutionTitle.getText(), txtInstitutionDescription.getText(), tags, logo);
-                createRelations(relations, i);
-                setVisible(false);
-            } catch (IOException | SQLException ex) {
-                Log.l(ex);
-            }
+                @Override
+                public void finished(boolean success) {
+                    AddDialog.this.setVisible(false);
+                }
+
+                @Override
+                public void cancel() {
+                    Log.l("adding Doc cannot be stopped");
+                }
+            }, false);
+
+            waitDialog.setVisible(true);
+            waitDialog.dispose();
+            System.gc();
         }
     }//GEN-LAST:event_btnInstitutionSaveActionPerformed
 
@@ -716,7 +787,7 @@ public class AddDialog extends javax.swing.JDialog {
 
     private void showSimilarEntities(String[] searchWords, boolean byTitleAndDescription, boolean byTags) {
         try {
-            imlSimilarEntities.setThumbnails(DataHandler.instance.search(searchWords, byTitleAndDescription, byTitleAndDescription, byTitleAndDescription, byTags, DataHandler.DEFAULT_LIMIT));
+            imlSimilarEntities.setThumbnails(DataHandler.instance.search(searchWords, byTitleAndDescription, byTitleAndDescription, byTitleAndDescription, byTags, 10));
         } catch (Exception ex) {
             Log.l(ex);
         }
@@ -725,7 +796,7 @@ public class AddDialog extends javax.swing.JDialog {
     private void showSimilarEntities(String longSearchString, boolean byTitleAndDescription, boolean byTags) {
         try {
             String[] searchWords = longSearchString.split(" ");
-            imlSimilarEntities.setThumbnails(DataHandler.instance.search(searchWords, byTitleAndDescription, byTitleAndDescription, false, byTags, DataHandler.DEFAULT_LIMIT));
+            imlSimilarEntities.setThumbnails(DataHandler.instance.search(searchWords, byTitleAndDescription, byTitleAndDescription, false, byTags, 10));
             imlSimilarEntities.repaint();
         } catch (Exception ex) {
             Log.l(ex);
