@@ -163,7 +163,7 @@ public class ContentPanel extends javax.swing.JPanel {
         //set current entity
         currentEntity = entity;
 
-        ((TitledBorder) imgPreview.getBorder()).setTitle(currentEntity.getTitle());
+//        ((TitledBorder) imgPreview.getBorder()).setTitle(currentEntity.getTitle());
         txtPreviewTitle.setText(currentEntity.getTitle());
         txaPreviewDescription.setText(currentEntity.getDescription());
         txtTags.setText(currentEntity.getTagsAsString());
@@ -255,13 +255,17 @@ public class ContentPanel extends javax.swing.JPanel {
 
         add(scrSearchResults, "card2");
 
-        pnlPreview.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "TITLE", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Arial", 1, 16))); // NOI18N
+        pnlPreview.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                pnlPreviewMouseClicked(evt);
+            }
+        });
 
         javax.swing.GroupLayout pnlPreviewLayout = new javax.swing.GroupLayout(pnlPreview);
         pnlPreview.setLayout(pnlPreviewLayout);
         pnlPreviewLayout.setHorizontalGroup(
             pnlPreviewLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 493, Short.MAX_VALUE)
+            .addGap(0, 505, Short.MAX_VALUE)
         );
         pnlPreviewLayout.setVerticalGroup(
             pnlPreviewLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -675,7 +679,7 @@ public class ContentPanel extends javax.swing.JPanel {
 
             fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
             fc.setMultiSelectionEnabled(false);
-            fc.setFileFilter(new FileNameExtensionFilter(fileExtension+" files", fileExtension));
+            fc.setFileFilter(new FileNameExtensionFilter(fileExtension + " files", fileExtension));
             fc.setSelectedFile(new File(lastPath + File.separator + fileList.getImageTitle(fileList.getSelectedImageIndex())));
             final boolean[] abort = new boolean[]{false};
             if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
@@ -702,7 +706,7 @@ public class ContentPanel extends javax.swing.JPanel {
                                 bytesRead += tmpCount;
                                 fos.write(buffer);
                                 double percent = (double) bytesRead / (double) fileSize;
-                                processing((double) bytesRead / (double) fileSize, (((int)(percent*1000.0))/10.0)+"%");
+                                processing((double) bytesRead / (double) fileSize, (((int) (percent * 1000.0)) / 10.0) + "%");
                             }
                             byteStream.close();
                             fos.close();
@@ -756,6 +760,20 @@ public class ContentPanel extends javax.swing.JPanel {
             DataHandler.instance.deleteRelation((Relation) imlRelatedWith.getThumbnails()[imlRelatedWith.getSelectedIndex()]);
         }
     }//GEN-LAST:event_btnRemoveRelationActionPerformed
+
+    private void pnlPreviewMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_pnlPreviewMouseClicked
+        if (fileList.getSelectedImageIndex() >= 0) {
+            try {
+                FullScreenPreview full = new FullScreenPreview(null, currentEntity, fileList.getImageTitle(fileList.getSelectedImageIndex()));
+                full.setVisible(true);
+                
+                full.dispose();
+                System.gc();
+            } catch (Exception ex) {
+                Log.l(ex);
+            }
+        }
+    }//GEN-LAST:event_pnlPreviewMouseClicked
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

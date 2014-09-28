@@ -509,14 +509,85 @@ public class DataHandler {
                 }
                 tagR.close();
 
+                Entity resultEntity = null;
+                
                 if (type == 1) {
-                    resultTmp.add(new Doc(id, title, description, tags, date, created));
+                    resultEntity = new Doc(id, title, description, tags, date, created);
                 } else if (type == 2) {
-                    resultTmp.add(new Institution(id, title, description, tags, created));
+                    resultEntity = new Institution(id, title, description, tags, created);
+                }
+                
+                if(!resultTmp.contains(resultEntity)){
+                    resultTmp.add(resultEntity);
                 }
             }
             r.close();
         }
+        
+        //search by tags
+        if(resultTmp.size() < limit && tagsAllowed && searchWords.length > 0){
+            String sql = "SELECT id FROM tags where ";
+            for(int i=0; i<searchWords.length; i++){
+                if(i==0){
+                    sql += "LOWER(tag) LIKE '%"+searchWords[i].toLowerCase()+"%' ";
+                }else{
+                    sql += "OR LOWER(tag) LIKE '%"+searchWords[i].toLowerCase()+"%' ";
+                }
+            }
+            
+            DB.DBResult r = DB.select(sql);
+            List<Long> tagIDs = new ArrayList<>();
+            while(r.resultSet.next()){
+                if(!tagIDs.contains(r.resultSet.getLong(1))){
+                    tagIDs.add(r.resultSet.getLong(1));
+                }
+            }
+            for(Long id : tagIDs){
+                Entity resultEntity = getEntityByID(id);
+                if(!resultTmp.contains(resultEntity)){
+                   resultTmp.add(resultEntity);
+                }
+            }
+            r.close();
+        }
+        
+        //search by relation title&description
+         if(resultTmp.size() < limit && relationsAllowed && searchWords.length > 0){
+             String sql = "SELECT entity1, entity2 FROM relations where ";
+            for(int i=0; i<searchWords.length; i++){
+                if(i==0){
+                    sql += "LOWER(title) LIKE '%"+searchWords[i].toLowerCase()+"%' ";
+                }else{
+                    sql += "OR LOWER(title) LIKE '%"+searchWords[i].toLowerCase()+"%' ";
+                }
+            }
+            
+            for(int i=0; i<searchWords.length; i++){
+                sql += "OR LOWER(description) LIKE '%"+searchWords[i].toLowerCase()+"%' ";
+            }
+            
+            
+            DB.DBResult r = DB.select(sql);
+            List<Long> relationIDs = new ArrayList<>();
+            while(r.resultSet.next()){
+                if(!relationIDs.contains(r.resultSet.getLong(1))){
+                    relationIDs.add(r.resultSet.getLong(1));
+                }
+                
+                if(!relationIDs.contains(r.resultSet.getLong(2))){
+                    relationIDs.add(r.resultSet.getLong(2));
+                }
+            }
+            
+            for(Long id : relationIDs){
+                Entity resultEntity = getEntityByID(id);
+                if(!resultTmp.contains(resultEntity)){
+                   resultTmp.add(resultEntity);
+                }
+            }
+            r.close();
+         }
+        
 
         Entity[] results = resultTmp.toArray(new Entity[resultTmp.size()]);
         return results;

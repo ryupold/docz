@@ -147,13 +147,14 @@ public class AddDialog extends javax.swing.JDialog {
         jLabel6 = new javax.swing.JLabel();
         txtInstitutionTags = new javax.swing.JTextField();
         txtInstitutionTitle = new javax.swing.JTextField();
-        txtInstitutionDescription = new javax.swing.JTextField();
         jLabel8 = new javax.swing.JLabel();
         jLabel9 = new javax.swing.JLabel();
         jLabel10 = new javax.swing.JLabel();
         imgLogo = imgPanel = new ImagePanel();
         btnInstitutionLogo = new javax.swing.JButton();
         btnInstitutionSave = new javax.swing.JButton();
+        jScrollPane4 = new javax.swing.JScrollPane();
+        txaInstitutionDescription = new javax.swing.JTextArea();
         jLabel7 = new javax.swing.JLabel();
         splitSimilarRelatives = new javax.swing.JSplitPane();
         jScrollPane2 = new javax.swing.JScrollPane();
@@ -188,6 +189,11 @@ public class AddDialog extends javax.swing.JDialog {
                 txtDocTagsActionPerformed(evt);
             }
         });
+        txtDocTags.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                txtDocTagsKeyTyped(evt);
+            }
+        });
 
         txtDocTitle.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
         txtDocTitle.addCaretListener(new javax.swing.event.CaretListener() {
@@ -198,6 +204,11 @@ public class AddDialog extends javax.swing.JDialog {
         txtDocTitle.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtDocTitleActionPerformed(evt);
+            }
+        });
+        txtDocTitle.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                txtDocTitleKeyTyped(evt);
             }
         });
 
@@ -272,6 +283,11 @@ public class AddDialog extends javax.swing.JDialog {
 
         txaDocDescription.setColumns(20);
         txaDocDescription.setRows(5);
+        txaDocDescription.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                txaDocDescriptionKeyTyped(evt);
+            }
+        });
         jScrollPane1.setViewportView(txaDocDescription);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -366,6 +382,11 @@ public class AddDialog extends javax.swing.JDialog {
         jLabel6.setText("Title:");
 
         txtInstitutionTags.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
+        txtInstitutionTags.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                txtInstitutionTagsKeyTyped(evt);
+            }
+        });
 
         txtInstitutionTitle.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
         txtInstitutionTitle.addActionListener(new java.awt.event.ActionListener() {
@@ -373,8 +394,11 @@ public class AddDialog extends javax.swing.JDialog {
                 txtInstitutionTitleActionPerformed(evt);
             }
         });
-
-        txtInstitutionDescription.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
+        txtInstitutionTitle.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                txtInstitutionTitleKeyTyped(evt);
+            }
+        });
 
         jLabel8.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel8.setText("Description:");
@@ -395,7 +419,7 @@ public class AddDialog extends javax.swing.JDialog {
         );
         imgLogoLayout.setVerticalGroup(
             imgLogoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 100, Short.MAX_VALUE)
+            .addGap(0, 0, Short.MAX_VALUE)
         );
 
         btnInstitutionLogo.setText("...");
@@ -413,6 +437,17 @@ public class AddDialog extends javax.swing.JDialog {
             }
         });
 
+        txaInstitutionDescription.setColumns(20);
+        txaInstitutionDescription.setFont(new java.awt.Font("Arial", 0, 18)); // NOI18N
+        txaInstitutionDescription.setRows(5);
+        txaInstitutionDescription.setToolTipText("");
+        txaInstitutionDescription.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                txaInstitutionDescriptionKeyTyped(evt);
+            }
+        });
+        jScrollPane4.setViewportView(txaInstitutionDescription);
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -426,8 +461,8 @@ public class AddDialog extends javax.swing.JDialog {
                             .addComponent(jLabel6))
                         .addGap(10, 10, 10)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(txtInstitutionDescription)
-                            .addComponent(txtInstitutionTitle)))
+                            .addComponent(txtInstitutionTitle)
+                            .addComponent(jScrollPane4)))
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel9)
@@ -453,9 +488,11 @@ public class AddDialog extends javax.swing.JDialog {
                     .addComponent(jLabel6)
                     .addComponent(txtInstitutionTitle, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel8)
-                    .addComponent(txtInstitutionDescription, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel8)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 294, Short.MAX_VALUE))
                 .addGap(18, 18, 18)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel9)
@@ -464,9 +501,9 @@ public class AddDialog extends javax.swing.JDialog {
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                         .addComponent(imgLogo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel10, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(jLabel10, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(btnInstitutionLogo))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 381, Short.MAX_VALUE)
+                .addGap(122, 122, 122)
                 .addComponent(btnInstitutionSave)
                 .addContainerGap())
         );
@@ -714,11 +751,10 @@ public class AddDialog extends javax.swing.JDialog {
                         List<File> logo = new ArrayList<>();
                         logo.add(imgPanel.getImg());
                         processing(0.1f, "saving institution data & logo...");
-                        Institution i = Institution.createInstitution(txtInstitutionTitle.getText(), txtInstitutionDescription.getText(), tags, logo);
+                        Institution i = Institution.createInstitution(txtInstitutionTitle.getText().trim(), txaInstitutionDescription.getText().trim(), tags, logo);
                         processing(0.9f, "creating relations...");
                         createRelations(relations, i);
                         processing(1f, "finished...");
-                        setVisible(false);
                     } catch (IOException | SQLException ex) {
                         Log.l(ex);
                     }
@@ -734,8 +770,7 @@ public class AddDialog extends javax.swing.JDialog {
                     Log.l("adding Doc cannot be stopped");
                 }
             }, false);
-
-            waitDialog.setVisible(true);
+            
             waitDialog.dispose();
             System.gc();
         }
@@ -749,11 +784,11 @@ public class AddDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_btnDocRemoveFileActionPerformed
 
     private void txtDocTitleCaretUpdate(javax.swing.event.CaretEvent evt) {//GEN-FIRST:event_txtDocTitleCaretUpdate
-        showSimilarEntities(txtDocTitle.getText(), true, false);
+        
     }//GEN-LAST:event_txtDocTitleCaretUpdate
 
     private void txtDocTagsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtDocTagsActionPerformed
-        showSimilarEntities(txtDocTags.getText(), false, true);
+        
     }//GEN-LAST:event_txtDocTagsActionPerformed
 
     private void btnRemoveFromRelationsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRemoveFromRelationsActionPerformed
@@ -784,6 +819,42 @@ public class AddDialog extends javax.swing.JDialog {
             Log.l(ex);
         }
     }//GEN-LAST:event_btnAddToRelationsActionPerformed
+
+    private void txtDocTitleKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtDocTitleKeyTyped
+        if(evt.isControlDown() && evt.getKeyChar() == ' ' || evt.getKeyChar() == '\n'){
+            showSimilarEntities(txtDocTitle.getText(), true, false);
+        }
+    }//GEN-LAST:event_txtDocTitleKeyTyped
+
+    private void txaDocDescriptionKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txaDocDescriptionKeyTyped
+        if(evt.isControlDown() && evt.getKeyChar() == ' ' || evt.getKeyChar() == '\n'){
+            showSimilarEntities(txaDocDescription.getText(), true, false);
+        }
+    }//GEN-LAST:event_txaDocDescriptionKeyTyped
+
+    private void txtDocTagsKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtDocTagsKeyTyped
+        if(evt.isControlDown() && evt.getKeyChar() == ' ' || evt.getKeyChar() == '\n'){
+            showSimilarEntities(txtDocTags.getText(), false, true);
+        }
+    }//GEN-LAST:event_txtDocTagsKeyTyped
+
+    private void txtInstitutionTitleKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtInstitutionTitleKeyTyped
+        if(evt.isControlDown() && evt.getKeyChar() == ' ' || evt.getKeyChar() == '\n'){
+            showSimilarEntities(txtInstitutionTitle.getText(), true, false);
+        }
+    }//GEN-LAST:event_txtInstitutionTitleKeyTyped
+
+    private void txaInstitutionDescriptionKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txaInstitutionDescriptionKeyTyped
+        if(evt.isControlDown() && evt.getKeyChar() == ' ' || evt.getKeyChar() == '\n'){
+            showSimilarEntities(txaInstitutionDescription.getText(), true, false);
+        }
+    }//GEN-LAST:event_txaInstitutionDescriptionKeyTyped
+
+    private void txtInstitutionTagsKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtInstitutionTagsKeyTyped
+        if(evt.isControlDown() && evt.getKeyChar() == ' ' || evt.getKeyChar() == '\n'){
+            showSimilarEntities(txtInstitutionTags.getText(), false, true);
+        }
+    }//GEN-LAST:event_txtInstitutionTagsKeyTyped
 
     private void showSimilarEntities(String[] searchWords, boolean byTitleAndDescription, boolean byTags) {
         try {
@@ -875,13 +946,14 @@ public class AddDialog extends javax.swing.JDialog {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JLabel lblDocDate;
     private javax.swing.JSplitPane splitSimilarRelatives;
     private javax.swing.JTextArea txaDocDescription;
+    private javax.swing.JTextArea txaInstitutionDescription;
     private javax.swing.JTextField txtDocTags;
     private javax.swing.JTextField txtDocTitle;
-    private javax.swing.JTextField txtInstitutionDescription;
     private javax.swing.JTextField txtInstitutionTags;
     private javax.swing.JTextField txtInstitutionTitle;
     // End of variables declaration//GEN-END:variables
