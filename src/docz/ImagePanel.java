@@ -13,6 +13,7 @@ import java.awt.Image;
 import java.awt.Point;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
@@ -32,7 +33,7 @@ public class ImagePanel extends JPanel {
     private File imgFile = null;
     private Image scaledImg = null;
     private Rectangle preferedSize;
-    private int camX = 0, camY = 0;
+    private float camX = 0, camY = 0;
     private float zoom = 1f;
     private Point startDrag = null;
 
@@ -72,22 +73,46 @@ public class ImagePanel extends JPanel {
 
             @Override
             public void mouseWheelMoved(MouseWheelEvent e) {
+                float delta = (float)e.getPreciseWheelRotation();                
                 zoom -= e.getPreciseWheelRotation();
                 zoom = Math.max(Math.min(10f, zoom), 1f);
+                int w = getWidth();
+                int h = getHeight();
+                
+                camX += delta * w;
+                camY += delta * h;
+                
+                
                 repaint();
             }
         });
-        
-        
+
+        addMouseListener(new MouseAdapter() {
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                startDrag = e.getPoint();
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                startDrag = null;
+            }
+
+        });
 
         addMouseMotionListener(new MouseMotionListener() {
 
             @Override
             public void mouseDragged(MouseEvent e) {
-                //Log.l("drag:" + e.getButton());
-                camX = getWidth() - e.getX();
-                camY = getHeight() - e.getY();
-                repaint();
+                if (startDrag != null) {
+                    Point delta = new Point(startDrag.x - e.getX(), startDrag.y - e.getY());
+                    
+                    camX = camX + delta.x / zoom;
+                    camY = camY + delta.y / zoom;
+                    repaint();
+                    startDrag = e.getPoint();
+                }
             }
 
             @Override
@@ -106,18 +131,22 @@ public class ImagePanel extends JPanel {
     }
 
     private void resetCam() {
-        camX = getWidth() / 2;
-        camY = getHeight() / 2;
+        camX = 0;
+        camY = 0;
         zoom = 1f;
     }
 
     public void setImg(File imgFile) throws IOException {
+        setImg(imgFile, false);
+    }
+    
+    public void setImg(File imgFile, boolean raw) throws IOException {
         this.imgFile = imgFile;
         if (imgFile != null) {
             BufferedImage img = ImageIO.read(imgFile);
             if (img != null) {
                 preferedSize = ScaleImage.fitToRect(new ScaleImage.Rectangle(0, 0, getWidth(), getHeight()), (BufferedImage) img);
-                this.scaledImg = ScaleImage.scale((BufferedImage) img, preferedSize.width, preferedSize.heigth);
+                this.scaledImg = raw ? img : ScaleImage.scale((BufferedImage) img, preferedSize.width, preferedSize.heigth);
             } else {
                 scaledImg = null;
                 this.imgFile = null;
@@ -143,10 +172,10 @@ public class ImagePanel extends JPanel {
         g.setColor(Color.black);
         g.fillRect(0, 0, getWidth(), getHeight());
         if (scaledImg != null && getWidth() > 0 && getHeight() > 0) {
-            Log.l("zoom = " + zoom + "    X = " + camX + "    Y = " + camY);
+            Log.l("zoom = " + zoom + "    CamX = " + camX + "    CamY = " + camY);
             g.drawImage(scaledImg,
-                    /*X*/ (int) (preferedSize.x - (camX * zoom - getWidth() / 2f)),
-                    /*Y*/ (int) (preferedSize.y - (camY * zoom - getHeight() / 2f)),
+                    /*X*/ (int) (preferedSize.x - camX * zoom),
+                    /*Y*/ (int) (preferedSize.y - camY * zoom),
                     /*W*/ (int) (preferedSize.width * zoom),
                     /*H*/ (int) (preferedSize.heigth * zoom),
                     this);

@@ -69,7 +69,7 @@ public class AddDialog extends javax.swing.JDialog {
             public void imageSelected(int pos) {
                 if (pos >= 0 && pos < files.size()) {
                     try {
-                        previewPanel.setImg(files.get(pos));
+                        previewPanel.setImg(files.get(pos), true);
                     } catch (IOException ex) {
                         Log.l(ex);
                     }

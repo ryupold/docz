@@ -467,6 +467,28 @@ public class DataHandler {
         }
     }
 
+    public Image getFileAsImage(Entity entity, String name) throws SQLException {
+        try (DB.DBResult r = DB.select("select name, file from files where id='" + entity.id + "' and name='" + name + "'")) {
+
+            if (r.resultSet.next()) {
+                String fileName = r.resultSet.getString(1);
+                if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".bmp") || fileName.endsWith(".wbmp") || fileName.endsWith(".gif") || fileName.endsWith(".png")) {
+                    try {
+                        InputStream byteStream = r.resultSet.getBinaryStream(2);
+                        BufferedImage img = ImageIO.read(byteStream);
+                        return img;
+                    } catch (IOException ex) {
+                        return null;
+                    }
+                } else {
+                    return null;
+                }
+            } else {
+                return Resources.getImg_nofiles();
+            }
+        }
+    }
+    
     public Entity[] search(String[] searchWords, boolean docsAllowed, boolean institutionsAllowed, boolean relationsAllowed, boolean tagsAllowed) throws SQLException {
         return search(searchWords, docsAllowed, institutionsAllowed, relationsAllowed, tagsAllowed, DEFAULT_LIMIT);
     }

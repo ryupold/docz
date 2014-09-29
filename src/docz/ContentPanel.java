@@ -11,10 +11,8 @@ import de.realriu.riulib.gui.imagelist.ScaledImageList;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -24,13 +22,9 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import javax.swing.border.TitledBorder;
-import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import net.sourceforge.jdatepicker.DateModel;
 import net.sourceforge.jdatepicker.JDateComponentFactory;
@@ -114,8 +108,11 @@ public class ContentPanel extends javax.swing.JPanel {
                     try {
                         String title = fileList.getTitle(pos);
                         Font font = new Font("Arial", Font.PLAIN, 30);
-                        Image img = DataHandler.instance.getThumbnail(currentEntity, title,
-                                (int) (imgPreview.getWidth() * 1.5), (int) (imgPreview.getHeight() * 1.5), font);
+                        Image img = DataHandler.instance.getFileAsImage(currentEntity, title);
+                        if (img == null) {
+                            img = DataHandler.instance.getThumbnail(currentEntity, title,
+                                    (int) (imgPreview.getWidth() * 1.5), (int) (imgPreview.getHeight() * 1.5), font);
+                        }
                         imgPreview.setImg(img);
                     } catch (SQLException ex) {
                         Log.l(ex);
@@ -159,6 +156,7 @@ public class ContentPanel extends javax.swing.JPanel {
         btnRemoveFile.setEnabled(editMode && fileList.getSelectedImageIndex() >= 0);
         btnAddRelation.setEnabled(editMode);
         btnRemoveRelation.setEnabled(editMode && imlRelatedWith.getSelectedIndex() >= 0);
+        btnDeleteEntity.setEnabled(editMode);
 
         //set current entity
         currentEntity = entity;
@@ -179,9 +177,13 @@ public class ContentPanel extends javax.swing.JPanel {
             }
             fileList.setTitleColor(new Color(255 - fileList.getBackground().getRed(),
                     255 - fileList.getBackground().getGreen(), 255 - fileList.getBackground().getBlue()));
-            if (files.length > 0) {
-                imgPreview.setImg(DataHandler.instance.getThumbnail(currentEntity, fileList.getTitle(0),
-                        (int) (imgPreview.getWidth() * 1.5), (int) (imgPreview.getHeight() * 1.5), null));
+            
+            
+            if(fileList.count() > 0){
+                fileList.selectImage(0);
+            }
+            else{
+                imgPreview.setImg(Resources.getImg_nofiles());
             }
         } catch (IOException ex) {
             Log.l(ex);
@@ -766,7 +768,7 @@ public class ContentPanel extends javax.swing.JPanel {
             try {
                 FullScreenPreview full = new FullScreenPreview(null, currentEntity, fileList.getImageTitle(fileList.getSelectedImageIndex()));
                 full.setVisible(true);
-                
+
                 full.dispose();
                 System.gc();
             } catch (Exception ex) {
