@@ -6,9 +6,7 @@
 package docz;
 
 import de.realriu.riulib.helpers.ScaleImage;
-import java.awt.Color;
 import java.awt.Font;
-import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -25,11 +23,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.imageio.ImageIO;
-import net.sourceforge.javaocr.ocr.PixelImage;
-import net.sourceforge.javaocr.ocrPlugins.mseOCR.OCRScanner;
 
 /**
  *
@@ -153,7 +147,7 @@ public class DataHandler {
     }
 
     public Entity createEntity(String title, String description, List<String> tags, Date date, List<File> files, int type) throws SQLException, FileNotFoundException, IOException {
-       Connection c = DB.createConnection();
+        Connection c = DB.createConnection();
 
         Date created = new Date();
         if (date == null) {
@@ -166,14 +160,14 @@ public class DataHandler {
                 for (String tag : tags) {
                     DB.insert("insert into tags(id, tag) values('" + id + "', '" + tag + "');", false);
                 }
-                
+
                 Entity entity = null;
                 if (type == 1) {
                     entity = new Doc(id, title, description, tags, date, created);
                 } else if (type == 2) {
                     entity = new Institution(id, title, description, tags, created);
                 }
-                
+
                 addFiles(entity, files.toArray(new File[files.size()]));
 
                 return entity;
@@ -358,6 +352,27 @@ public class DataHandler {
         }
     }
 
+    /**
+     * returns null ich the byte stream dowsnt hold an image
+     * @param byteStream
+     * @return 
+     */
+    public Image isImage(InputStream byteStream) {
+        try {
+            BufferedImage img = ImageIO.read(byteStream);
+            return img;
+        } catch (IOException ex) {
+            return null;
+        }
+    }
+
+    public DB.DBResultWithStream getFileStream(Entity entity, String name) throws SQLException {
+        DB.DBResultWithStream r = new DB.DBResultWithStream(
+                DB.select("select name, created, file from files where id='" + entity.id + "' AND name='" + name + "'"),
+                3);
+        return r;
+    }
+
     public ImageFile[] getThumbnails(Entity entity, int preferedWidth, int preferedHeight, Font font) throws IOException {
         try {
             DB.DBResult r = DB.select("select name, created, file from files where id='" + entity.id + "'");
@@ -510,84 +525,82 @@ public class DataHandler {
                 tagR.close();
 
                 Entity resultEntity = null;
-                
+
                 if (type == 1) {
                     resultEntity = new Doc(id, title, description, tags, date, created);
                 } else if (type == 2) {
                     resultEntity = new Institution(id, title, description, tags, created);
                 }
-                
-                if(!resultTmp.contains(resultEntity)){
+
+                if (!resultTmp.contains(resultEntity)) {
                     resultTmp.add(resultEntity);
                 }
             }
             r.close();
         }
-        
+
         //search by tags
-        if(resultTmp.size() < limit && tagsAllowed && searchWords.length > 0){
+        if (resultTmp.size() < limit && tagsAllowed && searchWords.length > 0) {
             String sql = "SELECT id FROM tags where ";
-            for(int i=0; i<searchWords.length; i++){
-                if(i==0){
-                    sql += "LOWER(tag) LIKE '%"+searchWords[i].toLowerCase()+"%' ";
-                }else{
-                    sql += "OR LOWER(tag) LIKE '%"+searchWords[i].toLowerCase()+"%' ";
+            for (int i = 0; i < searchWords.length; i++) {
+                if (i == 0) {
+                    sql += "LOWER(tag) LIKE '%" + searchWords[i].toLowerCase() + "%' ";
+                } else {
+                    sql += "OR LOWER(tag) LIKE '%" + searchWords[i].toLowerCase() + "%' ";
                 }
             }
-            
+
             DB.DBResult r = DB.select(sql);
             List<Long> tagIDs = new ArrayList<>();
-            while(r.resultSet.next()){
-                if(!tagIDs.contains(r.resultSet.getLong(1))){
+            while (r.resultSet.next()) {
+                if (!tagIDs.contains(r.resultSet.getLong(1))) {
                     tagIDs.add(r.resultSet.getLong(1));
                 }
             }
-            for(Long id : tagIDs){
+            for (Long id : tagIDs) {
                 Entity resultEntity = getEntityByID(id);
-                if(!resultTmp.contains(resultEntity)){
-                   resultTmp.add(resultEntity);
+                if (!resultTmp.contains(resultEntity)) {
+                    resultTmp.add(resultEntity);
                 }
             }
             r.close();
         }
-        
+
         //search by relation title&description
-         if(resultTmp.size() < limit && relationsAllowed && searchWords.length > 0){
-             String sql = "SELECT entity1, entity2 FROM relations where ";
-            for(int i=0; i<searchWords.length; i++){
-                if(i==0){
-                    sql += "LOWER(title) LIKE '%"+searchWords[i].toLowerCase()+"%' ";
-                }else{
-                    sql += "OR LOWER(title) LIKE '%"+searchWords[i].toLowerCase()+"%' ";
+        if (resultTmp.size() < limit && relationsAllowed && searchWords.length > 0) {
+            String sql = "SELECT entity1, entity2 FROM relations where ";
+            for (int i = 0; i < searchWords.length; i++) {
+                if (i == 0) {
+                    sql += "LOWER(title) LIKE '%" + searchWords[i].toLowerCase() + "%' ";
+                } else {
+                    sql += "OR LOWER(title) LIKE '%" + searchWords[i].toLowerCase() + "%' ";
                 }
             }
-            
-            for(int i=0; i<searchWords.length; i++){
-                sql += "OR LOWER(description) LIKE '%"+searchWords[i].toLowerCase()+"%' ";
+
+            for (int i = 0; i < searchWords.length; i++) {
+                sql += "OR LOWER(description) LIKE '%" + searchWords[i].toLowerCase() + "%' ";
             }
-            
-            
+
             DB.DBResult r = DB.select(sql);
             List<Long> relationIDs = new ArrayList<>();
-            while(r.resultSet.next()){
-                if(!relationIDs.contains(r.resultSet.getLong(1))){
+            while (r.resultSet.next()) {
+                if (!relationIDs.contains(r.resultSet.getLong(1))) {
                     relationIDs.add(r.resultSet.getLong(1));
                 }
-                
-                if(!relationIDs.contains(r.resultSet.getLong(2))){
+
+                if (!relationIDs.contains(r.resultSet.getLong(2))) {
                     relationIDs.add(r.resultSet.getLong(2));
                 }
             }
-            
-            for(Long id : relationIDs){
+
+            for (Long id : relationIDs) {
                 Entity resultEntity = getEntityByID(id);
-                if(!resultTmp.contains(resultEntity)){
-                   resultTmp.add(resultEntity);
+                if (!resultTmp.contains(resultEntity)) {
+                    resultTmp.add(resultEntity);
                 }
             }
             r.close();
-         }
-        
+        }
 
         Entity[] results = resultTmp.toArray(new Entity[resultTmp.size()]);
         return results;
@@ -600,10 +613,11 @@ public class DataHandler {
 
     /**
      * deactivated until I find a way to load a pretrained OCR library
+     *
      * @param file
-     * @return 
+     * @return
      */
-    public String getOCR(File file){
+    public String getOCR(File file) {
 //        OCRScanner scanner = new OCRScanner();
 //        String filename = file.getAbsolutePath().toLowerCase();
 //        if ((filename.endsWith(".jpg")

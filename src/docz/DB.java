@@ -6,6 +6,7 @@
 package docz;
 
 import java.io.File;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -13,8 +14,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.h2.tools.ChangeFileEncryption;
 
 /**
@@ -158,6 +157,17 @@ public abstract class DB {
         }
 
         throw new SecurityException("no password entered!");
+    }
+
+    public static class DBResultWithStream extends DBResult implements AutoCloseable {
+
+        public final InputStream stream;
+        
+        public DBResultWithStream(DBResult r, int columnIndex) throws SQLException {
+            super(r.connection, r.statement, r.resultSet);
+            if(r.resultSet.next()) stream = r.resultSet.getBinaryStream(columnIndex);
+            else stream = null;
+        }
     }
 
     public static class DBResult implements AutoCloseable {
