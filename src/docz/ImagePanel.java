@@ -36,6 +36,7 @@ public class ImagePanel extends JPanel {
     private float camX = 0, camY = 0;
     private float zoom = 1f;
     private Point startDrag = null;
+    private boolean raw;
 
     public ImagePanel() {
         addComponentListener(new ComponentListener() {
@@ -44,7 +45,7 @@ public class ImagePanel extends JPanel {
             public void componentResized(ComponentEvent e) {
                 try {
                     if (imgFile != null) {
-                        setImg(imgFile);
+                        setImg(imgFile, raw);
                     } else {
                         repaint();
                     }
@@ -75,13 +76,7 @@ public class ImagePanel extends JPanel {
             public void mouseWheelMoved(MouseWheelEvent e) {
                 float delta = (float)e.getPreciseWheelRotation();                
                 zoom -= e.getPreciseWheelRotation();
-                zoom = Math.max(Math.min(10f, zoom), 1f);
-                int w = getWidth();
-                int h = getHeight();
-                
-                camX += delta * w;
-                camY += delta * h;
-                
+                zoom = Math.max(Math.min(10f, zoom), 1f);                
                 
                 repaint();
             }
@@ -155,6 +150,8 @@ public class ImagePanel extends JPanel {
 
         resetCam();
 
+        this.raw = raw;
+        
         repaint();
     }
 
@@ -172,7 +169,6 @@ public class ImagePanel extends JPanel {
         g.setColor(Color.black);
         g.fillRect(0, 0, getWidth(), getHeight());
         if (scaledImg != null && getWidth() > 0 && getHeight() > 0) {
-            Log.l("zoom = " + zoom + "    CamX = " + camX + "    CamY = " + camY);
             g.drawImage(scaledImg,
                     /*X*/ (int) (preferedSize.x - camX * zoom),
                     /*Y*/ (int) (preferedSize.y - camY * zoom),
