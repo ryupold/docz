@@ -42,6 +42,7 @@ public class AddDialog extends javax.swing.JDialog {
     private ImagePanel imgPanel, previewPanel;
     private final List<Relation> relations = new ArrayList<>();
     private Entity tmpEntity = new Entity();
+    private WaitDialog.AsyncProcess searchProgress = null;
 
     /**
      * Creates new form AddDialog
@@ -857,22 +858,40 @@ public class AddDialog extends javax.swing.JDialog {
         }
     }//GEN-LAST:event_txtInstitutionTagsKeyTyped
 
-    private void showSimilarEntities(String[] searchWords, boolean byTitleAndDescription, boolean byTags) {
-        try {
-            imlSimilarEntities.setThumbnails(DataHandler.instance.search(searchWords, byTitleAndDescription, byTitleAndDescription, byTitleAndDescription, byTags, 10));
-        } catch (Exception ex) {
-            Log.l(ex);
-        }
-    }
+    private void showSimilarEntities(final String longSearchString, final boolean byTitleAndDescription, final boolean byTags) {
+        
+        if (searchProgress != null && !searchProgress.isFinished()) {
+                searchProgress.cancel(); //concurrency problems????
+            }
 
-    private void showSimilarEntities(String longSearchString, boolean byTitleAndDescription, boolean byTags) {
-        try {
-            String[] searchWords = longSearchString.split(" ");
-            imlSimilarEntities.setThumbnails(DataHandler.instance.search(searchWords, byTitleAndDescription, byTitleAndDescription, false, byTags, 10));
-            imlSimilarEntities.repaint();
-        } catch (Exception ex) {
-            Log.l(ex);
-        }
+            searchProgress = new WaitDialog.AsyncProcess("search") {
+                Entity[] findings = null;
+                private boolean canceled = false;
+
+                @Override
+                public void start() throws Exception {
+                    String[] searchWords = longSearchString.split(" ");
+                    findings = DataHandler.instance.search(searchWords, byTitleAndDescription, byTitleAndDescription, false, byTags, 10);
+                }
+
+                @Override
+                public void finished(boolean success) {
+                    try {
+                        if (!canceled && findings != null) {
+                            imlSimilarEntities.setThumbnails(findings);
+                        }
+                    } catch (Exception ex) {
+                        Log.l(ex);
+                    }
+                }
+
+                @Override
+                public void cancel() {
+                    canceled = true;
+                }
+
+            };
+            new WaitDialog(null, searchProgress, true, false);
     }
 
     /**

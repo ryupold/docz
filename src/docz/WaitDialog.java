@@ -19,7 +19,7 @@ public class WaitDialog extends javax.swing.JDialog {
     public static abstract class AsyncProcess {
 
         private ProcessingListener listener;
-
+        private boolean finished = false;
         public final String title;
 
         public AsyncProcess(String title) {
@@ -35,20 +35,33 @@ public class WaitDialog extends javax.swing.JDialog {
         }
 
         public abstract void finished(boolean success);
+        
+        public final boolean isFinished(){
+            return finished;
+        }
 
-        public abstract void cancel();
+        public void cancel(){}
     }
 
     private final AsyncProcess process;
     private Thread thread;
 
+    
+    public WaitDialog(java.awt.Frame parent, final AsyncProcess async) {
+        this(parent, async, true, true);
+    }
+    
+    public WaitDialog(java.awt.Frame parent, final AsyncProcess async, final boolean cancleAble) {
+        this(parent, async, cancleAble, true);
+    }
+    
     /**
      * Creates new form WaitDialog
      *
      * @param parent
      * @param async
      */
-    public WaitDialog(java.awt.Frame parent, final AsyncProcess async, boolean cancleAble) {
+    public WaitDialog(java.awt.Frame parent, final AsyncProcess async, final boolean cancleAble, final boolean showDialog) {
         super(parent, true);
         initComponents();
         btnCancel.setVisible(cancleAble);
@@ -72,8 +85,10 @@ public class WaitDialog extends javax.swing.JDialog {
             public void run() {
                 try {
                     process.start();
+                    process.finished = true;
                     process.finished(true);
                 } catch (Exception e) {
+                    process.finished = true;
                     process.finished(false);
                 }
                 setVisible(false);
@@ -82,7 +97,7 @@ public class WaitDialog extends javax.swing.JDialog {
         
         
         thread.start();
-        setVisible(true);
+        if(showDialog) setVisible(true);
     }
 
     @Override

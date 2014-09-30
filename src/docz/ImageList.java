@@ -89,13 +89,13 @@ public class ImageList extends javax.swing.JPanel {
                         }
                     }
                 }
-                
+
                 repaint();
             }
         });
     }
 
-    public void setImageListListener(ImageListListener listener) {
+    public synchronized void setImageListListener(ImageListListener listener) {
         this.listener = listener;
     }
 
@@ -108,19 +108,19 @@ public class ImageList extends javax.swing.JPanel {
         void imageHovered(int index);
 
         void imageSelected(int index);
-        
+
         void doubleClicked(int index);
     }
 
-    public void setPreferedWidth(int preferedWidth) {
+    public synchronized void setPreferedWidth(int preferedWidth) {
         this.preferedWidth = preferedWidth;
     }
 
-    public void setPreferedHeight(int preferedHeight) {
+    public synchronized void setPreferedHeight(int preferedHeight) {
         this.preferedHeight = preferedHeight;
     }
 
-    public void setThumbnails(Thumbnail[] thumbnails) throws Exception {
+    public synchronized void setThumbnails(Thumbnail[] thumbnails) throws Exception {
         this.thumbnails = thumbnails;
 
         images = new Image[thumbnails.length];
@@ -153,6 +153,7 @@ public class ImageList extends javax.swing.JPanel {
         });
 
         recalcPositions();
+        repaint();
     }
 
     public Thumbnail[] getThumbnails() {
@@ -167,7 +168,7 @@ public class ImageList extends javax.swing.JPanel {
         return hoveredIndex;
     }
 
-    private void recalcPositions() throws SQLException {
+    private synchronized void recalcPositions() throws SQLException {
         if (thumbnails.length > 0) {
             for (int i = 0; i < thumbnails.length; i++) {
                 int imgsPerRow = Math.max((int) (1f * getParent().getWidth() / (preferedWidth + 2 * paddingLR)), 1);
@@ -185,33 +186,37 @@ public class ImageList extends javax.swing.JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        
-        try{
-        if (images != null && names != null && rects != null) {
-            for (int i = 0; i < images.length; i++) {
-                g.drawRect(bounds[i].x, bounds[i].y, bounds[i].width, bounds[i].heigth);
-                g.drawImage(images[i], bounds[i].x + rects[i].x, bounds[i].y + rects[i].y, this);
-                double shorteningFactor = g.getFontMetrics().stringWidth(names[i]) * 1.0 / preferedWidth;
-                names[i] = shorteningFactor <= 1.0 ? names[i]
-                        : (names[i].length() >= (int) (names[i].length() / shorteningFactor)
-                        ? names[i].substring(0, (int) (names[i].length() / shorteningFactor)) : names[i]);
-                g.drawString(names[i], bounds[i].x, bounds[i].y + bounds[i].heigth + 12);
+
+        try {
+            if (images != null && names != null && rects != null) {
+                for (int i = 0; i < images.length; i++) {
+                    g.drawRect(bounds[i].x, bounds[i].y, bounds[i].width, bounds[i].heigth);
+                    g.drawImage(images[i], bounds[i].x + rects[i].x, bounds[i].y + rects[i].y, this);
+                    double shorteningFactor = g.getFontMetrics().stringWidth(names[i]) * 1.0 / preferedWidth;
+                    names[i] = shorteningFactor <= 1.0 ? names[i]
+                            : (names[i].length() >= (int) (names[i].length() / shorteningFactor)
+                            ? names[i].substring(0, (int) (names[i].length() / shorteningFactor)) : names[i]);
+                    g.drawString(names[i], bounds[i].x, bounds[i].y + bounds[i].heigth + 12);
+                }
             }
-        }
 
-        if (hoveredIndex >= 0) {
-            g.setColor(Color.yellow);
-            g.drawRect(bounds[hoveredIndex].x, bounds[hoveredIndex].y, bounds[hoveredIndex].width, bounds[hoveredIndex].heigth);
-            g.drawRect(bounds[hoveredIndex].x - 1, bounds[hoveredIndex].y - 1, bounds[hoveredIndex].width + 2, bounds[hoveredIndex].heigth + 2);
-        }
+            if (hoveredIndex >= 0) {
+                g.setColor(Color.yellow);
+                g.drawRect(bounds[hoveredIndex].x, bounds[hoveredIndex].y, bounds[hoveredIndex].width, bounds[hoveredIndex].heigth);
+                g.drawRect(bounds[hoveredIndex].x - 1, bounds[hoveredIndex].y - 1, bounds[hoveredIndex].width + 2, bounds[hoveredIndex].heigth + 2);
+            }
 
-        if (selectedIndex >= 0 && selectedIndex < bounds.length) {
-            g.setColor(Color.cyan);
-            g.drawRect(bounds[selectedIndex].x, bounds[selectedIndex].y, bounds[selectedIndex].width, bounds[selectedIndex].heigth);
-            g.drawRect(bounds[selectedIndex].x - 1, bounds[selectedIndex].y - 1, bounds[selectedIndex].width + 2, bounds[selectedIndex].heigth + 2);
+            if (selectedIndex >= 0 && selectedIndex < bounds.length) {
+                g.setColor(Color.cyan);
+                g.drawRect(bounds[selectedIndex].x, bounds[selectedIndex].y, bounds[selectedIndex].width, bounds[selectedIndex].heigth);
+                g.drawRect(bounds[selectedIndex].x - 1, bounds[selectedIndex].y - 1, bounds[selectedIndex].width + 2, bounds[selectedIndex].heigth + 2);
+            }
+        } 
+        catch(NullPointerException ne){
+            //do nothing,this happens sometimes
         }
-        }catch(Exception e){
-            Log.l(e, false);
+        catch (Exception e) {
+            Log.l(e, true);
         }
     }
 
