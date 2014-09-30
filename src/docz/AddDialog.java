@@ -10,6 +10,11 @@ import de.realriu.riulib.gui.imagelist.ImageListAdapter;
 import de.realriu.riulib.gui.imagelist.ScaledImageList;
 import java.awt.Font;
 import java.awt.Image;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetAdapter;
+import java.awt.dnd.DropTargetDragEvent;
+import java.awt.dnd.DropTargetDropEvent;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -43,6 +48,9 @@ public class AddDialog extends javax.swing.JDialog {
     private final List<Relation> relations = new ArrayList<>();
     private Entity tmpEntity = new Entity();
     private WaitDialog.AsyncProcess searchProgress = null;
+
+    //DnD
+    FileDrop fileDrop = null;
 
     /**
      * Creates new form AddDialog
@@ -112,12 +120,104 @@ public class AddDialog extends javax.swing.JDialog {
             }
         });
 
+        new FileDrop(imgList, new FileDrop.Listener() {
+
+            @Override
+            public void filesDropped(final File[] droppedFiles) {
+                addFiles(droppedFiles);
+                if(droppedFiles.length > 0 && txtDocTitle.getText().trim().length() == 0){
+                    txtDocTitle.setText(droppedFiles[0].getName());
+                }
+                
+                if(droppedFiles.length > 0 && txaDocDescription.getText().trim().length() == 0){
+                    for (int i = 0; i < droppedFiles.length; i++) {
+                        if(i == droppedFiles.length-1){
+                            txaDocDescription.append(droppedFiles[i].getName());
+                        }else{
+                            txaDocDescription.append(droppedFiles[i].getName()+", ");
+                        }
+                    }
+                }
+            }
+        });
+
+        new FileDrop(imgLogo, new FileDrop.Listener() {
+
+            @Override
+            public void filesDropped(final File[] droppedFiles) {
+                for (File f : droppedFiles) {
+                    if (f.exists() && f.isFile()) {
+                        String filename = f.getAbsolutePath().toLowerCase();
+                        if ((filename.endsWith(".jpg")
+                                || filename.endsWith(".jpeg")
+                                || filename.endsWith(".png")
+                                || filename.endsWith(".bmp")
+                                || filename.endsWith(".wbmp")
+                                || filename.endsWith(".gif"))) {
+                            try {
+                                ((ImagePanel)imgLogo).setImg(f);
+                                if(droppedFiles.length > 0 && txtInstitutionTitle.getText().trim().length() == 0){
+                                    txtInstitutionTitle.setText(f.getName());
+                                }
+                                break;
+                            } catch (IOException ex) {
+                                Log.l(ex);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
         setVisible(true);
     }
 
+    private void addFiles(final File... newFiles) {
+        WaitDialog wait = new WaitDialog(null, new WaitDialog.AsyncProcess("Loading files...") {
+
+            @Override
+            public void start() throws Exception {
+                int progress = 1;
+                for (File f : newFiles) {
+                    if (f.exists() && f.isFile()) {
+                        String filename = f.getAbsolutePath().toLowerCase();
+                        processing(((float) progress / (float) newFiles.length), filename);
+                        if ((filename.endsWith(".jpg")
+                                || filename.endsWith(".jpeg")
+                                || filename.endsWith(".png")
+                                || filename.endsWith(".bmp")
+                                || filename.endsWith(".wbmp")
+                                || filename.endsWith(".gif"))) {
+                            try {
+                                imgList.addImage(ImageIO.read(f), f.getName());
+                            } catch (IOException ex) {
+                                Log.l(ex);
+                            }
+                        } else {
+                            imgList.addImage(Resources.createImageWithText(f.getName(), imgList.getHeight(), imgList.getHeight()), f.getName());
+                        }
+
+                        files.add(f);
+                    }
+                    progress++;
+                }
+            }
+
+            @Override
+            public void finished(boolean success) {
+
+            }
+
+            @Override
+            public void cancel() {
+
+            }
+        }, false);
+    }
+
     /**
-     * This method is called from within the constructor to initialize the form. WARNING: Do NOT modify this code. The content of this method is
-     * always regenerated by the Form Editor.
+     * This method is called from within the constructor to initialize the form. WARNING: Do NOT modify this code. The content of this method
+     * is always regenerated by the Form Editor.
      */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -148,7 +248,6 @@ public class AddDialog extends javax.swing.JDialog {
         txtInstitutionTitle = new javax.swing.JTextField();
         jLabel8 = new javax.swing.JLabel();
         jLabel9 = new javax.swing.JLabel();
-        jLabel10 = new javax.swing.JLabel();
         imgLogo = imgPanel = new ImagePanel();
         btnInstitutionLogo = new javax.swing.JButton();
         btnInstitutionSave = new javax.swing.JButton();
@@ -265,11 +364,13 @@ public class AddDialog extends javax.swing.JDialog {
         lblDocDate.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lblDocDate.setText("DATE");
 
+        imgPanelPreview.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Preview", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Arial", 1, 14))); // NOI18N
+
         javax.swing.GroupLayout imgPanelPreviewLayout = new javax.swing.GroupLayout(imgPanelPreview);
         imgPanelPreview.setLayout(imgPanelPreviewLayout);
         imgPanelPreviewLayout.setHorizontalGroup(
             imgPanelPreviewLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 384, Short.MAX_VALUE)
+            .addGap(0, 378, Short.MAX_VALUE)
         );
         imgPanelPreviewLayout.setVerticalGroup(
             imgPanelPreviewLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -405,20 +506,18 @@ public class AddDialog extends javax.swing.JDialog {
         jLabel9.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel9.setText("Tags:");
 
-        jLabel10.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        jLabel10.setText("Logo:");
-
-        imgLogo.setBackground(new java.awt.Color(0, 0, 0));
+        imgLogo.setBackground(getBackground());
+        imgLogo.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Logo", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Arial", 1, 18))); // NOI18N
 
         javax.swing.GroupLayout imgLogoLayout = new javax.swing.GroupLayout(imgLogo);
         imgLogo.setLayout(imgLogoLayout);
         imgLogoLayout.setHorizontalGroup(
             imgLogoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 100, Short.MAX_VALUE)
+            .addGap(0, 0, Short.MAX_VALUE)
         );
         imgLogoLayout.setVerticalGroup(
             imgLogoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
+            .addGap(0, 223, Short.MAX_VALUE)
         );
 
         btnInstitutionLogo.setText("...");
@@ -463,19 +562,14 @@ public class AddDialog extends javax.swing.JDialog {
                             .addComponent(txtInstitutionTitle)
                             .addComponent(jScrollPane4)))
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel9)
-                            .addComponent(jLabel10))
-                        .addGap(70, 70, 70)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addComponent(imgLogo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnInstitutionLogo)
-                                .addGap(0, 0, Short.MAX_VALUE))
-                            .addComponent(txtInstitutionTags, javax.swing.GroupLayout.DEFAULT_SIZE, 811, Short.MAX_VALUE)))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(jLabel9)
+                        .addGap(71, 71, 71)
+                        .addComponent(txtInstitutionTags, javax.swing.GroupLayout.DEFAULT_SIZE, 817, Short.MAX_VALUE))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(imgLogo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnInstitutionLogo)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnInstitutionSave)))
                 .addContainerGap())
         );
@@ -496,14 +590,15 @@ public class AddDialog extends javax.swing.JDialog {
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel9)
                     .addComponent(txtInstitutionTags, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addComponent(imgLogo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel10, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(btnInstitutionLogo))
-                .addGap(122, 122, 122)
-                .addComponent(btnInstitutionSave)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGap(240, 240, 240)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(btnInstitutionSave)
+                            .addComponent(btnInstitutionLogo)))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGap(18, 18, 18)
+                        .addComponent(imgLogo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
 
@@ -574,7 +669,7 @@ public class AddDialog extends javax.swing.JDialog {
                 .addComponent(jTabbedPane1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(splitSimilarRelatives)
+                    .addComponent(splitSimilarRelatives, javax.swing.GroupLayout.DEFAULT_SIZE, 445, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 195, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -667,44 +762,7 @@ public class AddDialog extends javax.swing.JDialog {
         fc.setMultiSelectionEnabled(true);
         if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
 
-            WaitDialog wait = new WaitDialog(null, new WaitDialog.AsyncProcess("Loading files...") {
-
-                @Override
-                public void start() throws Exception {
-                    int progress = 1;
-                    for (File f : fc.getSelectedFiles()) {
-                        String filename = f.getAbsolutePath().toLowerCase();
-                        processing(((float) progress / (float) fc.getSelectedFiles().length), filename);
-                        if ((filename.endsWith(".jpg")
-                                || filename.endsWith(".jpeg")
-                                || filename.endsWith(".png")
-                                || filename.endsWith(".bmp")
-                                || filename.endsWith(".wbmp")
-                                || filename.endsWith(".gif"))) {
-                            try {
-                                imgList.addImage(ImageIO.read(f), f.getName());
-                            } catch (IOException ex) {
-                                Log.l(ex);
-                            }
-                        } else {
-                            imgList.addImage(Resources.createImageWithText(f.getName(), imgList.getHeight(), imgList.getHeight()), f.getName());
-                        }
-
-                        files.add(f);
-                        progress++;
-                    }
-                }
-
-                @Override
-                public void finished(boolean success) {
-
-                }
-
-                @Override
-                public void cancel() {
-
-                }
-            }, false);
+            addFiles(fc.getSelectedFiles());
 
             if (fc.getSelectedFiles().length > 0) {
                 lastPath = fc.getSelectedFiles()[0].getParentFile().getPath();
@@ -823,75 +881,63 @@ public class AddDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_btnAddToRelationsActionPerformed
 
     private void txtDocTitleKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtDocTitleKeyTyped
-        if (evt.isControlDown() && evt.getKeyChar() == ' ' || evt.getKeyChar() == '\n') {
-            showSimilarEntities(txtDocTitle.getText(), true, false);
-        }
+        showSimilarEntities(txtDocTitle.getText(), true, false);
     }//GEN-LAST:event_txtDocTitleKeyTyped
 
     private void txaDocDescriptionKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txaDocDescriptionKeyTyped
-        if (evt.isControlDown() && evt.getKeyChar() == ' ' || evt.getKeyChar() == '\n') {
-            showSimilarEntities(txaDocDescription.getText(), true, false);
-        }
+        showSimilarEntities(txaDocDescription.getText(), true, false);
     }//GEN-LAST:event_txaDocDescriptionKeyTyped
 
     private void txtDocTagsKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtDocTagsKeyTyped
-        if (evt.isControlDown() && evt.getKeyChar() == ' ' || evt.getKeyChar() == '\n') {
-            showSimilarEntities(txtDocTags.getText(), false, true);
-        }
+        showSimilarEntities(txtDocTags.getText(), false, true);
     }//GEN-LAST:event_txtDocTagsKeyTyped
 
     private void txtInstitutionTitleKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtInstitutionTitleKeyTyped
-        if (evt.isControlDown() && evt.getKeyChar() == ' ' || evt.getKeyChar() == '\n') {
-            showSimilarEntities(txtInstitutionTitle.getText(), true, false);
-        }
+        showSimilarEntities(txtInstitutionTitle.getText(), true, false);
     }//GEN-LAST:event_txtInstitutionTitleKeyTyped
 
     private void txaInstitutionDescriptionKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txaInstitutionDescriptionKeyTyped
-        if (evt.isControlDown() && evt.getKeyChar() == ' ' || evt.getKeyChar() == '\n') {
-            showSimilarEntities(txaInstitutionDescription.getText(), true, false);
-        }
+        showSimilarEntities(txaInstitutionDescription.getText(), true, false);
     }//GEN-LAST:event_txaInstitutionDescriptionKeyTyped
 
     private void txtInstitutionTagsKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtInstitutionTagsKeyTyped
-        if (evt.isControlDown() && evt.getKeyChar() == ' ' || evt.getKeyChar() == '\n') {
-            showSimilarEntities(txtInstitutionTags.getText(), false, true);
-        }
+        showSimilarEntities(txtInstitutionTags.getText(), false, true);
     }//GEN-LAST:event_txtInstitutionTagsKeyTyped
 
     private void showSimilarEntities(final String longSearchString, final boolean byTitleAndDescription, final boolean byTags) {
-        
+
         if (searchProgress != null && !searchProgress.isFinished()) {
-                searchProgress.cancel(); //concurrency problems????
+            searchProgress.cancel(); //concurrency problems????
+        }
+
+        searchProgress = new WaitDialog.AsyncProcess("search similarities") {
+            Entity[] findings = null;
+            private boolean canceled = false;
+
+            @Override
+            public void start() throws Exception {
+                String[] searchWords = longSearchString.split(" ");
+                findings = DataHandler.instance.search(searchWords, byTitleAndDescription, byTitleAndDescription, false, byTags, 10);
             }
 
-            searchProgress = new WaitDialog.AsyncProcess("search") {
-                Entity[] findings = null;
-                private boolean canceled = false;
-
-                @Override
-                public void start() throws Exception {
-                    String[] searchWords = longSearchString.split(" ");
-                    findings = DataHandler.instance.search(searchWords, byTitleAndDescription, byTitleAndDescription, false, byTags, 10);
-                }
-
-                @Override
-                public void finished(boolean success) {
-                    try {
-                        if (!canceled && findings != null) {
-                            imlSimilarEntities.setThumbnails(findings);
-                        }
-                    } catch (Exception ex) {
-                        Log.l(ex);
+            @Override
+            public void finished(boolean success) {
+                try {
+                    if (!canceled && findings != null) {
+                        imlSimilarEntities.setThumbnails(findings);
                     }
+                } catch (Exception ex) {
+                    Log.l(ex);
                 }
+            }
 
-                @Override
-                public void cancel() {
-                    canceled = true;
-                }
+            @Override
+            public void cancel() {
+                canceled = true;
+            }
 
-            };
-            new WaitDialog(null, searchProgress, true, false);
+        };
+        new WaitDialog(null, searchProgress, true, false);
     }
 
     /**
@@ -957,7 +1003,6 @@ public class AddDialog extends javax.swing.JDialog {
     private docz.ImageList imlRelated;
     private docz.ImageList imlSimilarEntities;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;

@@ -10,6 +10,7 @@ import de.realriu.riulib.helpers.ScaleImage.Rectangle;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Image;
+import java.awt.Insets;
 import java.awt.Point;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
@@ -37,6 +38,7 @@ public class ImagePanel extends JPanel {
     private float zoom = 1f;
     private Point startDrag = null;
     private boolean raw;
+    private Insets insets = new Insets(0, 0, 0, 0);
 
     public ImagePanel() {
         addComponentListener(new ComponentListener() {
@@ -129,6 +131,7 @@ public class ImagePanel extends JPanel {
         camX = 0;
         camY = 0;
         zoom = 1f;
+        
     }
 
     public void setImg(File imgFile) throws IOException {
@@ -137,17 +140,20 @@ public class ImagePanel extends JPanel {
     
     public void setImg(File imgFile, boolean raw) throws IOException {
         this.imgFile = imgFile;
+        insets = getBorder().getBorderInsets(this);
+        
         if (imgFile != null) {
             BufferedImage img = ImageIO.read(imgFile);
             if (img != null) {
-                preferedSize = ScaleImage.fitToRect(new ScaleImage.Rectangle(0, 0, getWidth(), getHeight()), (BufferedImage) img);
+                preferedSize = ScaleImage.fitToRect(new ScaleImage.Rectangle(0, 0, getWidth()-(insets.left+insets.right), getHeight()-(insets.top+insets.bottom)), (BufferedImage) img);
                 this.scaledImg = raw ? img : ScaleImage.scale((BufferedImage) img, preferedSize.width, preferedSize.heigth);
             } else {
                 scaledImg = null;
                 this.imgFile = null;
             }
         }
-
+        
+        
         resetCam();
 
         this.raw = raw;
@@ -157,25 +163,30 @@ public class ImagePanel extends JPanel {
 
     public void setImg(Image img) {
         scaledImg = img;
-        preferedSize = ScaleImage.fitToRect(new ScaleImage.Rectangle(0, 0, getWidth(), getHeight()), (BufferedImage) img);
-
+        insets = getBorder().getBorderInsets(this);
+        
+        preferedSize = ScaleImage.fitToRect(new ScaleImage.Rectangle(0, 0, getWidth()-(insets.left+insets.right), getHeight()-(insets.top+insets.bottom)), (BufferedImage) img);
+        
         resetCam();
 
         repaint();
     }
 
     @Override
-    public void paint(Graphics g) {
-        g.setColor(Color.black);
-        g.fillRect(0, 0, getWidth(), getHeight());
+    public void paintComponent(Graphics g) {        
+        super.paintComponent(g);
+        
+        g.setColor(getBackground());
+        g.fillRect(0, 0, getWidth()-(insets.left+insets.right), getHeight()-(insets.top+insets.bottom));
         if (scaledImg != null && getWidth() > 0 && getHeight() > 0) {
             g.drawImage(scaledImg,
-                    /*X*/ (int) (preferedSize.x - camX * zoom),
-                    /*Y*/ (int) (preferedSize.y - camY * zoom),
+                    /*X*/ (int) (preferedSize.x+insets.left - camX * zoom),
+                    /*Y*/ (int) (preferedSize.y+insets.top - camY * zoom),
                     /*W*/ (int) (preferedSize.width * zoom),
                     /*H*/ (int) (preferedSize.heigth * zoom),
                     this);
         }
+        
     }
 
 }

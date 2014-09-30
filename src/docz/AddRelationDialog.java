@@ -17,6 +17,7 @@ public class AddRelationDialog extends javax.swing.JDialog {
     private final Entity entity1;
     private Entity entity2;
     private ImagePanel imgRelation;
+    private WaitDialog.AsyncProcess searchProgress = null;
 
     /**
      * Creates new form AddRelation
@@ -41,7 +42,7 @@ public class AddRelationDialog extends javax.swing.JDialog {
                     txaDescription.setText(entity2.getDescription());
                     lblDate.setText("date: " + entity2.getDate() + "");
                     lblCreated.setText("created: " + entity2.getCreated());
-
+                    
                     try {
                         imgRelation.setImg(entity2.getThumbnail(imgRelation.getWidth(), imgRelation.getHeight(), new Font("Arial", Font.BOLD, 20)));
                     } catch (Exception ex) {
@@ -55,6 +56,8 @@ public class AddRelationDialog extends javax.swing.JDialog {
 
             }
         });
+        
+        txtSearchKeyTyped(null);
     }
 
     /**
@@ -304,14 +307,39 @@ public class AddRelationDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_btnAddActionPerformed
 
     private void txtSearchKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchKeyTyped
-        if (evt.getKeyChar() == '\n') {
-            try {
-                Entity[] findings = DataHandler.instance.search(txtSearch.getText().trim().split(" "), true, true, false, true);
-                imlEntities.setThumbnails(findings);
-            } catch (Exception ex) {
-                Log.l(ex);
-            }
+
+        if (searchProgress != null && !searchProgress.isFinished()) {
+            searchProgress.cancel(); //concurrency problems????
         }
+
+        searchProgress = new WaitDialog.AsyncProcess("search relations") {
+            Entity[] findings = null;
+            private boolean canceled = false;
+
+            @Override
+            public void start() throws Exception {
+                findings = DataHandler.instance.search(txtSearch.getText().split(" "), true, true, false, true);
+            }
+
+            @Override
+            public void finished(boolean success) {
+                try {
+                    if (!canceled && findings != null) {
+                        imlEntities.setThumbnails(findings);
+                    }
+                } catch (Exception ex) {
+                    Log.l(ex);
+                }
+            }
+
+            @Override
+            public void cancel() {
+                canceled = true;
+            }
+
+        };
+        new WaitDialog(null, searchProgress, true, false);
+
     }//GEN-LAST:event_txtSearchKeyTyped
 
 
