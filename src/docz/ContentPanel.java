@@ -265,7 +265,12 @@ public class ContentPanel extends javax.swing.JPanel {
             }
         });
 
-        jButton1.setText("fullscreen");
+        jButton1.setText("⬜");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout pnlPreviewLayout = new javax.swing.GroupLayout(pnlPreview);
         pnlPreview.setLayout(pnlPreviewLayout);
@@ -772,6 +777,10 @@ public class ContentPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_btnRemoveRelationActionPerformed
 
     private void pnlPreviewMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_pnlPreviewMouseClicked
+        
+    }//GEN-LAST:event_pnlPreviewMouseClicked
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         if (fileList.getSelectedImageIndex() >= 0) {
             try {
                 FullScreenPreview full = new FullScreenPreview(null, currentEntity, fileList.getImageTitle(fileList.getSelectedImageIndex()));
@@ -783,7 +792,7 @@ public class ContentPanel extends javax.swing.JPanel {
                 Log.l(ex);
             }
         }
-    }//GEN-LAST:event_pnlPreviewMouseClicked
+    }//GEN-LAST:event_jButton1ActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
