@@ -917,7 +917,7 @@ public class AddDialog extends javax.swing.JDialog {
             @Override
             public void start() throws Exception {
                 String[] searchWords = longSearchString.split(" ");
-                findings = DataHandler.instance.search(searchWords, byTitleAndDescription, byTitleAndDescription, false, byTags, 10);
+                findings = DataHandler.instance.search(searchWords, byTitleAndDescription, byTitleAndDescription, false, byTags, null, null, true, 10);
             }
 
             @Override

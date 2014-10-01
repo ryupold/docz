@@ -20,6 +20,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -354,8 +356,9 @@ public class DataHandler {
 
     /**
      * returns null ich the byte stream dowsnt hold an image
+     *
      * @param byteStream
-     * @return 
+     * @return
      */
     public Image isImage(InputStream byteStream) {
         try {
@@ -488,14 +491,78 @@ public class DataHandler {
             }
         }
     }
-    
+
+    public static enum Sorting {
+
+        Title,
+        Date,
+        Created
+    }
+
+    public static enum SortingOrder {
+
+        Ascending,
+        Descending
+    }
+
+    public static class EntityComparator implements Comparator<Entity> {
+
+        public final Sorting sorting;
+        public final SortingOrder order;
+
+        public EntityComparator(Sorting sorting, SortingOrder order) {
+            this.sorting = sorting;
+            this.order = order;
+        }
+
+        @Override
+        public int compare(Entity o1, Entity o2) {
+            switch (sorting) {
+                case Created:
+                    if (order == SortingOrder.Ascending) {
+                        return o1.created.compareTo(o2.created);
+                    } else {
+                        return o2.created.compareTo(o1.created);
+                    }
+                case Date:
+                    if (order == SortingOrder.Ascending) {
+                        return (o1.date!=null ? o1.date : o1.created).compareTo((o2.date!=null ? o2.date : o2.created));
+                    } else {
+                        return (o2.date!=null ? o2.date : o2.created).compareTo((o1.date!=null ? o1.date : o1.created));
+                    }
+                case Title:
+                    if (order == SortingOrder.Ascending) {
+                        return o1.title.compareTo(o2.title);
+                    } else {
+                        return o2.title.compareTo(o1.title);
+                    }
+                default:
+                    return 0;
+            }
+        }
+
+    }
+
+    public Entity[] search(String[] searchWords, boolean docsAllowed, boolean institutionsAllowed, boolean relationsAllowed, boolean tagsAllowed) throws SQLException {
+        return search(searchWords, docsAllowed, institutionsAllowed, relationsAllowed, tagsAllowed, null, null);
+    }
+
+    public Entity[] search(String[] searchWords, boolean docsAllowed, boolean institutionsAllowed, boolean relationsAllowed, boolean tagsAllowed, Date minDate, Date maxDate) throws SQLException {
+        return search(searchWords, docsAllowed, institutionsAllowed, relationsAllowed, tagsAllowed, minDate, maxDate, true);
+    }
+
     public Entity[] search(String[] searchWords, boolean docsAllowed, boolean institutionsAllowed, boolean relationsAllowed, boolean tagsAllowed, Date minDate, Date maxDate, boolean filesAllowd) throws SQLException {
         return search(searchWords, docsAllowed, institutionsAllowed, relationsAllowed, tagsAllowed, minDate, maxDate, filesAllowd, DEFAULT_LIMIT);
     }
 
-    public Entity[] search(String[] searchWords, boolean docsAllowed, boolean institutionsAllowed, boolean relationsAllowed, boolean tagsAllowed, Date minDate, Date maxDate, boolean filesAllowd, int limit) throws SQLException {
+    public Entity[] search(String[] searchWords, boolean docsAllowed, boolean institutionsAllowed, boolean relationsAllowed, boolean tagsAllowed, Date minDate, Date maxDate, boolean filesAllowed, int limit) throws SQLException {
+        return search(searchWords, docsAllowed, institutionsAllowed, relationsAllowed, tagsAllowed, minDate, maxDate, filesAllowed, limit, Sorting.Date, SortingOrder.Descending);
+    }
+
+    public Entity[] search(String[] searchWords, boolean docsAllowed, boolean institutionsAllowed, boolean relationsAllowed, boolean tagsAllowed, Date minDate, Date maxDate, boolean filesAllowed, int limit, Sorting sorting, SortingOrder order) throws SQLException {
         List<Entity> resultTmp = new LinkedList<>();
 
+        //search by title/description
         if (docsAllowed | institutionsAllowed) {
             String sql = "SELECT id, title, description, date, created, type FROM entities WHERE ";
             if (searchWords.length > 0) {
@@ -523,16 +590,15 @@ public class DataHandler {
             if (docsAllowed ^ institutionsAllowed) {
                 sql += (searchWords.length > 0 ? " AND " : "") + (docsAllowed ? "type='1'" : "type='2'");
             }
-            
-            if(minDate != null || maxDate!=null){
-                if(minDate != null && maxDate==null){
-                    sql += " AND date >= '"+minDate.getTime()+"'";
-                }
-                else if(minDate == null && maxDate!=null){
-                    sql += " AND date <= '"+maxDate.getTime()+"'";
-                }
-                else{
-                    sql += " AND date >= '"+minDate.getTime()+"' AND date <= '"+maxDate.getTime()+"'";
+
+            //search by date
+            if (minDate != null || maxDate != null) {
+                if (minDate != null && maxDate == null) {
+                    sql += " AND date >= '" + minDate.getTime() + "'";
+                } else if (minDate == null && maxDate != null) {
+                    sql += " AND date <= '" + maxDate.getTime() + "'";
+                } else {
+                    sql += " AND date >= '" + minDate.getTime() + "' AND date <= '" + maxDate.getTime() + "'";
                 }
             }
 
@@ -600,6 +666,33 @@ public class DataHandler {
             r.close();
         }
 
+        //search by files
+        if (resultTmp.size() < limit && filesAllowed && searchWords.length > 0) {
+            String sql = "SELECT id, name, ocr FROM files where ";
+            for (int i = 0; i < searchWords.length; i++) {
+                if (i == 0) {
+                    sql += "LOWER(name) LIKE '%" + searchWords[i].toLowerCase() + "%' ";
+                } else {
+                    sql += "OR LOWER(name) LIKE '%" + searchWords[i].toLowerCase() + "%' ";
+                }
+            }
+
+            DB.DBResult r = DB.select(sql);
+            List<Long> fileIDs = new ArrayList<>();
+            while (r.resultSet.next()) {
+                if (!fileIDs.contains(r.resultSet.getLong(1))) {
+                    fileIDs.add(r.resultSet.getLong(1));
+                }
+            }
+            for (Long id : fileIDs) {
+                Entity resultEntity = getEntityByID(id);
+                if (!resultTmp.contains(resultEntity)) {
+                    resultTmp.add(resultEntity);
+                }
+            }
+            r.close();
+        }
+
         //search by relation title&description
         if (resultTmp.size() < limit && relationsAllowed && searchWords.length > 0) {
             String sql = "SELECT entity1, entity2 FROM relations where ";
@@ -636,6 +729,7 @@ public class DataHandler {
             r.close();
         }
 
+        Collections.sort(resultTmp, new EntityComparator(sorting, order));
         Entity[] results = resultTmp.toArray(new Entity[resultTmp.size()]);
         return results;
     }

@@ -114,16 +114,20 @@ public class DocZMainFrame extends javax.swing.JFrame {
         ckbMaxDate = new javax.swing.JCheckBox();
         btnMinDate = new javax.swing.JButton();
         btnMaxDate = new javax.swing.JButton();
+        ckbFiles = new javax.swing.JCheckBox();
+        jLabel3 = new javax.swing.JLabel();
+        cbxSorting = new javax.swing.JComboBox();
+        ckbDescending = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        txtSearch.setFont(new java.awt.Font("Arial", 0, 18)); // NOI18N
+        txtSearch.setFont(new java.awt.Font("Arial", 0, 24)); // NOI18N
         txtSearch.setToolTipText("Search...");
         txtSearch.addInputMethodListener(new java.awt.event.InputMethodListener() {
-            public void caretPositionChanged(java.awt.event.InputMethodEvent evt) {
-            }
             public void inputMethodTextChanged(java.awt.event.InputMethodEvent evt) {
                 txtSearchInputMethodTextChanged(evt);
+            }
+            public void caretPositionChanged(java.awt.event.InputMethodEvent evt) {
             }
         });
         txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -154,15 +158,19 @@ public class DocZMainFrame extends javax.swing.JFrame {
 
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Filter", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Arial", 1, 16))); // NOI18N
 
+        ckbDocs.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
         ckbDocs.setSelected(true);
         ckbDocs.setText("Docs");
 
+        ckbRelations.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
         ckbRelations.setSelected(true);
         ckbRelations.setText("Relations");
 
+        ckbInstitutions.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
         ckbInstitutions.setSelected(true);
         ckbInstitutions.setText("Institutions");
 
+        ckbTags.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
         ckbTags.setSelected(true);
         ckbTags.setText("Tags");
 
@@ -173,9 +181,10 @@ public class DocZMainFrame extends javax.swing.JFrame {
         jLabel1.setFont(new java.awt.Font("Arial", 1, 24)); // NOI18N
         jLabel1.setText("max. results:");
 
-        jLabel2.setFont(new java.awt.Font("Arial", 0, 20)); // NOI18N
+        jLabel2.setFont(new java.awt.Font("Arial", 0, 24)); // NOI18N
         jLabel2.setText("filter date:");
 
+        ckbMinDate.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
         ckbMinDate.setText("min:");
         ckbMinDate.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
@@ -183,6 +192,7 @@ public class DocZMainFrame extends javax.swing.JFrame {
             }
         });
 
+        ckbMaxDate.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
         ckbMaxDate.setText("max:");
         ckbMaxDate.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
@@ -190,6 +200,7 @@ public class DocZMainFrame extends javax.swing.JFrame {
             }
         });
 
+        btnMinDate.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
         btnMinDate.setText("21.04.1988");
         btnMinDate.setEnabled(false);
         btnMinDate.addActionListener(new java.awt.event.ActionListener() {
@@ -198,6 +209,7 @@ public class DocZMainFrame extends javax.swing.JFrame {
             }
         });
 
+        btnMaxDate.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
         btnMaxDate.setText("01.10.2014");
         btnMaxDate.setEnabled(false);
         btnMaxDate.addActionListener(new java.awt.event.ActionListener() {
@@ -205,6 +217,21 @@ public class DocZMainFrame extends javax.swing.JFrame {
                 btnMaxDateActionPerformed(evt);
             }
         });
+
+        ckbFiles.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
+        ckbFiles.setSelected(true);
+        ckbFiles.setText("Files");
+
+        jLabel3.setFont(new java.awt.Font("Arial", 0, 18)); // NOI18N
+        jLabel3.setText("Sort by:");
+
+        cbxSorting.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
+        cbxSorting.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Date", "Created", "Title" }));
+        cbxSorting.setToolTipText("");
+
+        ckbDescending.setFont(new java.awt.Font("Arial", 0, 18)); // NOI18N
+        ckbDescending.setSelected(true);
+        ckbDescending.setText("DESC");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -216,18 +243,7 @@ public class DocZMainFrame extends javax.swing.JFrame {
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(spMaxResult))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(ckbDocs)
-                                .addGap(18, 18, 18)
-                                .addComponent(ckbInstitutions))
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(ckbRelations)
-                                .addGap(18, 18, 18)
-                                .addComponent(ckbTags)))
-                        .addGap(0, 0, Short.MAX_VALUE))
+                        .addComponent(spMaxResult, javax.swing.GroupLayout.DEFAULT_SIZE, 151, Short.MAX_VALUE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
@@ -237,7 +253,25 @@ public class DocZMainFrame extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(btnMaxDate, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(btnMinDate, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                            .addComponent(btnMinDate, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(ckbRelations)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(ckbDocs)
+                                .addGap(18, 18, 18)
+                                .addComponent(ckbInstitutions))
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(ckbFiles)
+                                .addGap(18, 18, 18)
+                                .addComponent(ckbTags)))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(cbxSorting, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(ckbDescending)))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -247,15 +281,17 @@ public class DocZMainFrame extends javax.swing.JFrame {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(ckbDocs)
                     .addComponent(ckbInstitutions))
-                .addGap(18, 18, 18)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(ckbRelations)
+                    .addComponent(ckbFiles)
                     .addComponent(ckbTags))
-                .addGap(47, 47, 47)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(ckbRelations)
+                .addGap(18, 18, 18)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(spMaxResult, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel1))
-                .addGap(48, 48, 48)
+                .addGap(58, 58, 58)
                 .addComponent(jLabel2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -265,7 +301,12 @@ public class DocZMainFrame extends javax.swing.JFrame {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(ckbMaxDate)
                     .addComponent(btnMaxDate))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 42, Short.MAX_VALUE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel3)
+                    .addComponent(cbxSorting, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(ckbDescending))
+                .addContainerGap())
         );
 
         //ckbDocs.setVisible(false);
@@ -287,7 +328,7 @@ public class DocZMainFrame extends javax.swing.JFrame {
                         .addGap(0, 0, Short.MAX_VALUE))
                     .addComponent(btnAdd, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 1231, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 1229, Short.MAX_VALUE)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -297,11 +338,11 @@ public class DocZMainFrame extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGap(103, 103, 103)
+                        .addGap(18, 18, 18)
+                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(btnChangePW)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGap(18, 18, 18)
                         .addComponent(btnAdd))
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 716, Short.MAX_VALUE))
                 .addContainerGap())
@@ -325,6 +366,15 @@ public class DocZMainFrame extends javax.swing.JFrame {
 
             @Override
             public void start() throws Exception {
+                
+                DataHandler.Sorting sorting = DataHandler.Sorting.Date;
+                
+                switch(cbxSorting.getSelectedItem().toString()){
+                    case "Date": sorting = DataHandler.Sorting.Date; break;
+                    case "Created": sorting = DataHandler.Sorting.Created; break;
+                    case "Title": sorting = DataHandler.Sorting.Title; break;
+                }                
+                
                 findings = DataHandler.instance.search(txtSearch.getText().split(" "), 
                         ckbDocs.isSelected(), 
                         ckbInstitutions.isSelected(), 
@@ -332,8 +382,11 @@ public class DocZMainFrame extends javax.swing.JFrame {
                         ckbTags.isSelected(), 
                         ckbMinDate.isSelected() ? DateFormat.getDateInstance().parse(btnMinDate.getText()) : null,
                         ckbMaxDate.isSelected() ? DateFormat.getDateInstance().parse(btnMaxDate.getText()) : null,
-                        true,
-                        ((Integer)spMaxResult.getModel().getValue()));
+                        ckbFiles.isSelected(),
+                        ((Integer)spMaxResult.getModel().getValue()),
+                        sorting,
+                        ckbDescending.isSelected() ? DataHandler.SortingOrder.Descending : DataHandler.SortingOrder.Ascending
+                        );
             }
 
             @Override
@@ -436,7 +489,10 @@ public class DocZMainFrame extends javax.swing.JFrame {
     private javax.swing.JButton btnChangePW;
     private javax.swing.JButton btnMaxDate;
     private javax.swing.JButton btnMinDate;
+    private javax.swing.JComboBox cbxSorting;
+    private javax.swing.JCheckBox ckbDescending;
     private javax.swing.JCheckBox ckbDocs;
+    private javax.swing.JCheckBox ckbFiles;
     private javax.swing.JCheckBox ckbInstitutions;
     private javax.swing.JCheckBox ckbMaxDate;
     private javax.swing.JCheckBox ckbMinDate;
@@ -445,6 +501,7 @@ public class DocZMainFrame extends javax.swing.JFrame {
     private docz.ContentPanel contentPanel;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSpinner spMaxResult;

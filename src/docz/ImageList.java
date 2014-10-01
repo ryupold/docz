@@ -188,7 +188,7 @@ public class ImageList extends javax.swing.JPanel {
     }
 
     @Override
-    protected void paintComponent(Graphics g) {
+    protected synchronized void paintComponent(Graphics g) {
         super.paintComponent(g);
 
         try {
