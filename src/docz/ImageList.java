@@ -215,8 +215,9 @@ public class ImageList extends javax.swing.JPanel {
                 g.drawRect(bounds[selectedIndex].x, bounds[selectedIndex].y, bounds[selectedIndex].width, bounds[selectedIndex].heigth);
                 g.drawRect(bounds[selectedIndex].x - 1, bounds[selectedIndex].y - 1, bounds[selectedIndex].width + 2, bounds[selectedIndex].heigth + 2);
             }
-        } catch (NullPointerException ne) {
+        } catch (NullPointerException | ArrayIndexOutOfBoundsException ne) {
             //do nothing,this happens sometimes
+            Log.l(ne, false);
         } catch (Exception e) {
             Log.l(e, true);
         }

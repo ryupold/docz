@@ -489,11 +489,11 @@ public class DataHandler {
         }
     }
     
-    public Entity[] search(String[] searchWords, boolean docsAllowed, boolean institutionsAllowed, boolean relationsAllowed, boolean tagsAllowed) throws SQLException {
-        return search(searchWords, docsAllowed, institutionsAllowed, relationsAllowed, tagsAllowed, DEFAULT_LIMIT);
+    public Entity[] search(String[] searchWords, boolean docsAllowed, boolean institutionsAllowed, boolean relationsAllowed, boolean tagsAllowed, Date minDate, Date maxDate, boolean filesAllowd) throws SQLException {
+        return search(searchWords, docsAllowed, institutionsAllowed, relationsAllowed, tagsAllowed, minDate, maxDate, filesAllowd, DEFAULT_LIMIT);
     }
 
-    public Entity[] search(String[] searchWords, boolean docsAllowed, boolean institutionsAllowed, boolean relationsAllowed, boolean tagsAllowed, int limit) throws SQLException {
+    public Entity[] search(String[] searchWords, boolean docsAllowed, boolean institutionsAllowed, boolean relationsAllowed, boolean tagsAllowed, Date minDate, Date maxDate, boolean filesAllowd, int limit) throws SQLException {
         List<Entity> resultTmp = new LinkedList<>();
 
         if (docsAllowed | institutionsAllowed) {
@@ -522,6 +522,18 @@ public class DataHandler {
 
             if (docsAllowed ^ institutionsAllowed) {
                 sql += (searchWords.length > 0 ? " AND " : "") + (docsAllowed ? "type='1'" : "type='2'");
+            }
+            
+            if(minDate != null || maxDate!=null){
+                if(minDate != null && maxDate==null){
+                    sql += " AND date >= '"+minDate.getTime()+"'";
+                }
+                else if(minDate == null && maxDate!=null){
+                    sql += " AND date <= '"+maxDate.getTime()+"'";
+                }
+                else{
+                    sql += " AND date >= '"+minDate.getTime()+"' AND date <= '"+maxDate.getTime()+"'";
+                }
             }
 
             if (limit > 0) {
