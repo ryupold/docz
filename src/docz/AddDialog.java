@@ -205,14 +205,9 @@ public class AddDialog extends javax.swing.JDialog {
 
             @Override
             public void finished(boolean success) {
-
+                
             }
-
-            @Override
-            public void cancel() {
-
-            }
-        }, false);
+        }, false, "Adding files to new Entity");
     }
 
     /**
@@ -732,7 +727,7 @@ public class AddDialog extends javax.swing.JDialog {
                 public void cancel() {
                     Log.l("adding Doc cannot be stopped");
                 }
-            }, false);
+            }, false, "Saving new Doc");
 
             waitDialog.dispose();
             System.gc();
@@ -823,7 +818,7 @@ public class AddDialog extends javax.swing.JDialog {
                 public void cancel() {
                     Log.l("adding Doc cannot be stopped");
                 }
-            }, false);
+            }, false, "Saving new Institution");
 
             waitDialog.dispose();
             System.gc();
@@ -912,7 +907,6 @@ public class AddDialog extends javax.swing.JDialog {
 
         searchProgress = new WaitDialog.AsyncProcess("search similarities") {
             Entity[] findings = null;
-            private boolean canceled = false;
 
             @Override
             public void start() throws Exception {
@@ -923,21 +917,15 @@ public class AddDialog extends javax.swing.JDialog {
             @Override
             public void finished(boolean success) {
                 try {
-                    if (!canceled && findings != null) {
+                    if (!searchProgress.isCanceled() && findings != null) {
                         imlSimilarEntities.setThumbnails(findings);
                     }
                 } catch (Exception ex) {
                     Log.l(ex);
                 }
             }
-
-            @Override
-            public void cancel() {
-                canceled = true;
-            }
-
         };
-        new WaitDialog(null, searchProgress, true, false);
+        new WaitDialog(null, searchProgress, true, false, 2000, "Searching for similarities");
     }
 
     /**

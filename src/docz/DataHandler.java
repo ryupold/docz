@@ -299,7 +299,9 @@ public class DataHandler {
             DB.DBResult r = DB.select("SELECT id, title, description, created, entity1, entity2 FROM relations WHERE entity1='" + entity.getID() + "' OR entity2='" + entity.getID() + "'");
             List<Relation> tmpRelations = new LinkedList<>();
             while (r.resultSet.next()) {
-                tmpRelations.add(new Relation(r.resultSet.getLong(1), r.resultSet.getString(2), r.resultSet.getString(3), new Date(r.resultSet.getLong(4)), getEntityByID(r.resultSet.getLong(5)), getEntityByID(r.resultSet.getLong(6))));
+                Entity e1 = r.resultSet.getLong(5)== entity.id ? entity : getEntityByID(r.resultSet.getLong(6));
+                Entity e2 = r.resultSet.getLong(5)== entity.id ? getEntityByID(r.resultSet.getLong(6)) : getEntityByID(r.resultSet.getLong(5));
+                tmpRelations.add(new Relation(r.resultSet.getLong(1), r.resultSet.getString(2), r.resultSet.getString(3), new Date(r.resultSet.getLong(4)), e1, e2));
             }
             r.close();
             relations = tmpRelations.toArray(new Relation[tmpRelations.size()]);
@@ -526,9 +528,9 @@ public class DataHandler {
                     }
                 case Date:
                     if (order == SortingOrder.Ascending) {
-                        return (o1.date!=null ? o1.date : o1.created).compareTo((o2.date!=null ? o2.date : o2.created));
+                        return (o1.date != null ? o1.date : o1.created).compareTo((o2.date != null ? o2.date : o2.created));
                     } else {
-                        return (o2.date!=null ? o2.date : o2.created).compareTo((o1.date!=null ? o1.date : o1.created));
+                        return (o2.date != null ? o2.date : o2.created).compareTo((o1.date != null ? o1.date : o1.created));
                     }
                 case Title:
                     if (order == SortingOrder.Ascending) {
@@ -727,6 +729,37 @@ public class DataHandler {
                 }
             }
             r.close();
+        }
+
+        //filter by date
+        for (int i = 0; i < resultTmp.size(); i++) {
+            if (minDate != null) {
+                if (resultTmp.get(i).date != null) {
+                    if (resultTmp.get(i).date.compareTo(minDate) < 0) {
+                        resultTmp.remove(i);
+                        i--;
+                    }
+                } else {
+                    if (resultTmp.get(i).created.compareTo(minDate) < 0) {
+                        resultTmp.remove(i);
+                        i--;
+                    }
+                }
+            }
+            
+            if (maxDate != null) {
+                if (resultTmp.get(i).date != null) {
+                    if (resultTmp.get(i).date.compareTo(maxDate) > 0) {
+                        resultTmp.remove(i);
+                        i--;
+                    }
+                } else {
+                    if (resultTmp.get(i).created.compareTo(maxDate) > 0) {
+                        resultTmp.remove(i);
+                        i--;
+                    }
+                }
+            }
         }
 
         Collections.sort(resultTmp, new EntityComparator(sorting, order));

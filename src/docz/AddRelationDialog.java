@@ -190,6 +190,7 @@ public class AddRelationDialog extends javax.swing.JDialog {
         txaRelationDescription.setColumns(20);
         txaRelationDescription.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         txaRelationDescription.setRows(5);
+        txaRelationDescription.setAutoscrolls(false);
         jScrollPane3.setViewportView(txaRelationDescription);
 
         javax.swing.GroupLayout pnlRelationLayout = new javax.swing.GroupLayout(pnlRelation);
@@ -314,7 +315,6 @@ public class AddRelationDialog extends javax.swing.JDialog {
 
         searchProgress = new WaitDialog.AsyncProcess("search relations") {
             Entity[] findings = null;
-            private boolean canceled = false;
 
             @Override
             public void start() throws Exception {
@@ -324,21 +324,15 @@ public class AddRelationDialog extends javax.swing.JDialog {
             @Override
             public void finished(boolean success) {
                 try {
-                    if (!canceled && findings != null) {
+                    if (!searchProgress.isCanceled() && findings != null) {
                         imlEntities.setThumbnails(findings);
                     }
                 } catch (Exception ex) {
                     Log.l(ex);
                 }
             }
-
-            @Override
-            public void cancel() {
-                canceled = true;
-            }
-
         };
-        new WaitDialog(null, searchProgress, true, false);
+        new WaitDialog(null, searchProgress, true, false, 1000, "Searching for Relations");
 
     }//GEN-LAST:event_txtSearchKeyTyped
 

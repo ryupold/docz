@@ -100,8 +100,6 @@ public class DocZMainFrame extends javax.swing.JFrame {
         txtSearch = new javax.swing.JTextField();
         btnAdd = new javax.swing.JButton();
         btnChangePW = new javax.swing.JButton();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        contentPanel = new docz.ContentPanel();
         jPanel1 = new javax.swing.JPanel();
         ckbDocs = new javax.swing.JCheckBox();
         ckbRelations = new javax.swing.JCheckBox();
@@ -118,16 +116,17 @@ public class DocZMainFrame extends javax.swing.JFrame {
         jLabel3 = new javax.swing.JLabel();
         cbxSorting = new javax.swing.JComboBox();
         ckbDescending = new javax.swing.JCheckBox();
+        contentPanel = new docz.ContentPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         txtSearch.setFont(new java.awt.Font("Arial", 0, 24)); // NOI18N
         txtSearch.setToolTipText("Search...");
         txtSearch.addInputMethodListener(new java.awt.event.InputMethodListener() {
+            public void caretPositionChanged(java.awt.event.InputMethodEvent evt) {
+            }
             public void inputMethodTextChanged(java.awt.event.InputMethodEvent evt) {
                 txtSearchInputMethodTextChanged(evt);
-            }
-            public void caretPositionChanged(java.awt.event.InputMethodEvent evt) {
             }
         });
         txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -151,10 +150,6 @@ public class DocZMainFrame extends javax.swing.JFrame {
                 btnChangePWActionPerformed(evt);
             }
         });
-
-        contentPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Search Results"));
-        contentPanel.setPreferredSize(null);
-        jScrollPane1.setViewportView(contentPanel);
 
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Filter", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Arial", 1, 16))); // NOI18N
 
@@ -243,7 +238,7 @@ public class DocZMainFrame extends javax.swing.JFrame {
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(spMaxResult, javax.swing.GroupLayout.DEFAULT_SIZE, 151, Short.MAX_VALUE))
+                        .addComponent(spMaxResult))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
@@ -314,6 +309,9 @@ public class DocZMainFrame extends javax.swing.JFrame {
         //ckbInstitutions.setVisible(false);
         //ckbTags.setVisible(false);
 
+        contentPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Search Results"));
+        contentPanel.setPreferredSize(null);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -325,27 +323,26 @@ public class DocZMainFrame extends javax.swing.JFrame {
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(btnChangePW)
-                        .addGap(0, 0, Short.MAX_VALUE))
+                        .addGap(0, 182, Short.MAX_VALUE))
                     .addComponent(btnAdd, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 1229, Short.MAX_VALUE)
-                .addContainerGap())
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(contentPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 1235, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(contentPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 135, Short.MAX_VALUE)
                         .addComponent(btnChangePW)
                         .addGap(18, 18, 18)
-                        .addComponent(btnAdd))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 716, Short.MAX_VALUE))
-                .addContainerGap())
+                        .addComponent(btnAdd)
+                        .addContainerGap())))
         );
 
         pack();
@@ -362,7 +359,6 @@ public class DocZMainFrame extends javax.swing.JFrame {
 
         searchProgress = new WaitDialog.AsyncProcess("search") {
             Entity[] findings = null;
-            private boolean canceled = false;
 
             @Override
             public void start() throws Exception {
@@ -392,21 +388,15 @@ public class DocZMainFrame extends javax.swing.JFrame {
             @Override
             public void finished(boolean success) {
                 try {
-                    if (!canceled && findings != null) {
+                    if (!searchProgress.isCanceled() && findings != null) {
                         contentPanel.showResults(findings);
                     }
                 } catch (Exception ex) {
                     Log.l(ex);
                 }
             }
-
-            @Override
-            public void cancel() {
-                canceled = true;
-            }
-
         };
-        new WaitDialog(null, searchProgress, true, false);
+        new WaitDialog(null, searchProgress, true, false, 1000, "Searching for Entities");
     }//GEN-LAST:event_txtSearchKeyTyped
 
     private void btnAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddActionPerformed
@@ -503,7 +493,6 @@ public class DocZMainFrame extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSpinner spMaxResult;
     private javax.swing.JTextField txtSearch;
     // End of variables declaration//GEN-END:variables

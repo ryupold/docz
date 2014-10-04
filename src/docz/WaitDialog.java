@@ -19,7 +19,7 @@ public class WaitDialog extends javax.swing.JDialog {
     public static abstract class AsyncProcess {
 
         private ProcessingListener listener;
-        private boolean finished = false;
+        private boolean finished = false, canceled = false;
         public final String title;
 
         public AsyncProcess(String title) {
@@ -35,37 +35,55 @@ public class WaitDialog extends javax.swing.JDialog {
         }
 
         public abstract void finished(boolean success);
-        
-        public final boolean isFinished(){
+
+        public final boolean isFinished() {
             return finished;
         }
 
-        public void cancel(){}
+        public boolean isCanceled() {
+            return canceled;
+        }
+
+        public synchronized void cancel() {
+            canceled = true;
+            this.notifyAll();
+        }
     }
 
     private final AsyncProcess process;
     private Thread thread;
 
-    
-    public WaitDialog(java.awt.Frame parent, final AsyncProcess async) {
-        this(parent, async, true, true);
+    public WaitDialog(java.awt.Frame parent, final AsyncProcess async, String threadName) {
+        this(parent, async, true, true, 0, threadName);
     }
-    
-    public WaitDialog(java.awt.Frame parent, final AsyncProcess async, final boolean cancleAble) {
-        this(parent, async, cancleAble, true);
+
+    public WaitDialog(java.awt.Frame parent, final AsyncProcess async, final boolean cancleAble, String threadName) {
+        this(parent, async, cancleAble, true, 0, threadName);
     }
-    
+
+    public WaitDialog(java.awt.Frame parent, final AsyncProcess async, long delay, String threadName) {
+        this(parent, async, true, true, delay, threadName);
+    }
+
+    public WaitDialog(java.awt.Frame parent, final AsyncProcess async, final boolean cancleAble, long delay, String threadName) {
+        this(parent, async, cancleAble, true, delay, threadName);
+    }
+
+    public WaitDialog(java.awt.Frame parent, final AsyncProcess async, final boolean cancleAble, final boolean showDialog, String threadName) {
+        this(parent, async, cancleAble, showDialog, 0, threadName);
+    }
+
     /**
      * Creates new form WaitDialog
      *
      * @param parent
      * @param async
      */
-    public WaitDialog(java.awt.Frame parent, final AsyncProcess async, final boolean cancleAble, final boolean showDialog) {
+    public WaitDialog(java.awt.Frame parent, final AsyncProcess async, final boolean cancleAble, final boolean showDialog, final long delay, String threadName) {
         super(parent, true);
         initComponents();
         btnCancel.setVisible(cancleAble);
-        
+
         process = async;
         if (async == null) {
             throw new IllegalArgumentException("AsyncProcess was null!");
@@ -83,27 +101,38 @@ public class WaitDialog extends javax.swing.JDialog {
 
             @Override
             public void run() {
+                long delta = delay;
                 try {
-                    process.start();
-                    process.finished = true;
-                    process.finished(true);
+                    synchronized(process){
+                        while (!process.canceled && delta > 0) {
+                            long wait = delta;
+                            delta -= wait;
+                            process.wait(wait);                            
+                        }
+                    }
+                    if(!process.canceled){
+                        process.start();
+                        process.finished = true;
+                        process.finished(true);
+                    }                    
                 } catch (Exception e) {
                     process.finished = true;
                     process.finished(false);
                 }
                 setVisible(false);
             }
-        });
-        
-        
+        }, threadName!=null?threadName:"Thread that does things and waits "+delay+" ms before doing it.");
+
         thread.start();
-        if(showDialog) setVisible(true);
+        if (showDialog) {
+            setVisible(true);
+        }
     }
 
     @Override
     public void setVisible(boolean b) {
         super.setVisible(b); //To change body of generated methods, choose Tools | Templates.
-    }    
+    }
 
     private void onProcessUpdate(double percent, String processingStep) {
         pbProgress.setValue((int) (100 * percent));

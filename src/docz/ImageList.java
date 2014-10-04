@@ -204,7 +204,7 @@ public class ImageList extends javax.swing.JPanel {
                 }
             }
 
-            if (hoveredIndex >= 0) {
+            if (hoveredIndex >= 0 && hoveredIndex < bounds.length) {
                 g.setColor(Color.yellow);
                 g.drawRect(bounds[hoveredIndex].x, bounds[hoveredIndex].y, bounds[hoveredIndex].width, bounds[hoveredIndex].heigth);
                 g.drawRect(bounds[hoveredIndex].x - 1, bounds[hoveredIndex].y - 1, bounds[hoveredIndex].width + 2, bounds[hoveredIndex].heigth + 2);
@@ -217,7 +217,7 @@ public class ImageList extends javax.swing.JPanel {
             }
         } catch (NullPointerException | ArrayIndexOutOfBoundsException ne) {
             //do nothing,this happens sometimes
-            Log.l(ne, false);
+            Log.l(ne, true);
         } catch (Exception e) {
             Log.l(e, true);
         }
