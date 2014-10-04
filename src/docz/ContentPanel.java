@@ -746,7 +746,7 @@ public class ContentPanel extends javax.swing.JPanel {
 
     private void btnDeleteEntityActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteEntityActionPerformed
         if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, "This will delete this entity and all its relations, files and tags", "Delete entity " + currentEntity.getTitle(), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE)) {
-            DataHandler.instance.deleteEntity(currentEntity);
+            Log.l(DataHandler.instance.deleteEntity(currentEntity) ? "Entity "+currentEntity.title+" deleted" : "couldn't delete Entity "+currentEntity.title);
             currentEntity = null;
             ((CardLayout) getLayout()).show(this, "card2");
         }

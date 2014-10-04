@@ -183,7 +183,11 @@ public class DataHandler {
 
     public boolean deleteEntity(Entity entity) {
         try {
-            return DB.update("DELETE FROM entities WHERE id='" + entity.getID() + "'") > 0;
+            boolean deleted = DB.update("DELETE FROM entities WHERE id='" + entity.getID() + "'") > 0;
+            DB.update("DELETE FROM relations WHERE entity1='" + entity.getID() + "' OR entity2='" + entity.getID() + "'");
+            DB.update("DELETE FROM tags WHERE id='" + entity.getID() + "'");
+            DB.update("DELETE FROM files WHERE id='" + entity.getID() + "'");
+            return deleted;
         } catch (SQLException ex) {
             Log.l(ex);
             return false;
@@ -521,12 +525,19 @@ public class DataHandler {
         public int compare(Entity o1, Entity o2) {
             switch (sorting) {
                 case Created:
+                    if(o1 == null || o2 == null){
+                        return 0;
+                    }
                     if (order == SortingOrder.Ascending) {
                         return o1.created.compareTo(o2.created);
                     } else {
                         return o2.created.compareTo(o1.created);
                     }
                 case Date:
+                    if(o1 == null || o2 == null){
+                        return 0;
+                    }
+                    
                     if (order == SortingOrder.Ascending) {
                         return (o1.date != null ? o1.date : o1.created).compareTo((o2.date != null ? o2.date : o2.created));
                     } else {

@@ -118,6 +118,7 @@ public class WaitDialog extends javax.swing.JDialog {
                 } catch (Exception e) {
                     process.finished = true;
                     process.finished(false);
+                    Log.l(e);
                 }
                 setVisible(false);
             }
