@@ -2,12 +2,6 @@
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group name="Current Projects">
-            <file>file:/C:/Stuff/Proggn/DocZ/src/docz/DocZMainFrame.java</file>
-            <file>file:/C:/Stuff/Proggn/DocZ/src/docz/ImageList.java</file>
-            <file>file:/C:/Stuff/Proggn/DocZ/src/docz/DataHandler.java</file>
-            <file>file:/C:/Stuff/Proggn/DocZ/src/docz/ContentPanel.java</file>
-        </group>
         <group>
             <file>file:/D:/Stuff/Proggen/DocZ/src/docz/ContentPanel.java</file>
             <file>file:/D:/Stuff/Proggen/DocZ/src/docz/ImagePanel.java</file>
@@ -19,6 +13,12 @@
             <file>file:/D:/Stuff/Proggen/DocZ/src/docz/AddRelationDialog.java</file>
             <file>file:/D:/Stuff/Proggen/DocZ/src/docz/ImageList.java</file>
             <file>file:/D:/Stuff/Proggen/DocZ/src/docz/DataHandler.java</file>
+        </group>
+        <group name="Current Projects">
+            <file>file:/C:/Stuff/Proggn/DocZ/src/docz/DocZMainFrame.java</file>
+            <file>file:/C:/Stuff/Proggn/DocZ/src/docz/ImageList.java</file>
+            <file>file:/C:/Stuff/Proggn/DocZ/src/docz/DataHandler.java</file>
+            <file>file:/C:/Stuff/Proggn/DocZ/src/docz/ContentPanel.java</file>
         </group>
     </open-files>
 </project-private>

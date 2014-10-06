@@ -18,6 +18,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.List;
 import javax.swing.JScrollPane;
 
 /**
@@ -26,11 +28,11 @@ import javax.swing.JScrollPane;
  */
 public class ImageList extends javax.swing.JPanel {
 
-    private Thumbnail[] thumbnails;
-    private Image[] images;
-    private String[] names, descriptions;
-    private ScaleImage.Rectangle[] rects;
-    private ScaleImage.Rectangle[] bounds;
+    private Thumbnail[] thumbnails = new Thumbnail[0];
+    private Image[] images = new Image[0];
+    private String[] names = new String[0], descriptions = new String[0];
+    private ScaleImage.Rectangle[] rects = new ScaleImage.Rectangle[0];
+    private ScaleImage.Rectangle[] bounds = new ScaleImage.Rectangle[0];
     private int hoveredIndex = -1, selectedIndex = -1;
     private int preferedWidth = 150, preferedHeight = 150, paddingLR = 20, paddingTB = 30;
 
@@ -41,6 +43,19 @@ public class ImageList extends javax.swing.JPanel {
      */
     public ImageList() {
         initComponents();
+        if (getParent() != null) {
+            getParent().addComponentListener(new ComponentAdapter() {
+
+                @Override
+                public void componentResized(ComponentEvent e) {
+                    try {
+                        recalcPositions();
+                    } catch (SQLException ex) {
+                        Log.l(ex);
+                    }
+                }
+            });
+        }
 
         addMouseMotionListener(new MouseAdapter() {
             @Override
@@ -72,7 +87,7 @@ public class ImageList extends javax.swing.JPanel {
                         repaint();
                     }
                 } catch (Exception ex) {
-                    
+
                 }
             }
         });
@@ -124,44 +139,103 @@ public class ImageList extends javax.swing.JPanel {
         this.preferedHeight = preferedHeight;
     }
 
-    public synchronized void setThumbnails(Thumbnail[] thumbnails) throws Exception {
-        this.thumbnails = thumbnails;
+    public void setThumbnails(Thumbnail[] thumbnails) throws Exception {
+        synchronized (this) {
+            thumbnails = new Thumbnail[0];
+            images = new Image[0];
+            names = new String[0];
+            descriptions = new String[0];
+            rects = new ScaleImage.Rectangle[0];
+            bounds = new ScaleImage.Rectangle[0];
+        }
 
-        images = new Image[thumbnails.length];
-        rects = new ScaleImage.Rectangle[images.length];
-        bounds = new ScaleImage.Rectangle[images.length];
-        names = new String[images.length];
-        descriptions = new String[images.length];
+        for (Thumbnail t : thumbnails) {
+            addThumbnail(t);
+        }
 
-        for (int i = 0; i < thumbnails.length; i++) {
-            images[i] = thumbnails[i].getThumbnail(preferedWidth, preferedHeight, null);
-            rects[i] = ScaleImage.fitToRect(new ScaleImage.Rectangle(0, 0, preferedWidth, preferedHeight), (BufferedImage) images[i]);
-            names[i] = thumbnails[i].getTitle();
-            descriptions[i] = thumbnails[i].getDescription();
+        repaint();
+
+//        this.thumbnails = thumbnails;
+//
+//        images = new Image[thumbnails.length];
+//        rects = new ScaleImage.Rectangle[images.length];
+//        bounds = new ScaleImage.Rectangle[images.length];
+//        names = new String[images.length];
+//        descriptions = new String[images.length];
+//
+//        for (int i = 0; i < thumbnails.length; i++) {
+//            images[i] = thumbnails[i].getThumbnail(preferedWidth, preferedHeight, null);
+//            rects[i] = ScaleImage.fitToRect(new ScaleImage.Rectangle(0, 0, preferedWidth, preferedHeight), (BufferedImage) images[i]);
+//            names[i] = thumbnails[i].getTitle();
+//            descriptions[i] = thumbnails[i].getDescription();
+//        }
+//
+//        if (getParent().getParent() instanceof JScrollPane) {
+//            ((JScrollPane) getParent().getParent()).getVerticalScrollBar().setUnitIncrement(20);
+//        }
+//
+//        recalcPositions();
+//        repaint();
+    }
+
+    public Thumbnail[] getThumbnails() {
+        return thumbnails;
+    }
+
+    public void addThumbnail(Thumbnail t) throws Exception {
+        synchronized (this) {
+            thumbnails = Arrays.copyOf(thumbnails, thumbnails.length + 1);
+            thumbnails[thumbnails.length - 1] = t;
+
+            images = Arrays.copyOf(images, thumbnails.length);
+            images[images.length - 1] = t.getThumbnail(preferedWidth, preferedHeight, null);
+
+            rects = Arrays.copyOf(rects, thumbnails.length);
+            rects[rects.length - 1] = ScaleImage.fitToRect(new ScaleImage.Rectangle(0, 0, preferedWidth, preferedHeight), (BufferedImage) images[images.length - 1]);;
+
+            bounds = Arrays.copyOf(bounds, thumbnails.length);
+
+            names = Arrays.copyOf(names, thumbnails.length);
+            names[names.length - 1] = t.getTitle();
+
+            descriptions = Arrays.copyOf(descriptions, thumbnails.length);
+            descriptions[descriptions.length - 1] = t.getDescription();
+
+            recalcPositions();
         }
 
         if (getParent().getParent() instanceof JScrollPane) {
             ((JScrollPane) getParent().getParent()).getVerticalScrollBar().setUnitIncrement(20);
         }
 
-        getParent().addComponentListener(new ComponentAdapter() {
-
-            @Override
-            public void componentResized(ComponentEvent e) {
-                try {
-                    recalcPositions();
-                } catch (SQLException ex) {
-                    Log.l(ex);
-                }
-            }
-        });
-
-        recalcPositions();
         repaint();
     }
 
-    public Thumbnail[] getThumbnails() {
-        return thumbnails;
+    private static <T> T[] removeFromArray(T[] array, int index) {
+        if (array != null && index >= 0 && index < array.length) {
+            List<T> l = Arrays.asList(array);
+            l.remove(index);
+            return (T[]) l.toArray();
+        }
+
+        return array;
+    }
+
+    public void removeThumbnail(Thumbnail t) throws Exception {
+        synchronized (this) {
+            List<Thumbnail> tList = Arrays.asList(thumbnails);
+            int index = tList.indexOf(t);
+            removeFromArray(thumbnails, index);
+
+            images = removeFromArray(images, index);
+            rects = removeFromArray(rects, index);
+            bounds = removeFromArray(bounds, index);
+            names = removeFromArray(names, index);
+            descriptions = removeFromArray(descriptions, index);
+
+            recalcPositions();
+        }
+        repaint();
     }
 
     public int getSelectedIndex() {
@@ -188,8 +262,22 @@ public class ImageList extends javax.swing.JPanel {
     }
 
     @Override
-    protected synchronized void paintComponent(Graphics g) {
+    protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+
+        Image[] images;
+        String[] names;
+        String[] descriptions;
+        ScaleImage.Rectangle[] bounds;
+        ScaleImage.Rectangle[] rects;
+
+        synchronized (this) {
+            images = Arrays.copyOf(this.images, this.images.length);
+            names = Arrays.copyOf(this.names, this.names.length);
+            descriptions = Arrays.copyOf(this.descriptions, this.descriptions.length);
+            bounds = Arrays.copyOf(this.bounds, this.bounds.length);
+            rects = Arrays.copyOf(this.rects, this.rects.length);
+        }
 
         try {
             if (images != null && names != null && rects != null) {
@@ -199,7 +287,7 @@ public class ImageList extends javax.swing.JPanel {
                     double shorteningFactor = g.getFontMetrics().stringWidth(names[i]) * 1.0 / preferedWidth;
                     names[i] = shorteningFactor <= 1.0 ? names[i]
                             : (names[i].length() >= (int) (names[i].length() / shorteningFactor)
-                                    ? names[i].substring(0, (int) (names[i].length() / shorteningFactor)) : names[i]);
+                            ? names[i].substring(0, (int) (names[i].length() / shorteningFactor)) : names[i]);
                     g.drawString(names[i], bounds[i].x, bounds[i].y + bounds[i].heigth + 12);
                 }
             }
@@ -224,8 +312,8 @@ public class ImageList extends javax.swing.JPanel {
     }
 
     /**
-     * This method is called from within the constructor to initialize the form. WARNING: Do NOT modify this code. The content of this method
-     * is always regenerated by the Form Editor.
+     * This method is called from within the constructor to initialize the form. WARNING: Do NOT modify this code. The content of this method is
+     * always regenerated by the Form Editor.
      */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents

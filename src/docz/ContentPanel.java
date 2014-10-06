@@ -122,7 +122,9 @@ public class ContentPanel extends javax.swing.JPanel {
     }
 
     public void showResults(Entity[] resultEntities) throws SQLException, Exception {
+        //imlSearchResults.setThumbnails(resultEntities);
         imlSearchResults.setThumbnails(resultEntities);
+        
         ((CardLayout) getLayout()).show(this, "card2");
     }
 
@@ -755,6 +757,7 @@ public class ContentPanel extends javax.swing.JPanel {
     private void btnRemoveRelationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRemoveRelationActionPerformed
         if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, "Do you really want to delete the relation: " + imlRelatedWith.getThumbnails()[imlRelatedWith.getSelectedIndex()].getTitle(), "Delete Relation ", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE)) {
             DataHandler.instance.deleteRelation((Relation) imlRelatedWith.getThumbnails()[imlRelatedWith.getSelectedIndex()]);
+            
         }
     }//GEN-LAST:event_btnRemoveRelationActionPerformed
 
