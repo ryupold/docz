@@ -22,6 +22,8 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -756,8 +758,13 @@ public class ContentPanel extends javax.swing.JPanel {
 
     private void btnRemoveRelationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRemoveRelationActionPerformed
         if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, "Do you really want to delete the relation: " + imlRelatedWith.getThumbnails()[imlRelatedWith.getSelectedIndex()].getTitle(), "Delete Relation ", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE)) {
-            DataHandler.instance.deleteRelation((Relation) imlRelatedWith.getThumbnails()[imlRelatedWith.getSelectedIndex()]);
-            
+            try {
+                Thumbnail t = imlRelatedWith.getThumbnails()[imlRelatedWith.getSelectedIndex()];
+                imlRelatedWith.removeThumbnail(t);            
+                DataHandler.instance.deleteRelation((Relation) t);
+            } catch (Exception ex) {
+                Log.l(ex);
+            }
         }
     }//GEN-LAST:event_btnRemoveRelationActionPerformed
 

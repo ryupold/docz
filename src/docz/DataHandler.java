@@ -20,6 +20,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -35,6 +36,7 @@ public class DataHandler {
 
     public static final DataHandler instance;
     public static final int DEFAULT_LIMIT = 50;
+    public static final String filterChars = ",.;:'\"!@#$%^&*~`<>/*-+/\\?";
 
     static {
 
@@ -574,12 +576,17 @@ public class DataHandler {
 
     public Entity[] search(String[] searchWords, boolean docsAllowed, boolean institutionsAllowed, boolean relationsAllowed, boolean tagsAllowed, Date minDate, Date maxDate, boolean filesAllowed, int limit, Sorting sorting, SortingOrder order) throws SQLException {
         List<Entity> resultTmp = new LinkedList<>();
-
+        
+        for(int i=0; i<searchWords.length; i++){
+            for(int j=0; j<filterChars.length(); j++){
+                searchWords[i] = searchWords[i].replace(filterChars.charAt(j)+"", "");
+            }
+        }
+        
         //search by title/description
         if (docsAllowed | institutionsAllowed) {
             String sql = "SELECT id, title, description, date, created, type FROM entities WHERE ";
             if (searchWords.length > 0) {
-                sql += "(";
                 sql += "(";
                 {
                     sql += " LOWER(title) LIKE LOWER('%" + searchWords[0] + "%') ";
@@ -587,16 +594,16 @@ public class DataHandler {
                         sql += " OR title LIKE '%" + searchWords[i] + "%' ";
                     }
                 }
-                sql += ")";
+                
 
-                sql += " OR (";
+                sql += " OR";
                 {
                     sql += " LOWER(description) LIKE LOWER('%" + searchWords[0] + "%') ";
                     for (int i = 1; i < searchWords.length; i++) {
                         sql += " OR LOWER(description) LIKE LOWER('%" + searchWords[i] + "%') ";
                     }
                 }
-                sql += ")";
+                
                 sql += ")";
             }
 
@@ -615,10 +622,21 @@ public class DataHandler {
                 }
             }
 
+            //odering
+            switch(sorting)
+            {
+                case Created: sql += " ORDER BY created " + (order == SortingOrder.Descending ? "DESC" : ""); break;
+                case Date: sql += " ORDER BY date " + (order == SortingOrder.Descending ? "DESC" : ""); break;
+                case Title: sql += " ORDER BY title " + (order == SortingOrder.Descending ? "DESC" : ""); break;
+                default: break;
+            }
+            
+            //limit
             if (limit > 0) {
                 sql += " LIMIT " + limit;
             }
 
+            //Log.l(sql);
             DB.DBResult r = DB.select(sql);
             while (r.resultSet.next()) {
                 long id = r.resultSet.getLong(1);
@@ -775,7 +793,7 @@ public class DataHandler {
 
         Collections.sort(resultTmp, new EntityComparator(sorting, order));
         Entity[] results = resultTmp.toArray(new Entity[resultTmp.size()]);
-        return results;
+        return results.length > limit ? Arrays.copyOf(results, limit) : results;
     }
 
     @Override

@@ -10,6 +10,7 @@ import de.realriu.riulib.gui.imagelist.ImageListAdapter;
 import de.realriu.riulib.gui.imagelist.ScaledImageList;
 import java.awt.Font;
 import java.awt.Image;
+import java.awt.TextComponent;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetAdapter;
@@ -32,6 +33,7 @@ import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.text.JTextComponent;
 import net.sourceforge.jdatepicker.DateModel;
 import net.sourceforge.jdatepicker.JDatePanel;
 import net.sourceforge.jdatepicker.impl.JDatePanelImpl;
@@ -876,31 +878,31 @@ public class AddDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_btnAddToRelationsActionPerformed
 
     private void txtDocTitleKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtDocTitleKeyTyped
-        showSimilarEntities(txtDocTitle.getText(), true, false);
+        showSimilarEntities(txtDocTitle, true, false);
     }//GEN-LAST:event_txtDocTitleKeyTyped
 
     private void txaDocDescriptionKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txaDocDescriptionKeyTyped
-        showSimilarEntities(txaDocDescription.getText(), true, false);
+        showSimilarEntities(txaDocDescription, true, false);
     }//GEN-LAST:event_txaDocDescriptionKeyTyped
 
     private void txtDocTagsKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtDocTagsKeyTyped
-        showSimilarEntities(txtDocTags.getText(), false, true);
+        showSimilarEntities(txtDocTags, false, true);
     }//GEN-LAST:event_txtDocTagsKeyTyped
 
     private void txtInstitutionTitleKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtInstitutionTitleKeyTyped
-        showSimilarEntities(txtInstitutionTitle.getText(), true, false);
+        showSimilarEntities(txtInstitutionTitle, true, false);
     }//GEN-LAST:event_txtInstitutionTitleKeyTyped
 
     private void txaInstitutionDescriptionKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txaInstitutionDescriptionKeyTyped
-        showSimilarEntities(txaInstitutionDescription.getText(), true, false);
+        showSimilarEntities(txaInstitutionDescription, true, false);
     }//GEN-LAST:event_txaInstitutionDescriptionKeyTyped
 
     private void txtInstitutionTagsKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtInstitutionTagsKeyTyped
-        showSimilarEntities(txtInstitutionTags.getText(), false, true);
+        showSimilarEntities(txtInstitutionTags, false, true);
     }//GEN-LAST:event_txtInstitutionTagsKeyTyped
 
-    private void showSimilarEntities(final String longSearchString, final boolean byTitleAndDescription, final boolean byTags) {
-
+    private void showSimilarEntities(final JTextComponent textComponent, final boolean byTitleAndDescription, final boolean byTags) {
+        
         if (searchProgress != null && !searchProgress.isFinished()) {
             searchProgress.cancel(); //concurrency problems????
         }
@@ -910,8 +912,8 @@ public class AddDialog extends javax.swing.JDialog {
 
             @Override
             public void start() throws Exception {
-                String[] searchWords = longSearchString.split(" ");
-                findings = DataHandler.instance.search(searchWords, byTitleAndDescription, byTitleAndDescription, false, byTags, null, null, true, 10);
+                String[] searchWords = textComponent.getText().trim().split(" ");                
+                findings = DataHandler.instance.search(searchWords, true, true, true, true, null, null, true, 10, DataHandler.Sorting.Title, DataHandler.SortingOrder.Descending);
             }
 
             @Override
