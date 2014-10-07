@@ -19,8 +19,6 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 import javax.swing.JScrollPane;
 
@@ -37,6 +35,30 @@ public class ImageList extends javax.swing.JPanel {
     private List<ScaleImage.Rectangle> bounds = new ArrayList<>();
     private int hoveredIndex = -1, selectedIndex = -1;
     private int preferedWidth = 150, preferedHeight = 150, paddingLR = 20, paddingTB = 30;
+    private Task task = null;
+
+    private abstract class Task extends Thread {
+
+        private boolean canceled = false;
+
+        public Task(String name) {
+            super(name);
+            setDaemon(true);
+        }
+
+        @Override
+        public abstract void run();
+
+        public boolean isCanceled() {
+            return canceled;
+        }
+        
+        public void cancel() {
+            canceled = true;
+            Log.l("canceled "+Thread.currentThread().getId());
+        }
+
+    }
 
     private ImageListListener listener;
 
@@ -141,7 +163,7 @@ public class ImageList extends javax.swing.JPanel {
         this.preferedHeight = preferedHeight;
     }
 
-    public void setThumbnails(Thumbnail[] thumbnails) throws Exception {
+    public void setThumbnails(final Thumbnail[] thumbnails) throws Exception {
         synchronized (this) {
             this.thumbnails.clear();
             images.clear();
@@ -150,40 +172,73 @@ public class ImageList extends javax.swing.JPanel {
             rects.clear();
             bounds.clear();
         }
+        if(task!=null){
+            task.cancel();
+        }
 
         repaint();
 
-        for (Thumbnail t : thumbnails) {
-            addThumbnail(t);
-        }
+        task = new Task("setting thumbnails") {
+
+            @Override
+            public void run() {
+                for (int i=0; !isCanceled() && i<thumbnails.length; i++) {
+                    try {
+                        if(!isCanceled())addThumbnail(thumbnails[i], false);
+                    } catch (Exception ex) {
+                        Log.l(ex);
+                    }
+                }
+            }
+
+        };
+
+        task.start();
     }
 
     public Thumbnail[] getThumbnails() {
         return thumbnails.toArray(new Thumbnail[thumbnails.size()]);
     }
 
-    public void addThumbnail(Thumbnail t) throws Exception {
-        synchronized (this) {
-            thumbnails.add(t);
-            images.add(t.getThumbnail(preferedWidth, preferedHeight, null));            
-            rects.add(ScaleImage.fitToRect(new ScaleImage.Rectangle(0, 0, preferedWidth, preferedHeight), (BufferedImage) images.get(images.size() - 1)));
-            names.add(t.getTitle());
-            descriptions.add(t.getDescription());
+    public void addThumbnail(final Thumbnail t, boolean async) throws Exception {
+        task = new Task("adding thumbnail") {
 
-            recalcPositions();
-        }
+            @Override
+            public void run() {
+                synchronized (ImageList.this) {
+                    try {
+                        thumbnails.add(t);
+                        images.add(t.getThumbnail(preferedWidth, preferedHeight, null));
+                        rects.add(ScaleImage.fitToRect(new ScaleImage.Rectangle(0, 0, preferedWidth, preferedHeight), (BufferedImage) images.get(images.size() - 1)));
+                        names.add(t.getTitle());
+                        descriptions.add(t.getDescription());
+
+                        recalcPositions();
+                    } catch (Exception ex) {
+                        Log.l(ex);
+                    }
+                }
+
+                repaint();
+            }
+
+        };
 
         if (getParent().getParent() instanceof JScrollPane) {
             ((JScrollPane) getParent().getParent()).getVerticalScrollBar().setUnitIncrement(20);
         }
 
-        repaint();
+        if (async) {
+            task.start();
+        } else {
+            task.run();
+        }
     }
 
     public void removeThumbnail(Thumbnail t) throws Exception {
         synchronized (this) {
             int index = thumbnails.indexOf(t);
-            
+
             thumbnails.remove(index);
             images.remove(index);
             rects.remove(index);
@@ -246,7 +301,7 @@ public class ImageList extends javax.swing.JPanel {
                     double shorteningFactor = g.getFontMetrics().stringWidth(names[i]) * 1.0 / preferedWidth;
                     names[i] = shorteningFactor <= 1.0 ? names[i]
                             : (names[i].length() >= (int) (names[i].length() / shorteningFactor)
-                                    ? names[i].substring(0, (int) (names[i].length() / shorteningFactor)) : names[i]);
+                            ? names[i].substring(0, (int) (names[i].length() / shorteningFactor)) : names[i]);
                     g.drawString(names[i], bounds[i].x, bounds[i].y + bounds[i].heigth + 12);
                 }
             }
@@ -271,8 +326,8 @@ public class ImageList extends javax.swing.JPanel {
     }
 
     /**
-     * This method is called from within the constructor to initialize the form. WARNING: Do NOT modify this code. The content of this method
-     * is always regenerated by the Form Editor.
+     * This method is called from within the constructor to initialize the form. WARNING: Do NOT modify this code. The content of this method is
+     * always regenerated by the Form Editor.
      */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
