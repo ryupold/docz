@@ -101,11 +101,12 @@ public class WaitDialog extends javax.swing.JDialog {
 
             @Override
             public void run() {
+                Log.l(this+" started");
                 long delta = delay;
                 try {
                     synchronized(process){
                         while (!process.canceled && delta > 0) {
-                            long wait = delta;
+                            long wait = delay;
                             delta -= wait;
                             process.wait(wait);                            
                         }
@@ -121,9 +122,11 @@ public class WaitDialog extends javax.swing.JDialog {
                     Log.l(e);
                 }
                 setVisible(false);
+                Log.l(this+" finished");
             }
         }, threadName!=null?threadName:"Thread that does things and waits "+delay+" ms before doing it.");
 
+        thread.setDaemon(true);
         thread.start();
         if (showDialog) {
             setVisible(true);

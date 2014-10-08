@@ -5,7 +5,6 @@
  */
 package docz;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -31,8 +30,8 @@ public class Institution extends Entity {
         this.created = created;
     }
 
-    public static Institution createInstitution(String title, String description, List<String> tags, List<File> files) throws SQLException, FileNotFoundException, IOException {
-        return new Institution(DataHandler.instance.createEntity(title, description, tags, null, files, 2));
+    public static Institution createInstitution(String title, String description, List<String> tags) throws SQLException, FileNotFoundException, IOException {
+        return new Institution(DataHandler.instance.createEntity(title, description, tags, null, 2));
     }
 
     @Override

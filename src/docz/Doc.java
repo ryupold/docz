@@ -5,7 +5,6 @@
  */
 package docz;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -32,8 +31,8 @@ public class Doc extends Entity {
         this.created = created;
     }
 
-    public static Doc createDoc(String title, String description, List<String> tags, Date date, List<File> files) throws SQLException, FileNotFoundException, IOException {
-        return new Doc(DataHandler.instance.createEntity(title, description, tags, date, files, 1));
+    public static Doc createDoc(String title, String description, List<String> tags, Date date) throws SQLException, FileNotFoundException, IOException {
+        return new Doc(DataHandler.instance.createEntity(title, description, tags, date, 1));
     }
 
     @Override

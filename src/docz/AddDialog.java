@@ -10,12 +10,6 @@ import de.realriu.riulib.gui.imagelist.ImageListAdapter;
 import de.realriu.riulib.gui.imagelist.ScaledImageList;
 import java.awt.Font;
 import java.awt.Image;
-import java.awt.TextComponent;
-import java.awt.dnd.DnDConstants;
-import java.awt.dnd.DropTarget;
-import java.awt.dnd.DropTargetAdapter;
-import java.awt.dnd.DropTargetDragEvent;
-import java.awt.dnd.DropTargetDropEvent;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -80,7 +74,7 @@ public class AddDialog extends javax.swing.JDialog {
                     try {
                         previewPanel.setImg(files.get(pos), true);
                     } catch (IOException ex) {
-                        Log.l(ex);
+                        previewPanel.setImg(Resources.createImageWithText(files.get(pos).getName(), imgList.getHeight(), imgList.getHeight()));
                     }
                 }
             }
@@ -193,7 +187,7 @@ public class AddDialog extends javax.swing.JDialog {
                             try {
                                 imgList.addImage(ImageIO.read(f), f.getName());
                             } catch (IOException ex) {
-                                Log.l(ex);
+                                imgList.addImage(Resources.createImageWithText(f.getName(), imgList.getHeight(), imgList.getHeight()), f.getName());
                             }
                         } else {
                             imgList.addImage(Resources.createImageWithText(f.getName(), imgList.getHeight(), imgList.getHeight()), f.getName());
@@ -709,8 +703,10 @@ public class AddDialog extends javax.swing.JDialog {
                         for (String t : tagArray) {
                             tags.add(t.trim().toLowerCase());
                         }
-                        processing(0.1f, "saving doc data & files...");
-                        Doc d = Doc.createDoc(txtDocTitle.getText(), txaDocDescription.getText(), tags, DateFormat.getDateInstance().parse(lblDocDate.getText()), files);
+                        processing(0.1f, "saving doc data...");
+                        Doc d = Doc.createDoc(txtDocTitle.getText(), txaDocDescription.getText(), tags, DateFormat.getDateInstance().parse(lblDocDate.getText()));
+                        processing(0.2f, "saving images & files...");
+                        DataHandler.instance.addFiles(d, files.toArray(new File[files.size()]));
                         processing(0.9f, "adding relations...");
                         createRelations(relations, d);
                         processing(1f, "finished...");
@@ -799,10 +795,12 @@ public class AddDialog extends javax.swing.JDialog {
                             tags.add(t.trim().toLowerCase());
                         }
 
-                        List<File> logo = new ArrayList<>();
-                        logo.add(imgPanel.getImg());
-                        processing(0.1f, "saving institution data & logo...");
-                        Institution i = Institution.createInstitution(txtInstitutionTitle.getText().trim(), txaInstitutionDescription.getText().trim(), tags, logo);
+//                        List<File> logo = new ArrayList<>();
+//                        logo.add(imgPanel.getImg());
+                        processing(0.1f, "saving institution data...");
+                        Institution i = Institution.createInstitution(txtInstitutionTitle.getText().trim(), txaInstitutionDescription.getText().trim(), tags);
+                        processing(0.2f, "saving logo...");
+                        DataHandler.instance.addFiles(i, imgPanel.getImg());
                         processing(0.9f, "creating relations...");
                         createRelations(relations, i);
                         processing(1f, "finished...");

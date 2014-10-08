@@ -7,7 +7,6 @@ package docz;
 
 import de.realriu.riulib.helpers.ScaleImage;
 import de.realriu.riulib.helpers.ScaleImage.Rectangle;
-import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Insets;
@@ -162,6 +161,7 @@ public class ImagePanel extends JPanel {
     }
 
     public void setImg(Image img) {
+        this.imgFile = null;
         scaledImg = img;
         insets = getBorder().getBorderInsets(this);
         

@@ -150,7 +150,7 @@ public class DataHandler {
         }
     }
 
-    public Entity createEntity(String title, String description, List<String> tags, Date date, List<File> files, int type) throws SQLException, FileNotFoundException, IOException {
+    public Entity createEntity(String title, String description, List<String> tags, Date date, int type) throws SQLException, FileNotFoundException, IOException {
         Connection c = DB.createConnection();
 
         Date created = new Date();
@@ -171,8 +171,6 @@ public class DataHandler {
                 } else if (type == 2) {
                     entity = new Institution(id, title, description, tags, created);
                 }
-
-                addFiles(entity, files.toArray(new File[files.size()]));
 
                 return entity;
             } else {
@@ -305,8 +303,8 @@ public class DataHandler {
             DB.DBResult r = DB.select("SELECT id, title, description, created, entity1, entity2 FROM relations WHERE entity1='" + entity.getID() + "' OR entity2='" + entity.getID() + "'");
             List<Relation> tmpRelations = new LinkedList<>();
             while (r.resultSet.next()) {
-                Entity e1 = r.resultSet.getLong(5)== entity.id ? entity : getEntityByID(r.resultSet.getLong(6));
-                Entity e2 = r.resultSet.getLong(5)== entity.id ? getEntityByID(r.resultSet.getLong(6)) : getEntityByID(r.resultSet.getLong(5));
+                Entity e1 = r.resultSet.getLong(5) == entity.id ? entity : getEntityByID(r.resultSet.getLong(6));
+                Entity e2 = r.resultSet.getLong(5) == entity.id ? getEntityByID(r.resultSet.getLong(6)) : getEntityByID(r.resultSet.getLong(5));
                 tmpRelations.add(new Relation(r.resultSet.getLong(1), r.resultSet.getString(2), r.resultSet.getString(3), new Date(r.resultSet.getLong(4)), e1, e2));
             }
             r.close();
@@ -390,15 +388,20 @@ public class DataHandler {
             List<ImageFile> imgs = new LinkedList<>();
             while (r.resultSet.next()) {
                 BufferedImage sImg;
-                try {
-                    InputStream byteStream = r.resultSet.getBinaryStream(3);
-                    sImg = ImageIO.read(byteStream);
-                    ScaleImage.Rectangle rec = ScaleImage.fitToRect(preferedWidth, preferedHeight, sImg);
-                    sImg = ScaleImage.scale(sImg, rec.width, rec.heigth);
-                } catch (IllegalArgumentException iae) {
-                    sImg = Resources.createImageWithText(r.resultSet.getString(1), preferedWidth, preferedHeight / 2, font);
+                String fname = r.resultSet.getString(1);
+                if (fname.endsWith(".jpg") || fname.endsWith(".jpeg") || fname.endsWith(".bmp") || fname.endsWith(".wbmp") || fname.endsWith(".gif") || fname.endsWith(".png")) {
+                    try {
+                        InputStream byteStream = r.resultSet.getBinaryStream(3);
+                        sImg = ImageIO.read(byteStream);
+                        ScaleImage.Rectangle rec = ScaleImage.fitToRect(preferedWidth, preferedHeight, sImg);
+                        sImg = ScaleImage.scale(sImg, rec.width, rec.heigth);
+                    } catch (IllegalArgumentException iae) {
+                        sImg = Resources.createImageWithText(fname, preferedWidth, preferedHeight / 2, font);
+                    }
+                } else {
+                    sImg = Resources.createImageWithText(fname, preferedWidth, preferedHeight / 2, font);
                 }
-                imgs.add(new ImageFile(entity, r.resultSet.getString(1), new Date(r.resultSet.getLong(2)), sImg));
+                imgs.add(new ImageFile(entity, fname, new Date(r.resultSet.getLong(2)), sImg));
 
             }
             r.close();
@@ -527,7 +530,7 @@ public class DataHandler {
         public int compare(Entity o1, Entity o2) {
             switch (sorting) {
                 case Created:
-                    if(o1 == null || o2 == null){
+                    if (o1 == null || o2 == null) {
                         return 0;
                     }
                     if (order == SortingOrder.Ascending) {
@@ -536,10 +539,10 @@ public class DataHandler {
                         return o2.created.compareTo(o1.created);
                     }
                 case Date:
-                    if(o1 == null || o2 == null){
+                    if (o1 == null || o2 == null) {
                         return 0;
                     }
-                    
+
                     if (order == SortingOrder.Ascending) {
                         return (o1.date != null ? o1.date : o1.created).compareTo((o2.date != null ? o2.date : o2.created));
                     } else {
@@ -576,13 +579,13 @@ public class DataHandler {
 
     public Entity[] search(String[] searchWords, boolean docsAllowed, boolean institutionsAllowed, boolean relationsAllowed, boolean tagsAllowed, Date minDate, Date maxDate, boolean filesAllowed, int limit, Sorting sorting, SortingOrder order) throws SQLException {
         List<Entity> resultTmp = new LinkedList<>();
-        
-        for(int i=0; i<searchWords.length; i++){
-            for(int j=0; j<filterChars.length(); j++){
-                searchWords[i] = searchWords[i].replace(filterChars.charAt(j)+"", "");
+
+        for (int i = 0; i < searchWords.length; i++) {
+            for (int j = 0; j < filterChars.length(); j++) {
+                searchWords[i] = searchWords[i].replace(filterChars.charAt(j) + "", "");
             }
         }
-        
+
         //search by title/description
         if (docsAllowed | institutionsAllowed) {
             String sql = "SELECT id, title, description, date, created, type FROM entities WHERE ";
@@ -594,7 +597,6 @@ public class DataHandler {
                         sql += " OR title LIKE '%" + searchWords[i] + "%' ";
                     }
                 }
-                
 
                 sql += " OR";
                 {
@@ -603,7 +605,7 @@ public class DataHandler {
                         sql += " OR LOWER(description) LIKE LOWER('%" + searchWords[i] + "%') ";
                     }
                 }
-                
+
                 sql += ")";
             }
 
@@ -623,14 +625,20 @@ public class DataHandler {
             }
 
             //odering
-            switch(sorting)
-            {
-                case Created: sql += " ORDER BY created " + (order == SortingOrder.Descending ? "DESC" : ""); break;
-                case Date: sql += " ORDER BY date " + (order == SortingOrder.Descending ? "DESC" : ""); break;
-                case Title: sql += " ORDER BY title " + (order == SortingOrder.Descending ? "DESC" : ""); break;
-                default: break;
+            switch (sorting) {
+                case Created:
+                    sql += " ORDER BY created " + (order == SortingOrder.Descending ? "DESC" : "");
+                    break;
+                case Date:
+                    sql += " ORDER BY date " + (order == SortingOrder.Descending ? "DESC" : "");
+                    break;
+                case Title:
+                    sql += " ORDER BY title " + (order == SortingOrder.Descending ? "DESC" : "");
+                    break;
+                default:
+                    break;
             }
-            
+
             //limit
             if (limit > 0) {
                 sql += " LIMIT " + limit;
@@ -775,7 +783,7 @@ public class DataHandler {
                     }
                 }
             }
-            
+
             if (maxDate != null) {
                 if (resultTmp.get(i).date != null) {
                     if (resultTmp.get(i).date.compareTo(maxDate) > 0) {
