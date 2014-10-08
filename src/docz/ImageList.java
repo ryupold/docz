@@ -10,8 +10,8 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Image;
-import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Point;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
@@ -52,10 +52,9 @@ public class ImageList extends javax.swing.JPanel {
         public boolean isCanceled() {
             return canceled;
         }
-        
+
         public void cancel() {
             canceled = true;
-            Log.l("canceled "+Thread.currentThread().getId());
         }
 
     }
@@ -172,7 +171,7 @@ public class ImageList extends javax.swing.JPanel {
             rects.clear();
             bounds.clear();
         }
-        if(task!=null){
+        if (task != null) {
             task.cancel();
         }
 
@@ -182,9 +181,11 @@ public class ImageList extends javax.swing.JPanel {
 
             @Override
             public void run() {
-                for (int i=0; !isCanceled() && i<thumbnails.length; i++) {
+                for (int i = 0; !isCanceled() && i < thumbnails.length; i++) {
                     try {
-                        if(!isCanceled())addThumbnail(thumbnails[i], false);
+                        if (!isCanceled()) {
+                            addThumbnail(thumbnails[i], false);
+                        }
                     } catch (Exception ex) {
                         Log.l(ex);
                     }
@@ -200,38 +201,40 @@ public class ImageList extends javax.swing.JPanel {
         return thumbnails.toArray(new Thumbnail[thumbnails.size()]);
     }
 
-    public void addThumbnail(final Thumbnail t, boolean async) throws Exception {
-        task = new Task("adding thumbnail") {
+    public void addThumbnail(final Thumbnail t, boolean async) {
+        if (async) {
+            task = new Task("adding thumbnail") {
 
-            @Override
-            public void run() {
-                synchronized (ImageList.this) {
-                    try {
-                        thumbnails.add(t);
-                        images.add(t.getThumbnail(preferedWidth, preferedHeight, null));
-                        rects.add(ScaleImage.fitToRect(new ScaleImage.Rectangle(0, 0, preferedWidth, preferedHeight), (BufferedImage) images.get(images.size() - 1)));
-                        names.add(t.getTitle());
-                        descriptions.add(t.getDescription());
-
-                        recalcPositions();
-                    } catch (Exception ex) {
-                        Log.l(ex);
+                @Override
+                public void run() {
+                    synchronized (ImageList.this) {
+                        addThumbnail(t, false);
                     }
                 }
 
-                repaint();
+            };
+
+            if (getParent().getParent() instanceof JScrollPane) {
+                ((JScrollPane) getParent().getParent()).getVerticalScrollBar().setUnitIncrement(20);
             }
 
-        };
-
-        if (getParent().getParent() instanceof JScrollPane) {
-            ((JScrollPane) getParent().getParent()).getVerticalScrollBar().setUnitIncrement(20);
-        }
-
-        if (async) {
             task.start();
         } else {
-            task.run();
+            try {
+                Image im = t.getThumbnail(preferedWidth, preferedHeight, null);
+                synchronized (this) {
+                    thumbnails.add(t);
+                    images.add(im);
+                    rects.add(ScaleImage.fitToRect(new ScaleImage.Rectangle(0, 0, preferedWidth, preferedHeight), (BufferedImage) images.get(images.size() - 1)));
+                    names.add(t.getTitle());
+                    descriptions.add(t.getDescription());
+                    recalcPositions();
+                }
+
+                repaint();
+            } catch (Exception ex) {
+                Log.l(ex);
+            }
         }
     }
 
@@ -295,7 +298,7 @@ public class ImageList extends javax.swing.JPanel {
 
         try {
             if (images != null && names != null && rects != null) {
-                for (int i = 0; i < images.length; i++) {
+                for (int i = 0; i < bounds.length; i++) {
                     g.drawRect(bounds[i].x, bounds[i].y, bounds[i].width, bounds[i].heigth);
                     g.drawImage(images[i], bounds[i].x + rects[i].x, bounds[i].y + rects[i].y, this);
                     double shorteningFactor = g.getFontMetrics().stringWidth(names[i]) * 1.0 / preferedWidth;
