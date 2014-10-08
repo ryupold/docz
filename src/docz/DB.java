@@ -18,11 +18,11 @@ import org.h2.tools.ChangeFileEncryption;
 
 /**
  *
- * @author Michael
+ * @author RyU
  */
-public abstract class DB {
+public final class DB {
 
-    private static final String dbPath = "db/db";
+    private static String dbPath = null;
     private static String pw = null;
 
     protected static void setPW(String pw) {
@@ -30,7 +30,11 @@ public abstract class DB {
     }
 
     public static final String getDBPath() {
-        return new File(dbPath).getAbsolutePath();
+        return dbPath;
+    }
+    
+    public static final void setDBPath(String path){
+        dbPath = path.trim();
     }
 
     static {
@@ -77,7 +81,6 @@ public abstract class DB {
     public static void setSetting(String name, String value) {
         try {
             if (DB.update("update settings set value='" + value + "' where name='" + name + "'") == 0) {
-
                 DB.insert("insert into settings(name, value) values('" + name + "','" + value + "')", false);
             }
         } catch (SQLException ex) {
@@ -133,12 +136,18 @@ public abstract class DB {
     }
 
     public static Connection createConnection() throws SQLException {
-        if (pw != null) {
-            Connection c = DriverManager.getConnection("jdbc:h2:file:" + new File(dbPath).getAbsolutePath() + ";CIPHER=AES", "sa", pw + " " + "password");
-            return c;
+        if(dbPath != null){
+            if (pw == null) {
+                Connection c = DriverManager.getConnection("jdbc:h2:file:" + new File(dbPath).getAbsolutePath(), null, null);
+                return c;
+            }
+            else{
+                Connection c = DriverManager.getConnection("jdbc:h2:file:" + new File(dbPath).getAbsolutePath() + ";CIPHER=AES", "sa", pw + " " + "password");
+                return c;
+            }
         }
-
-        throw new SecurityException("no password entered!");
+        
+        throw new IllegalStateException("no database path set");
     }
 
     public static boolean changePW(String oldPW, String newPW) throws SQLException {

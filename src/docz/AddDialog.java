@@ -373,7 +373,10 @@ public class AddDialog extends javax.swing.JDialog {
         jScrollPane1.setFont(new java.awt.Font("Arial", 0, 16)); // NOI18N
 
         txaDocDescription.setColumns(20);
+        txaDocDescription.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        txaDocDescription.setLineWrap(true);
         txaDocDescription.setRows(5);
+        txaDocDescription.setWrapStyleWord(true);
         txaDocDescription.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyTyped(java.awt.event.KeyEvent evt) {
                 txaDocDescriptionKeyTyped(evt);
@@ -528,8 +531,10 @@ public class AddDialog extends javax.swing.JDialog {
 
         txaInstitutionDescription.setColumns(20);
         txaInstitutionDescription.setFont(new java.awt.Font("Arial", 0, 18)); // NOI18N
+        txaInstitutionDescription.setLineWrap(true);
         txaInstitutionDescription.setRows(5);
         txaInstitutionDescription.setToolTipText("");
+        txaInstitutionDescription.setWrapStyleWord(true);
         txaInstitutionDescription.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyTyped(java.awt.event.KeyEvent evt) {
                 txaInstitutionDescriptionKeyTyped(evt);

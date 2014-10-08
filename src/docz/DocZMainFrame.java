@@ -30,7 +30,7 @@ public class DocZMainFrame extends javax.swing.JFrame {
      */
     public DocZMainFrame() {
         initComponents();
-
+        
         setTitle("DocZ");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         Log.l("DB file = " + DataHandler.instance);
