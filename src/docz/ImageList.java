@@ -191,7 +191,6 @@ public class ImageList extends javax.swing.JPanel {
                     }
                 }
             }
-
         };
 
         task.start();
@@ -227,8 +226,12 @@ public class ImageList extends javax.swing.JPanel {
                     images.add(im);
                     rects.add(ScaleImage.fitToRect(new ScaleImage.Rectangle(0, 0, preferedWidth, preferedHeight), (BufferedImage) images.get(images.size() - 1)));
                     names.add(t.getTitle());
-                    descriptions.add(t.getDescription());
+                    descriptions.add(t.getDescription().trim().isEmpty() ? t.getTitle() : t.getDescription());
                     recalcPositions();
+                }
+                
+                if (getParent().getParent() instanceof JScrollPane) {
+                    ((JScrollPane) getParent().getParent()).getVerticalScrollBar().setUnitIncrement(20);
                 }
 
                 repaint();
@@ -272,7 +275,7 @@ public class ImageList extends javax.swing.JPanel {
                 bounds.add(new ScaleImage.Rectangle(x, y, preferedWidth, preferedHeight));
             }
 
-            Rectangle r = new Rectangle(bounds.get(0).x, bounds.get(0).y, bounds.get(bounds.size() - 1).x - bounds.get(0).x + bounds.get(bounds.size() - 1).width, bounds.get(bounds.size() - 1).y - bounds.get(0).y + bounds.get(bounds.size() - 1).heigth);
+            Rectangle r = new Rectangle(bounds.get(0).x, bounds.get(0).y, bounds.get(bounds.size() - 1).x - bounds.get(0).x + bounds.get(bounds.size() - 1).width, bounds.get(bounds.size() - 1).y - bounds.get(0).y + bounds.get(bounds.size() - 1).heigth + 20);
             repaint();
             setPreferredSize(new Dimension(r.width, r.height));
         }

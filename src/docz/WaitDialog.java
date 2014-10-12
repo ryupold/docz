@@ -120,9 +120,12 @@ public class WaitDialog extends javax.swing.JDialog {
                     process.finished = true;
                     process.finished(false);
                     Log.l(e);
+                }finally{
+                    setVisible(false);
+                    dispose();
+                    Log.l(this+" finished");
                 }
-                setVisible(false);
-                Log.l(this+" finished");
+                
             }
         }, threadName!=null?threadName:"Thread that does things and waits "+delay+" ms before doing it.");
 
