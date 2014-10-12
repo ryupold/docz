@@ -9,8 +9,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -100,7 +98,7 @@ public final class Config {
         }
     }
 
-    public static void addDatabase(String path) {
+    public static boolean addDatabase(String path) {
         path = path.trim();
         boolean alreadyAdded = false;
         String[] dbs = getDatabases();
@@ -117,10 +115,15 @@ public final class Config {
             databases.appendChild(db);
             
             save();
+            
+            return true;
+        }
+        else{
+            return false;
         }
     }
     
-    public static void deleteDatabase(String path) {
+    public static boolean deleteDatabase(String path) {
         path = path.trim();
         File dbFile = new File(path);
         
@@ -142,6 +145,11 @@ public final class Config {
                 }
             }
             save();
+            
+            return dbFile.delete();
+        }
+        else{
+            return false;
         }
     }
 

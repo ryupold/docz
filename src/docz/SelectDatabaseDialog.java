@@ -5,18 +5,28 @@
  */
 package docz;
 
+import javax.swing.DefaultListModel;
+
 /**
  *
  * @author Michael
  */
 public class SelectDatabaseDialog extends javax.swing.JDialog {
-
+    
+    private DefaultListModel<String> databases = new DefaultListModel<>();
+    
     /**
      * Creates new form SelectDatabaseDialog
      */
     public SelectDatabaseDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
+        
+        setVisible(true);
+    }
+    
+    public String getSelectedDatabase(){
+        return listDatabases.getSelectedIndex() >= 0 ? listDatabases.getSelectedValue().toString() : null;
     }
 
     /**
@@ -27,21 +37,123 @@ public class SelectDatabaseDialog extends javax.swing.JDialog {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jScrollPane1 = new javax.swing.JScrollPane();
+        listDatabases = new javax.swing.JList();
+        txtNewDBPath = new javax.swing.JTextField();
+        btnBrowse = new javax.swing.JButton();
+        btnAddDB = new javax.swing.JButton();
+        btnDeleteDB = new javax.swing.JButton();
+        btnSelect = new javax.swing.JButton();
+        btnAbort = new javax.swing.JButton();
+
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+
+        jScrollPane1.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Databases", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Arial", 1, 20))); // NOI18N
+
+        listDatabases.setFont(new java.awt.Font("Arial", 1, 24)); // NOI18N
+        listDatabases.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        listDatabases.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                listDatabasesValueChanged(evt);
+            }
+        });
+        jScrollPane1.setViewportView(listDatabases);
+        listDatabases.setModel(databases);
+
+        txtNewDBPath.setFont(new java.awt.Font("Arial", 0, 20)); // NOI18N
+
+        btnBrowse.setFont(new java.awt.Font("Arial", 1, 20)); // NOI18N
+        btnBrowse.setText("...");
+
+        btnAddDB.setFont(new java.awt.Font("Arial", 1, 20)); // NOI18N
+        btnAddDB.setText("+");
+        btnAddDB.setEnabled(false);
+        btnAddDB.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAddDBActionPerformed(evt);
+            }
+        });
+
+        btnDeleteDB.setFont(new java.awt.Font("Arial", 1, 20)); // NOI18N
+        btnDeleteDB.setText("-");
+        btnDeleteDB.setEnabled(false);
+        btnDeleteDB.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDeleteDBActionPerformed(evt);
+            }
+        });
+
+        btnSelect.setFont(new java.awt.Font("Arial", 1, 24)); // NOI18N
+        btnSelect.setText("select");
+        btnSelect.setEnabled(false);
+
+        btnAbort.setFont(new java.awt.Font("Arial", 1, 24)); // NOI18N
+        btnAbort.setText("abort");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 646, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(btnDeleteDB)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtNewDBPath)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnBrowse)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnAddDB))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(btnSelect, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnAbort)))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 371, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtNewDBPath, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnBrowse)
+                    .addComponent(btnAddDB)
+                    .addComponent(btnDeleteDB))
+                .addGap(18, 18, 18)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnAbort)
+                    .addComponent(btnSelect))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void listDatabasesValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_listDatabasesValueChanged
+        btnDeleteDB.setEnabled(listDatabases.getSelectedIndex() >= 0);
+        btnAddDB.setEnabled(listDatabases.getSelectedIndex() >= 0);
+        btnSelect.setEnabled(listDatabases.getSelectedIndex() >= 0);
+        
+        if(listDatabases.getSelectedIndex() >= 0){
+            btnSelect.setText(listDatabases.getSelectedValue().toString());
+        }
+    }//GEN-LAST:event_listDatabasesValueChanged
+
+    private void btnAddDBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddDBActionPerformed
+        if(Config.addDatabase(txtNewDBPath.getText().trim())){
+            databases.addElement(txtNewDBPath.getText().trim());
+        }
+    }//GEN-LAST:event_btnAddDBActionPerformed
+
+    private void btnDeleteDBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteDBActionPerformed
+        if(Config.deleteDatabase(listDatabases.getSelectedValue().toString())){
+            databases.removeElementAt(listDatabases.getSelectedIndex());
+        }
+    }//GEN-LAST:event_btnDeleteDBActionPerformed
 
     /**
      * @param args the command line arguments
@@ -86,5 +198,13 @@ public class SelectDatabaseDialog extends javax.swing.JDialog {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnAbort;
+    private javax.swing.JButton btnAddDB;
+    private javax.swing.JButton btnBrowse;
+    private javax.swing.JButton btnDeleteDB;
+    private javax.swing.JButton btnSelect;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JList listDatabases;
+    private javax.swing.JTextField txtNewDBPath;
     // End of variables declaration//GEN-END:variables
 }

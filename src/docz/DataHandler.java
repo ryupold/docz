@@ -44,21 +44,33 @@ public class DataHandler {
     }
 
     private DataHandler() {
-        init();
+        
     }
 
-    public void init() {
+    /**
+     * 1 = no DB path specified, 2 = wrong password, 3 = no password, 4 = error
+     * @return 
+     */
+    public int init() {
+        if(DB.getDBPath() == null){
+            return 1;
+        }
+        
         File databaseFile = new File(DB.getDBPath());
 
         try {
             if (testConnection()) {
                 createTables();
                 Log.l("connection to database established successfully.");
+                
+                return 3;
             } else {
                 Log.l("no DB file could be created, password is needed!");
+                return 2;
             }
         } catch (SQLException ex) {
             Log.l(ex);
+            return 4;
         }
     }
 

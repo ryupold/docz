@@ -7,11 +7,9 @@ package docz;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.sql.SQLException;
 import java.text.DateFormat;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.JPasswordField;
 import net.sourceforge.jdatepicker.DateModel;
 import net.sourceforge.jdatepicker.JDateComponentFactory;
 import net.sourceforge.jdatepicker.JDatePanel;
@@ -39,48 +37,51 @@ public class DocZMainFrame extends javax.swing.JFrame {
 
             @Override
             public void windowOpened(WindowEvent e) {
-                try {
-                    if (!DataHandler.instance.testConnection()) {
-                        JPasswordField pf = new JPasswordField();
-                        int okCxl = JOptionPane.showConfirmDialog(null, pf, "Enter password of the AES-encrypted database file.", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-
-                        if (okCxl == JOptionPane.OK_OPTION) {
-                            String password = new String(pf.getPassword());
-                            DB.setPW(password);
-                            DataHandler.instance.testConnection();
-                            DataHandler.instance.init();
-                        } else {
-                            JOptionPane.showConfirmDialog(null, "This database is encrypted, you need a password to proceed", "Error", JOptionPane.CLOSED_OPTION, JOptionPane.WARNING_MESSAGE);
-                            System.exit(1);
-                        }
-                    }
-                } catch (SQLException ex) {
-                    if (ex.getMessage().contains("Encryption error")) {
-                        boolean canLeave = false;
-                        while (!canLeave) {
-                            try {
-                                JPasswordField pf = new JPasswordField();
-                                int okCxl = JOptionPane.showConfirmDialog(null, pf, "Wrong password! Please enter the right one.", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-
-                                if (okCxl == JOptionPane.OK_OPTION) {
-                                    String password = new String(pf.getPassword());
-                                    DB.setPW(password);
-                                    DataHandler.instance.testConnection();
-                                    DataHandler.instance.init();
-                                } else {
-                                    JOptionPane.showConfirmDialog(null, "This database is encrypted, you need a password to proceed", "Error", JOptionPane.CLOSED_OPTION, JOptionPane.WARNING_MESSAGE);
-                                    System.exit(1);
-                                }
-
-                                canLeave = true;
-                            } catch (SQLException ise) {
-                                if (!ise.getMessage().contains("Encryption error")) {
-                                    canLeave = true;
-                                }
-                            }
-                        }
-                    }
-                }
+                
+                SelectDatabaseDialog selectDB = new SelectDatabaseDialog(DocZMainFrame.this, true);
+                
+//                try {
+//                    if (!DataHandler.instance.testConnection()) {
+//                        JPasswordField pf = new JPasswordField();
+//                        int okCxl = JOptionPane.showConfirmDialog(null, pf, "Enter password of the AES-encrypted database file.", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+//
+//                        if (okCxl == JOptionPane.OK_OPTION) {
+//                            String password = new String(pf.getPassword());
+//                            DB.setPW(password);
+//                            DataHandler.instance.testConnection();
+//                            DataHandler.instance.init();
+//                        } else {
+//                            JOptionPane.showConfirmDialog(null, "This database is encrypted, you need a password to proceed", "Error", JOptionPane.CLOSED_OPTION, JOptionPane.WARNING_MESSAGE);
+//                            System.exit(1);
+//                        }
+//                    }
+//                } catch (SQLException ex) {
+//                    if (ex.getMessage().contains("Encryption error")) {
+//                        boolean canLeave = false;
+//                        while (!canLeave) {
+//                            try {
+//                                JPasswordField pf = new JPasswordField();
+//                                int okCxl = JOptionPane.showConfirmDialog(null, pf, "Wrong password! Please enter the right one.", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+//
+//                                if (okCxl == JOptionPane.OK_OPTION) {
+//                                    String password = new String(pf.getPassword());
+//                                    DB.setPW(password);
+//                                    DataHandler.instance.testConnection();
+//                                    DataHandler.instance.init();
+//                                } else {
+//                                    JOptionPane.showConfirmDialog(null, "This database is encrypted, you need a password to proceed", "Error", JOptionPane.CLOSED_OPTION, JOptionPane.WARNING_MESSAGE);
+//                                    System.exit(1);
+//                                }
+//
+//                                canLeave = true;
+//                            } catch (SQLException ise) {
+//                                if (!ise.getMessage().contains("Encryption error")) {
+//                                    canLeave = true;
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
 
                 //initial search
                 doSearch(100);
@@ -117,6 +118,11 @@ public class DocZMainFrame extends javax.swing.JFrame {
         cbxSorting = new javax.swing.JComboBox();
         ckbDescending = new javax.swing.JCheckBox();
         contentPanel = new docz.ContentPanel();
+        jMenuBar1 = new javax.swing.JMenuBar();
+        menuFile = new javax.swing.JMenu();
+        menuChangeDB = new javax.swing.JMenuItem();
+        menuEncryptDB = new javax.swing.JMenuItem();
+        menuExit = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -375,6 +381,36 @@ public class DocZMainFrame extends javax.swing.JFrame {
         contentPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Search Results"));
         contentPanel.setPreferredSize(null);
 
+        menuFile.setText("File");
+
+        menuChangeDB.setText("change databse");
+        menuChangeDB.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuChangeDBActionPerformed(evt);
+            }
+        });
+        menuFile.add(menuChangeDB);
+
+        menuEncryptDB.setText("encrypt database");
+        menuEncryptDB.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuEncryptDBActionPerformed(evt);
+            }
+        });
+        menuFile.add(menuEncryptDB);
+
+        menuExit.setText("exit");
+        menuExit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuExitActionPerformed(evt);
+            }
+        });
+        menuFile.add(menuExit);
+
+        jMenuBar1.add(menuFile);
+
+        setJMenuBar(jMenuBar1);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -401,7 +437,7 @@ public class DocZMainFrame extends javax.swing.JFrame {
                         .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 135, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 104, Short.MAX_VALUE)
                         .addComponent(btnChangePW)
                         .addGap(18, 18, 18)
                         .addComponent(btnAdd)
@@ -513,6 +549,18 @@ public class DocZMainFrame extends javax.swing.JFrame {
         doSearch(1000);
     }//GEN-LAST:event_spMaxResultCaretPositionChanged
 
+    private void menuChangeDBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuChangeDBActionPerformed
+        SelectDatabaseDialog selectDB = new SelectDatabaseDialog(this, true);
+    }//GEN-LAST:event_menuChangeDBActionPerformed
+
+    private void menuEncryptDBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuEncryptDBActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_menuEncryptDBActionPerformed
+
+    private void menuExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuExitActionPerformed
+        System.exit(0);
+    }//GEN-LAST:event_menuExitActionPerformed
+
     public void doSearch(final long delay){
         if (searchProgress != null && !searchProgress.isFinished()) {
             searchProgress.cancel(); //concurrency problems????
@@ -619,7 +667,12 @@ public class DocZMainFrame extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JMenuItem menuChangeDB;
+    private javax.swing.JMenuItem menuEncryptDB;
+    private javax.swing.JMenuItem menuExit;
+    private javax.swing.JMenu menuFile;
     private javax.swing.JSpinner spMaxResult;
     private javax.swing.JTextField txtSearch;
     // End of variables declaration//GEN-END:variables
