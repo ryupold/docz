@@ -38,7 +38,7 @@ public final class Config {
     private static Element doc, databases;
 
     static {
-        configPath = System.getProperty("user.home") + File.pathSeparator + ".docz" + File.pathSeparator + "docz_config.xml";
+        configPath = System.getProperty("user.home") + File.separator + ".docz" + File.separator + "docz_config.xml";
         configFile = new File(configPath);
         try {
             loadConfig();

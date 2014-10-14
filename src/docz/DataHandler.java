@@ -34,6 +34,7 @@ import javax.imageio.ImageIO;
  */
 public class DataHandler {
 
+    
     public static final DataHandler instance;
     public static final int DEFAULT_LIMIT = 50;
     public static final String filterChars = ",.;:'\"!@#$%^&*~`<>/*-+/\\?";
@@ -401,7 +402,7 @@ public class DataHandler {
             while (r.resultSet.next()) {
                 BufferedImage sImg;
                 String fname = r.resultSet.getString(1);
-                if (fname.endsWith(".jpg") || fname.endsWith(".jpeg") || fname.endsWith(".bmp") || fname.endsWith(".wbmp") || fname.endsWith(".gif") || fname.endsWith(".png")) {
+                if (fname.toLowerCase().endsWith(".jpg") || fname.toLowerCase().endsWith(".jpeg") || fname.toLowerCase().endsWith(".bmp") || fname.toLowerCase().endsWith(".wbmp") || fname.toLowerCase().endsWith(".gif") || fname.toLowerCase().endsWith(".png")) {
                     try {
                         InputStream byteStream = r.resultSet.getBinaryStream(3);
                         sImg = ImageIO.read(byteStream);
@@ -435,12 +436,12 @@ public class DataHandler {
      */
     public Image getThumbnail(Entity entity, int preferedWidth, int preferedHeight, Font font) throws SQLException {
         DB.DBResult r = DB.select("select name, file from files where id='" + entity.id + "' and ("
-                + "name like '%.png' or "
-                + "name like '%.jpg' or "
-                + "name like '%.jpeg' or "
-                + "name like '%.bmp' or "
-                + "name like '%.wbmp' or "
-                + "name like '%.gif'"
+                + "LOWER(name) like '%.png' or "
+                + "LOWER(name) like '%.jpg' or "
+                + "LOWER(name) like '%.jpeg' or "
+                + "LOWER(name) like '%.bmp' or "
+                + "LOWER(name) like '%.wbmp' or "
+                + "LOWER(name) like '%.gif'"
                 + ") limit 1;");
 
         try {
@@ -474,7 +475,7 @@ public class DataHandler {
 
             if (r.resultSet.next()) {
                 String fileName = r.resultSet.getString(1);
-                if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".bmp") || fileName.endsWith(".wbmp") || fileName.endsWith(".gif") || fileName.endsWith(".png")) {
+                if (fileName.toLowerCase().endsWith(".jpg") || fileName.toLowerCase().endsWith(".jpeg") || fileName.toLowerCase().endsWith(".bmp") || fileName.toLowerCase().endsWith(".wbmp") || fileName.toLowerCase().endsWith(".gif") || fileName.toLowerCase().endsWith(".png")) {
                     try {
                         InputStream byteStream = r.resultSet.getBinaryStream(2);
                         BufferedImage img = ImageIO.read(byteStream);
@@ -593,6 +594,7 @@ public class DataHandler {
         List<Entity> resultTmp = new LinkedList<>();
 
         for (int i = 0; i < searchWords.length; i++) {
+            searchWords[i] = searchWords[i].trim();
             for (int j = 0; j < filterChars.length(); j++) {
                 searchWords[i] = searchWords[i].replace(filterChars.charAt(j) + "", "");
             }

@@ -72,15 +72,18 @@ public class WaitDialog extends javax.swing.JDialog {
     public WaitDialog(java.awt.Frame parent, final AsyncProcess async, final boolean cancleAble, final boolean showDialog, String threadName) {
         this(parent, async, cancleAble, showDialog, 0, threadName);
     }
-
+    
+    public WaitDialog(java.awt.Frame parent, final AsyncProcess async, final boolean cancleAble, final boolean showDialog, final long delay, String threadName) {
+        this(parent, async, cancleAble, showDialog, delay, threadName, true);
+    }
     /**
      * Creates new form WaitDialog
      *
      * @param parent
      * @param async
      */
-    public WaitDialog(java.awt.Frame parent, final AsyncProcess async, final boolean cancleAble, final boolean showDialog, final long delay, String threadName) {
-        super(parent, true);
+    public WaitDialog(java.awt.Frame parent, final AsyncProcess async, final boolean cancleAble, final boolean showDialog, final long delay, String threadName, boolean modal) {
+        super(parent, modal && showDialog);
         initComponents();
         btnCancel.setVisible(cancleAble);
 
@@ -101,7 +104,7 @@ public class WaitDialog extends javax.swing.JDialog {
 
             @Override
             public void run() {
-                Log.l(this+" started");
+                //Log.l(this+" started");
                 long delta = delay;
                 try {
                     synchronized(process){
@@ -123,7 +126,7 @@ public class WaitDialog extends javax.swing.JDialog {
                 }finally{
                     setVisible(false);
                     dispose();
-                    Log.l(this+" finished");
+                    //Log.l(this+" finished");
                 }
                 
             }
@@ -135,6 +138,14 @@ public class WaitDialog extends javax.swing.JDialog {
             setVisible(true);
         }
     }
+
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize(); //To change body of generated methods, choose Tools | Templates.
+        Log.l(this+" finalized");
+    }
+    
+    
 
     @Override
     public void setVisible(boolean b) {

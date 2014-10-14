@@ -5,7 +5,10 @@
  */
 package docz;
 
+import java.io.File;
+import java.util.Date;
 import javax.swing.DefaultListModel;
+import javax.swing.JFileChooser;
 
 /**
  *
@@ -14,6 +17,8 @@ import javax.swing.DefaultListModel;
 public class SelectDatabaseDialog extends javax.swing.JDialog {
     
     private DefaultListModel<String> databases = new DefaultListModel<>();
+    private Date lastClick = new Date();
+    private boolean selectPressed = false;
     
     /**
      * Creates new form SelectDatabaseDialog
@@ -21,12 +26,23 @@ public class SelectDatabaseDialog extends javax.swing.JDialog {
     public SelectDatabaseDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
+        String[] dbs = Config.getDatabases();
+        for(String d : dbs){
+            databases.addElement(d);
+        }
+        
+        if(dbs.length > 0){
+            setTitle("Select Database");
+        }
+        else{
+            setTitle("Create a new Database");
+        }
         
         setVisible(true);
     }
     
     public String getSelectedDatabase(){
-        return listDatabases.getSelectedIndex() >= 0 ? listDatabases.getSelectedValue().toString() : null;
+        return selectPressed && listDatabases.getSelectedIndex() >= 0 ? listDatabases.getSelectedValue().toString() : null;
     }
 
     /**
@@ -47,11 +63,21 @@ public class SelectDatabaseDialog extends javax.swing.JDialog {
         btnAbort = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosed(java.awt.event.WindowEvent evt) {
+                formWindowClosed(evt);
+            }
+        });
 
         jScrollPane1.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Databases", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Arial", 1, 20))); // NOI18N
 
         listDatabases.setFont(new java.awt.Font("Arial", 1, 24)); // NOI18N
         listDatabases.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        listDatabases.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                listDatabasesMouseClicked(evt);
+            }
+        });
         listDatabases.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
             public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
                 listDatabasesValueChanged(evt);
@@ -61,9 +87,19 @@ public class SelectDatabaseDialog extends javax.swing.JDialog {
         listDatabases.setModel(databases);
 
         txtNewDBPath.setFont(new java.awt.Font("Arial", 0, 20)); // NOI18N
+        txtNewDBPath.addCaretListener(new javax.swing.event.CaretListener() {
+            public void caretUpdate(javax.swing.event.CaretEvent evt) {
+                txtNewDBPathCaretUpdate(evt);
+            }
+        });
 
         btnBrowse.setFont(new java.awt.Font("Arial", 1, 20)); // NOI18N
         btnBrowse.setText("...");
+        btnBrowse.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnBrowseActionPerformed(evt);
+            }
+        });
 
         btnAddDB.setFont(new java.awt.Font("Arial", 1, 20)); // NOI18N
         btnAddDB.setText("+");
@@ -86,6 +122,11 @@ public class SelectDatabaseDialog extends javax.swing.JDialog {
         btnSelect.setFont(new java.awt.Font("Arial", 1, 24)); // NOI18N
         btnSelect.setText("select");
         btnSelect.setEnabled(false);
+        btnSelect.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSelectActionPerformed(evt);
+            }
+        });
 
         btnAbort.setFont(new java.awt.Font("Arial", 1, 24)); // NOI18N
         btnAbort.setText("abort");
@@ -135,11 +176,11 @@ public class SelectDatabaseDialog extends javax.swing.JDialog {
 
     private void listDatabasesValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_listDatabasesValueChanged
         btnDeleteDB.setEnabled(listDatabases.getSelectedIndex() >= 0);
-        btnAddDB.setEnabled(listDatabases.getSelectedIndex() >= 0);
+        
         btnSelect.setEnabled(listDatabases.getSelectedIndex() >= 0);
         
         if(listDatabases.getSelectedIndex() >= 0){
-            btnSelect.setText(listDatabases.getSelectedValue().toString());
+            btnSelect.setText("use "+listDatabases.getSelectedValue().toString());
         }
     }//GEN-LAST:event_listDatabasesValueChanged
 
@@ -150,11 +191,47 @@ public class SelectDatabaseDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_btnAddDBActionPerformed
 
     private void btnDeleteDBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteDBActionPerformed
-        if(Config.deleteDatabase(listDatabases.getSelectedValue().toString())){
+        if(listDatabases.getSelectedIndex() >= 0 && Config.deleteDatabase(databases.elementAt(listDatabases.getSelectedIndex()))){
             databases.removeElementAt(listDatabases.getSelectedIndex());
         }
     }//GEN-LAST:event_btnDeleteDBActionPerformed
 
+    private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
+        
+    }//GEN-LAST:event_formWindowClosed
+
+    private void txtNewDBPathCaretUpdate(javax.swing.event.CaretEvent evt) {//GEN-FIRST:event_txtNewDBPathCaretUpdate
+        if(!txtNewDBPath.getText().trim().isEmpty()){
+            btnAddDB.setEnabled(new File(txtNewDBPath.getText().trim()).isDirectory() && !databases.contains(txtNewDBPath.getText().trim()));
+        }
+    }//GEN-LAST:event_txtNewDBPathCaretUpdate
+
+    private void btnBrowseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrowseActionPerformed
+        JFileChooser fc = new JFileChooser();
+        fc.setMultiSelectionEnabled(false);
+        fc.setDialogType(JFileChooser.OPEN_DIALOG);
+        fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        if(fc.showDialog(this, "use/create database folder") == JFileChooser.APPROVE_OPTION){
+            txtNewDBPath.setText(fc.getSelectedFile().getAbsolutePath());
+        }
+    }//GEN-LAST:event_btnBrowseActionPerformed
+
+    private void btnSelectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSelectActionPerformed
+        selectPressed = true;
+        setVisible(false);
+    }//GEN-LAST:event_btnSelectActionPerformed
+
+    private void listDatabasesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_listDatabasesMouseClicked
+        if((new Date().getTime() - lastClick.getTime()) < 500 && listDatabases.getSelectedIndex() >= 0){ //double click
+            btnSelect.doClick();
+        }
+        else if(listDatabases.getSelectedIndex() >= 0){
+            lastClick = new Date();
+        }
+    }//GEN-LAST:event_listDatabasesMouseClicked
+
+    
+    
     /**
      * @param args the command line arguments
      */
