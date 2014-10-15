@@ -9,6 +9,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.SQLException;
 import java.text.DateFormat;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
@@ -136,6 +137,8 @@ public class DocZMainFrame extends javax.swing.JFrame {
         menuFile = new javax.swing.JMenu();
         menuChangeDB = new javax.swing.JMenuItem();
         menuEncryptDB = new javax.swing.JMenuItem();
+        menuExportDB = new javax.swing.JMenuItem();
+        menuImportDB = new javax.swing.JMenuItem();
         menuExit = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -405,6 +408,22 @@ public class DocZMainFrame extends javax.swing.JFrame {
         });
         menuFile.add(menuEncryptDB);
 
+        menuExportDB.setText("export database...");
+        menuExportDB.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuExportDBActionPerformed(evt);
+            }
+        });
+        menuFile.add(menuExportDB);
+
+        menuImportDB.setText("import database...");
+        menuImportDB.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuImportDBActionPerformed(evt);
+            }
+        });
+        menuFile.add(menuImportDB);
+
         menuExit.setText("exit");
         menuExit.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -585,6 +604,26 @@ public class DocZMainFrame extends javax.swing.JFrame {
         System.exit(0);
     }//GEN-LAST:event_menuExitActionPerformed
 
+    private void menuExportDBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuExportDBActionPerformed
+        JFileChooser fc = new JFileChooser();
+        fc.setMultiSelectionEnabled(false);
+        fc.setDialogType(JFileChooser.SAVE_DIALOG);
+        fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        if(fc.showDialog(this, "export database") == JFileChooser.APPROVE_OPTION){
+            //TODO
+        }
+    }//GEN-LAST:event_menuExportDBActionPerformed
+
+    private void menuImportDBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuImportDBActionPerformed
+        JFileChooser fc = new JFileChooser();
+        fc.setMultiSelectionEnabled(false);
+        fc.setDialogType(JFileChooser.OPEN_DIALOG);
+        fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        if(fc.showDialog(this, "import database") == JFileChooser.APPROVE_OPTION){
+            //TODO
+        }
+    }//GEN-LAST:event_menuImportDBActionPerformed
+
     public void doSearch(final long delay) {
         if (searchProgress != null && !searchProgress.isFinished()) {
             searchProgress.cancel(); //concurrency problems????
@@ -695,7 +734,9 @@ public class DocZMainFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem menuChangeDB;
     private javax.swing.JMenuItem menuEncryptDB;
     private javax.swing.JMenuItem menuExit;
+    private javax.swing.JMenuItem menuExportDB;
     private javax.swing.JMenu menuFile;
+    private javax.swing.JMenuItem menuImportDB;
     private javax.swing.JSpinner spMaxResult;
     private javax.swing.JTextField txtSearch;
     // End of variables declaration//GEN-END:variables
