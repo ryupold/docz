@@ -213,7 +213,6 @@ public class ChangePassword extends javax.swing.JDialog {
     private void btnOKActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnOKActionPerformed
         try {
             if (DB.changePW(firstEncrypt ? null : new String(pwdOldPW.getPassword()), new String(pwdConfirm.getPassword()))) {
-                DB.setPW(new String(pwdConfirm.getPassword()));
                 setVisible(false);
             } else {
                 lblStatus.setForeground(Color.red);

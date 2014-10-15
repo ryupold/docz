@@ -141,8 +141,8 @@ public class WaitDialog extends javax.swing.JDialog {
 
     @Override
     protected void finalize() throws Throwable {
-        super.finalize(); //To change body of generated methods, choose Tools | Templates.
-        Log.l(this+" finalized");
+        super.finalize();
+        //Log.l(this+" finalized");
     }
     
     

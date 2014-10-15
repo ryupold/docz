@@ -141,7 +141,7 @@ public final class DB {
                 Connection c = DriverManager.getConnection("jdbc:h2:file:" + new File(dbPath).getAbsolutePath(), null, null);
                 return c;
             } else {
-                Connection c = DriverManager.getConnection("jdbc:h2:file:" + new File(dbPath).getAbsolutePath() + ";CIPHER=AES", "sa", pw + " " + "password");
+                Connection c = DriverManager.getConnection("jdbc:h2:file:" + new File(dbPath).getAbsolutePath() + ";CIPHER=AES", null, pw+" ");
                 return c;
             }
         }
@@ -154,7 +154,7 @@ public final class DB {
             DriverManager.getConnection("jdbc:h2:file:" + new File(dbPath).getAbsolutePath(), null, null).close();
             return false;
         } catch (SQLException e) {
-            if (e.getMessage().contains("File corrupted") || e.getMessage().contains("Encryption error") || e.getMessage().contains("Store header is corrupt")) {
+            if (e.getMessage().contains("File corrupted") || e.getMessage().contains("Encryption error") || e.getMessage().contains("Store header is corrupt") || e.getMessage().contains("Wrong user name or password")) {
                 return true;
             }
             throw e;
@@ -164,7 +164,7 @@ public final class DB {
     public static boolean checkPW(String pw) throws SQLException {
         if (dbPath != null) {
             try {
-                Connection c = DriverManager.getConnection("jdbc:h2:file:" + new File(dbPath).getAbsolutePath() + ";CIPHER=AES", "sa", pw + " " + "password");
+                Connection c = DriverManager.getConnection("jdbc:h2:file:" + new File(dbPath).getAbsolutePath() + ";CIPHER=AES", null, pw+" ");
                 c.close();
                 return true;
             } catch (SQLException ex) {
@@ -181,9 +181,9 @@ public final class DB {
     }
 
     public static boolean changePW(String oldPW, String newPW) throws SQLException {
-        if (newPW != null) {
+        if (!(newPW == null && oldPW == null)) {
             try {
-                ChangeFileEncryption.execute(new File(DB.getDBPath()).getParent(), null, "AES", oldPW==null ? new char[0] : oldPW.toCharArray(), newPW.toCharArray(), false);
+                ChangeFileEncryption.execute(new File(DB.getDBPath()).getParent(), null, "AES", oldPW==null ? null : oldPW.toCharArray(), newPW == null ? null : newPW.toCharArray(), false);
                 DB.setPW(newPW);
                 return true;
             } catch (SQLException sqlex) {
@@ -195,7 +195,7 @@ public final class DB {
             }
         }
 
-        throw new SecurityException("no password entered!");
+        throw new SecurityException("no passwords entered!");
     }
 
     public static class DBResultWithStream extends DBResult implements AutoCloseable {

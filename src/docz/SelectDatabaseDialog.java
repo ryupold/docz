@@ -60,7 +60,6 @@ public class SelectDatabaseDialog extends javax.swing.JDialog {
         btnAddDB = new javax.swing.JButton();
         btnDeleteDB = new javax.swing.JButton();
         btnSelect = new javax.swing.JButton();
-        btnAbort = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -128,9 +127,6 @@ public class SelectDatabaseDialog extends javax.swing.JDialog {
             }
         });
 
-        btnAbort.setFont(new java.awt.Font("Arial", 1, 24)); // NOI18N
-        btnAbort.setText("abort");
-
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -138,6 +134,7 @@ public class SelectDatabaseDialog extends javax.swing.JDialog {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(btnSelect, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 646, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(btnDeleteDB)
@@ -146,11 +143,7 @@ public class SelectDatabaseDialog extends javax.swing.JDialog {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnBrowse)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnAddDB))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(btnSelect, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnAbort)))
+                        .addComponent(btnAddDB)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -165,9 +158,7 @@ public class SelectDatabaseDialog extends javax.swing.JDialog {
                     .addComponent(btnAddDB)
                     .addComponent(btnDeleteDB))
                 .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnAbort)
-                    .addComponent(btnSelect))
+                .addComponent(btnSelect)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -275,7 +266,6 @@ public class SelectDatabaseDialog extends javax.swing.JDialog {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnAbort;
     private javax.swing.JButton btnAddDB;
     private javax.swing.JButton btnBrowse;
     private javax.swing.JButton btnDeleteDB;
