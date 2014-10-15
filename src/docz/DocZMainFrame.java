@@ -7,15 +7,24 @@ package docz;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import net.sourceforge.jdatepicker.DateModel;
 import net.sourceforge.jdatepicker.JDateComponentFactory;
 import net.sourceforge.jdatepicker.JDatePanel;
 import net.sourceforge.jdatepicker.impl.JDatePanelImpl;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  *
@@ -117,6 +126,7 @@ public class DocZMainFrame extends javax.swing.JFrame {
         cbxSorting = new javax.swing.JComboBox();
         ckbDescending = new javax.swing.JCheckBox();
         contentPanel = new docz.ContentPanel();
+        jButton1 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -375,6 +385,13 @@ public class DocZMainFrame extends javax.swing.JFrame {
         contentPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Search Results"));
         contentPanel.setPreferredSize(null);
 
+        jButton1.setText("export");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -384,10 +401,12 @@ public class DocZMainFrame extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(txtSearch)
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(btnAdd, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(btnChangePW)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(btnAdd, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(btnChangePW)
+                            .addComponent(jButton1))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(contentPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 1235, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
@@ -401,7 +420,9 @@ public class DocZMainFrame extends javax.swing.JFrame {
                         .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 135, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 88, Short.MAX_VALUE)
+                        .addComponent(jButton1)
+                        .addGap(18, 18, 18)
                         .addComponent(btnChangePW)
                         .addGap(18, 18, 18)
                         .addComponent(btnAdd)
@@ -482,15 +503,15 @@ public class DocZMainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_ckbRelationsActionPerformed
 
     private void spMaxResultStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spMaxResultStateChanged
-        
+
     }//GEN-LAST:event_spMaxResultStateChanged
 
     private void cbxSortingItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cbxSortingItemStateChanged
-        
+
     }//GEN-LAST:event_cbxSortingItemStateChanged
 
     private void ckbDescendingStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_ckbDescendingStateChanged
-        
+
     }//GEN-LAST:event_ckbDescendingStateChanged
 
     private void ckbDescendingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ckbDescendingActionPerformed
@@ -506,14 +527,61 @@ public class DocZMainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_ckbMaxDateActionPerformed
 
     private void spMaxResultInputMethodTextChanged(java.awt.event.InputMethodEvent evt) {//GEN-FIRST:event_spMaxResultInputMethodTextChanged
-        
+
     }//GEN-LAST:event_spMaxResultInputMethodTextChanged
 
     private void spMaxResultCaretPositionChanged(java.awt.event.InputMethodEvent evt) {//GEN-FIRST:event_spMaxResultCaretPositionChanged
         doSearch(1000);
     }//GEN-LAST:event_spMaxResultCaretPositionChanged
 
-    public void doSearch(final long delay){
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        try {
+            //export dir
+            File exportDir = new File("C:\\Users\\Michael\\Downloads\\export");
+            File entityFile = new File("C:\\Users\\Michael\\Downloads\\export\\entities.xml");
+            File relationFile = new File("C:\\Users\\Michael\\Downloads\\export\\relations.xml");
+            File tagFile = new File("C:\\Users\\Michael\\Downloads\\export\\tags.xml");
+            File fileFile = new File("C:\\Users\\Michael\\Downloads\\export\\files.xml");
+            File fileDir = new File("C:\\Users\\Michael\\Downloads\\export\\files");
+            fileDir.mkdirs();
+
+            //entity xml doc
+            DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            Document document = db.newDocument();
+            Element root = document.createElement("entities");
+            document.appendChild(root);
+
+            DB.DBResult r = DB.select("SELECT id, title, description, date, created, type FROM entities");
+            while(r.resultSet.next()){
+                Element entity = document.createElement("entity");
+                Element id = document.createElement("id");
+                Element title = document.createElement("title");
+                Element description = document.createElement("description");
+                Element date = document.createElement("date");
+                Element created = document.createElement("created");
+                Element type = document.createElement("type");
+            }
+            
+            saveXMLDocument(document, entityFile);
+
+        } catch (Exception ex) {
+            Log.l(ex);
+        }
+    }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void saveXMLDocument(Document document, File file) {
+        try {
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            DOMSource domSource = new DOMSource(document);
+            StreamResult streamResult = new StreamResult(file);
+            transformer.transform(domSource, streamResult);
+        } catch (Exception ex) {
+            Log.l(ex);
+        }
+    }
+
+    public void doSearch(final long delay) {
         if (searchProgress != null && !searchProgress.isFinished()) {
             searchProgress.cancel(); //concurrency problems????
         }
@@ -565,7 +633,7 @@ public class DocZMainFrame extends javax.swing.JFrame {
         };
         new WaitDialog(null, searchProgress, true, false, delay, "Searching for Entities");
     }
-    
+
     /**
      * @param args the command line arguments
      */
@@ -616,6 +684,7 @@ public class DocZMainFrame extends javax.swing.JFrame {
     private javax.swing.JCheckBox ckbRelations;
     private javax.swing.JCheckBox ckbTags;
     private docz.ContentPanel contentPanel;
+    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
