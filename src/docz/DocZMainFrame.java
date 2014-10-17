@@ -536,142 +536,159 @@ public class DocZMainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_spMaxResultCaretPositionChanged
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        try {
-            //export dir
-            File exportDir = new File("C:\\Users\\Michael\\Downloads\\export");
-            File entityFile = new File("C:\\Users\\Michael\\Downloads\\export\\entities.xml");
-            File relationFile = new File("C:\\Users\\Michael\\Downloads\\export\\relations.xml");
-            File tagFile = new File("C:\\Users\\Michael\\Downloads\\export\\tags.xml");
-            File fileFile = new File("C:\\Users\\Michael\\Downloads\\export\\files.xml");
-            File fileDir = new File("C:\\Users\\Michael\\Downloads\\export\\files");
-            fileDir.mkdirs();
+        new WaitDialog(this, new WaitDialog.AsyncProcess("exporting database...") {
 
-            //entity xml doc
-            DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            Document document = db.newDocument();
-            Element root = document.createElement("entities");
-            document.appendChild(root);
+            @Override
+            public void finished(boolean success) {
 
-            DB.DBResult r = DB.select("SELECT id, title, description, date, created, type FROM entities");
-            while(r.resultSet.next()){
-                Element entity = document.createElement("entity");
-                Element id = document.createElement("id");
-                id.setTextContent(r.resultSet.getString(1));
-                entity.appendChild(id);
-                Element title = document.createElement("title");
-                title.setTextContent(r.resultSet.getString(2));
-                entity.appendChild(title);
-                Element description = document.createElement("description");
-                description.setTextContent(r.resultSet.getString(3));
-                entity.appendChild(description);
-                Element date = document.createElement("date");
-                date.setTextContent(r.resultSet.getString(4));
-                entity.appendChild(date);
-                Element created = document.createElement("created");
-                created.setTextContent(r.resultSet.getString(5));
-                entity.appendChild(created);
-                Element type = document.createElement("type");
-                type.setTextContent(r.resultSet.getString(6));
-                entity.appendChild(type);
-                root.appendChild(entity);
             }
-            
-            saveXMLDocument(document, entityFile);
-            r.close();
-            
-            
-            //tags xml doc
-            db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            document = db.newDocument();
-            root = document.createElement("tags");
-            document.appendChild(root);
 
-            r = DB.select("SELECT id, tag FROM tags");
-            while(r.resultSet.next()){
-                Element tag = document.createElement("tag");
-                Element id = document.createElement("id");
-                id.setTextContent(r.resultSet.getString(1));
-                tag.appendChild(id);
-                Element tagname = document.createElement("tag");
-                tagname.setTextContent(r.resultSet.getString(2));
-                tag.appendChild(tagname);
-                root.appendChild(tag);
+            @Override
+            public void start() throws Exception {
+
+                try {
+                    this.processing(0.0, "initializing destination");
+                    
+                    //export dir
+                    File exportDir = new File("C:\\Users\\Michael\\Downloads\\export");
+                    File entityFile = new File("C:\\Users\\Michael\\Downloads\\export\\entities.xml");
+                    File relationFile = new File("C:\\Users\\Michael\\Downloads\\export\\relations.xml");
+                    File tagFile = new File("C:\\Users\\Michael\\Downloads\\export\\tags.xml");
+                    File fileFile = new File("C:\\Users\\Michael\\Downloads\\export\\files.xml");
+                    File fileDir = new File("C:\\Users\\Michael\\Downloads\\export\\files");
+                    fileDir.mkdirs();
+
+                    this.processing(0.01, "exporting entity data");
+                    //entity xml doc
+                    DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+                    Document document = db.newDocument();
+                    Element root = document.createElement("entities");
+                    document.appendChild(root);
+
+                    DB.DBResult r = DB.select("SELECT id, title, description, date, created, type FROM entities");
+                    while (r.resultSet.next()) {
+                        Element entity = document.createElement("entity");
+                        Element id = document.createElement("id");
+                        id.setTextContent(r.resultSet.getString(1));
+                        entity.appendChild(id);
+                        Element title = document.createElement("title");
+                        title.setTextContent(r.resultSet.getString(2));
+                        entity.appendChild(title);
+                        Element description = document.createElement("description");
+                        description.setTextContent(r.resultSet.getString(3));
+                        entity.appendChild(description);
+                        Element date = document.createElement("date");
+                        date.setTextContent(r.resultSet.getString(4));
+                        entity.appendChild(date);
+                        Element created = document.createElement("created");
+                        created.setTextContent(r.resultSet.getString(5));
+                        entity.appendChild(created);
+                        Element type = document.createElement("type");
+                        type.setTextContent(r.resultSet.getString(6));
+                        entity.appendChild(type);
+                        root.appendChild(entity);
+                    }
+
+                    saveXMLDocument(document, entityFile);
+                    r.close();
+                    this.processing(0.1, null);
+                    
+                    
+
+                    this.processing(0.2, "exporting tags...");
+                    //tags xml doc
+                    db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+                    document = db.newDocument();
+                    root = document.createElement("tags");
+                    document.appendChild(root);
+
+                    r = DB.select("SELECT id, tag FROM tags");
+                    while (r.resultSet.next()) {
+                        Element tag = document.createElement("tag");
+                        Element id = document.createElement("id");
+                        id.setTextContent(r.resultSet.getString(1));
+                        tag.appendChild(id);
+                        Element tagname = document.createElement("tag");
+                        tagname.setTextContent(r.resultSet.getString(2));
+                        tag.appendChild(tagname);
+                        root.appendChild(tag);
+                    }
+
+                    saveXMLDocument(document, tagFile);
+                    r.close();
+
+                    //relation xml doc
+                    db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+                    document = db.newDocument();
+                    root = document.createElement("relations");
+                    document.appendChild(root);
+
+                    r = DB.select("SELECT id, title, description, created, entity1, entity2 FROM relations");
+                    while (r.resultSet.next()) {
+                        Element relation = document.createElement("relation");
+                        Element id = document.createElement("id");
+                        id.setTextContent(r.resultSet.getString(1));
+                        relation.appendChild(id);
+                        Element title = document.createElement("title");
+                        title.setTextContent(r.resultSet.getString(2));
+                        relation.appendChild(title);
+                        Element description = document.createElement("description");
+                        description.setTextContent(r.resultSet.getString(3));
+                        relation.appendChild(description);
+                        Element created = document.createElement("created");
+                        created.setTextContent(r.resultSet.getString(4));
+                        relation.appendChild(created);
+                        Element entity1 = document.createElement("entity1");
+                        entity1.setTextContent(r.resultSet.getString(5));
+                        relation.appendChild(entity1);
+                        Element entity2 = document.createElement("entity2");
+                        entity2.setTextContent(r.resultSet.getString(6));
+                        relation.appendChild(entity2);
+                        root.appendChild(relation);
+                    }
+
+                    saveXMLDocument(document, relationFile);
+                    r.close();
+
+                    //files xml doc
+                    db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+                    document = db.newDocument();
+                    root = document.createElement("files");
+                    document.appendChild(root);
+
+                    r = DB.select("SELECT id, name, created, file, size, ocr FROM files");
+                    while (r.resultSet.next()) {
+                        Element file = document.createElement("file");
+                        Element id = document.createElement("id");
+                        id.setTextContent(r.resultSet.getString(1));
+                        file.appendChild(id);
+                        Element name = document.createElement("name");
+                        name.setTextContent(r.resultSet.getString(2));
+                        file.appendChild(name);
+                        Element created = document.createElement("created");
+                        created.setTextContent(r.resultSet.getString(3));
+                        file.appendChild(created);
+                        Element size = document.createElement("size");
+                        size.setTextContent(r.resultSet.getString(4));
+                        file.appendChild(size);
+                        Element ocr = document.createElement("ocr");
+                        ocr.setTextContent(r.resultSet.getString(5));
+                        file.appendChild(ocr);
+                        root.appendChild(file);
+
+                        Entity e = DataHandler.instance.getEntityByID(r.resultSet.getLong(1));
+                        new File(fileDir.getAbsolutePath() + File.separator + "id_" + e.id).mkdirs();
+                        DataHandler.instance.writeFileToStream(e, r.resultSet.getString(2), new FileOutputStream(fileDir.getAbsolutePath() + File.separator + "id_" + e.id + File.separator + r.resultSet.getString(2)));
+                    }
+
+                    saveXMLDocument(document, fileFile);
+                    r.close();
+
+                } catch (Exception ex) {
+                    Log.l(ex);
+                }
             }
-            
-            saveXMLDocument(document, tagFile);
-            r.close();
-            
-            
-            //relation xml doc
-            db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            document = db.newDocument();
-            root = document.createElement("relations");
-            document.appendChild(root);
-
-            r = DB.select("SELECT id, title, description, created, entity1, entity2 FROM relations");
-            while(r.resultSet.next()){
-                Element relation = document.createElement("relation");
-                Element id = document.createElement("id");
-                id.setTextContent(r.resultSet.getString(1));
-                relation.appendChild(id);
-                Element title = document.createElement("title");
-                title.setTextContent(r.resultSet.getString(2));
-                relation.appendChild(title);
-                Element description = document.createElement("description");
-                description.setTextContent(r.resultSet.getString(3));
-                relation.appendChild(description);
-                Element created = document.createElement("created");
-                created.setTextContent(r.resultSet.getString(4));
-                relation.appendChild(created);
-                Element entity1 = document.createElement("entity1");
-                entity1.setTextContent(r.resultSet.getString(5));
-                relation.appendChild(entity1);
-                Element entity2 = document.createElement("entity2");
-                entity2.setTextContent(r.resultSet.getString(6));
-                relation.appendChild(entity2);
-                root.appendChild(relation);
-            }
-            
-            saveXMLDocument(document, relationFile);
-            r.close();
-            
-            
-            //relation xml doc
-            db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            document = db.newDocument();
-            root = document.createElement("relations");
-            document.appendChild(root);
-
-            r = DB.select("SELECT id, name, created, file, size, ocr FROM files");
-            while(r.resultSet.next()){
-                Element file = document.createElement("file");
-                Element id = document.createElement("id");
-                id.setTextContent(r.resultSet.getString(1));
-                file.appendChild(id);
-                Element name = document.createElement("name");
-                name.setTextContent(r.resultSet.getString(2));
-                file.appendChild(name);
-                Element created = document.createElement("created");
-                created.setTextContent(r.resultSet.getString(3));
-                file.appendChild(created);
-                Element size = document.createElement("size");
-                size.setTextContent(r.resultSet.getString(4));
-                file.appendChild(size);
-                Element ocr = document.createElement("ocr");
-                ocr.setTextContent(r.resultSet.getString(5));
-                file.appendChild(ocr);
-                root.appendChild(file);
-                
-                Entity e = DataHandler.instance.getEntityByID(r.resultSet.getLong(1));
-                DataHandler.instance.writeFileToStream(e, r.resultSet.getString(2), new FileOutputStream(fileDir.getAbsolutePath()+File.separator+""));
-            }
-            
-            saveXMLDocument(document, fileFile);
-            r.close();
-
-        } catch (Exception ex) {
-            Log.l(ex);
-        }
+        }, true, "exporting database");
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void saveXMLDocument(Document document, File file) {
