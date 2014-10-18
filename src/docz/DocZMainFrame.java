@@ -12,6 +12,14 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.sql.SQLException;
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -33,6 +41,7 @@ import net.sourceforge.jdatepicker.JDatePanel;
 import net.sourceforge.jdatepicker.impl.JDatePanelImpl;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
@@ -782,32 +791,116 @@ public class DocZMainFrame extends javax.swing.JFrame {
                 @Override
                 public void start() throws Exception {
                     try {
+                        this.processing(0.0, "loading id range...");
+                        long nextID_entity = 0;
+                        long nextID_relation = 0;
+                        
+                        DB.DBResult r = DB.select("SELECT max(id) FROM entities");
+                        if(r.resultSet.next()){
+                            nextID_entity = r.resultSet.getLong(1) + 1000;
+                        }
+                        r.close();
+                        
+                        r = DB.select("SELECT max(id) FROM relations");
+                        if(r.resultSet.next()){
+                            nextID_relation = r.resultSet.getLong(1) + 1000;
+                        }
+                        r.close();
+                        
+                        Map<Long, Long> oldAndNewEntityIDLookupTable = new HashMap<>();
+                        
+                        
+                        this.processing(0.0, "loading database file...");
                         //load document
                         DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
                         Document document = db.parse(fc.getSelectedFile()+File.separator+"db.xml");
                         Element root = document.getDocumentElement();
                         XPathFactory xPathfactory = XPathFactory.newInstance();
                         XPath xpath = xPathfactory.newXPath();
-                        XPathExpression expr = xpath.compile("/docz/entities/entity");
-                        NodeList nl = (NodeList)expr.evaluate(document, XPathConstants.NODESET);
-                        Log.l(nl.getLength());
+                        XPathExpression xAllEntities = xpath.compile("/docz/entities/entity");
+                        NodeList entityNodes = (NodeList)xAllEntities.evaluate(document, XPathConstants.NODESET);
                         
+                        List<Relation> relations = new LinkedList<>();
                         
-//                        //get xml nodes 
-//                        NodeList nl = root.getElementsByTagName("entities");
-//                        Node entities = nl.item(0);
-//                        
-//                        nl = root.getElementsByTagName("tags");
-//                        Node tags = nl.item(0);
-//                        
-//                        nl = root.getElementsByTagName("relations");
-//                        Node relations = nl.item(0);
-//                        
-//                        nl = root.getElementsByTagName("files");
-//                        Node files = nl.item(0);
+                        for(int i=0; i<entityNodes.getLength(); i++){
+                            this.processing((double)(i+1)/(double)entityNodes.getLength(), "importing entity "+(i+1)+"/"+entityNodes.getLength());
+
+                            //entity data
+                            Node entityN = entityNodes.item(i);
+                            Entity entity = new Entity();
+                            
+                            entity.setId(Long.parseLong((String)xpath.compile("id").evaluate(entityN, XPathConstants.STRING)));
+                            entity.setTitle((String)xpath.compile("title").evaluate(entityN, XPathConstants.STRING));
+                            entity.setDescription((String)xpath.compile("description").evaluate(entityN, XPathConstants.STRING));
+                            entity.setDate(new Date(Long.parseLong((String)xpath.compile("date").evaluate(entityN, XPathConstants.STRING))));
+                            entity.setCreated(new Date(Long.parseLong((String)xpath.compile("created").evaluate(entityN, XPathConstants.STRING))));
+                            entity.setType(Integer.parseInt((String)xpath.compile("type").evaluate(entityN, XPathConstants.STRING)));
+                            
+                            
+                            //tags
+                            NodeList allTags = (NodeList)xpath.compile("/docz/tags/tag[id='"+entity.id+"']").evaluate(document, XPathConstants.NODESET);
+                            XPathExpression xTag = xpath.compile("tag");
+                            String tagString = "";
+                            for(int j=0; j<allTags.getLength(); j++){
+                                Node tagN = allTags.item(j);
+                                tagString += xTag.evaluate(tagN, XPathConstants.STRING) + (j!=allTags.getLength()-1 ? ", " : "");
+                            }                          
+                            entity.setTagsAsString(tagString);
+                            
+                            
+                            //relations
+                            NodeList allRelations = (NodeList) xpath.compile("/docz/relations/relation[entity1='"+entity.id+"']").evaluate(document, XPathConstants.NODESET);
+                            int tmp = allRelations.getLength();
+                            if(tmp > 0) Log.l(tmp+" relations");
+                            for(int j=0; j<allRelations.getLength(); j++){
+                                Relation relation = new Relation();
+                                Node relationN = allRelations.item(j);
+                                
+                                relation.setID(Long.parseLong((String)xpath.compile("id").evaluate(relationN, XPathConstants.STRING)));
+                                relation.setTitle((String)xpath.compile("title").evaluate(relationN, XPathConstants.STRING));
+                                relation.setDescription((String)xpath.compile("description").evaluate(relationN, XPathConstants.STRING));
+                                relation.setCreated(new Date(Long.parseLong((String)xpath.compile("created").evaluate(relationN, XPathConstants.STRING))));
+                                relation.setEntityID1(Long.parseLong((String)xpath.compile("entity1").evaluate(relationN, XPathConstants.STRING)));
+                                relation.setEntityID2(Long.parseLong((String)xpath.compile("entity2").evaluate(relationN, XPathConstants.STRING)));
+                                relations.add(relation);
+                            }
+                            
+                            
+                            //files                           
+                            List<File> files = new ArrayList<>();
+                            NodeList allFiles = (NodeList) xpath.compile("/docz/files/file[id='"+entity.id+"']").evaluate(document, XPathConstants.NODESET);
+                            for(int j=0; j<allFiles.getLength(); j++){
+                                Node fileN = allFiles.item(j);
+                                String name = (String)xpath.compile("name").evaluate(fileN, XPathConstants.STRING);
+                                Date created = new Date(Long.parseLong((String)xpath.compile("created").evaluate(fileN, XPathConstants.STRING)));
+                                File file = new File(fc.getSelectedFile()+File.separator+"files"+File.separator+"id_"+entity.id+File.separator+name);
+                                long size = Long.parseLong((String)xpath.compile("size").evaluate(fileN, XPathConstants.STRING));
+                                String ocr = (String)xpath.compile("ocr").evaluate(fileN, XPathConstants.STRING);
+                                files.add(file);
+                            }
+                            
+                            
+                            //save to DB
+                            long oldID = entity.id;
+                            entity = DataHandler.instance.createEntity(entity.title, entity.description, Arrays.asList(entity.getTags()), entity.date, entity.type);
+                            oldAndNewEntityIDLookupTable.put(oldID, entity.id);
+                            
+                            //save files
+                            DataHandler.instance.addFiles(entity, files.toArray(new File[files.size()]));
+                            
+                            Log.l("imported: "+entity);
+                        }
                         
-                        //load entities
-                        
+                        this.processing(0.99, "saving relations...");
+                        for(Relation relation : relations){
+                            DataHandler.instance.createRelation(relation.title, relation.description, 
+                                    DataHandler.instance.getEntityByID(oldAndNewEntityIDLookupTable.get(relation.entityID1)), 
+                                    DataHandler.instance.getEntityByID(oldAndNewEntityIDLookupTable.get(relation.entityID2))
+                            );
+                        }
+                                              
+                        this.processing(1.0, "finished importing...");
+                                                
                         
                     } catch (Exception e) {
                         Log.l(e);

@@ -32,6 +32,10 @@ public class Entity implements Thumbnail {
         return id;
     }    
 
+    public void setCreated(Date created) {
+        this.created = created;
+    }
+    
     public Date getCreated() {
         return created;
     }
@@ -81,6 +85,14 @@ public class Entity implements Thumbnail {
         }
         return tagsString;
     }
+    
+    public void setTagsAsString(String tagsSeperatedByComma) {
+        tags = new ArrayList<>();
+        String[] tagSplit = tagsSeperatedByComma.split(",");
+        for(String t : tagSplit){
+            tags.add(t.trim());
+        }
+    }
 
     public void setTags(String... tags) {
         this.tags = new ArrayList<>(tags.length);
@@ -93,10 +105,22 @@ public class Entity implements Thumbnail {
         this.tags = tags;
     }
 
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
+    }
+
     @Override
     public Image getThumbnail(int preferedWidth, int preferedHeight, Font font) throws Exception {
         return DataHandler.instance.getThumbnail(this, preferedWidth, preferedHeight, font);
     }
 
-    
+    @Override
+    public String toString() {
+        return (type == 1 ? "Doc" : type == 2 ? "Institution" : "Entity") + ":[ID="+id+", Title="+title+", Description="+description
+                +", Date="+date+", Created="+created+", Tags=("+getTagsAsString()+")";
+    }
 }

@@ -171,6 +171,16 @@ public class DataHandler {
                 } else if (type == 2) {
                     entity = new Institution(id, title, description, tags, created);
                 }
+                else{
+                    entity = new Entity();
+                    entity.setId(id);
+                    entity.setTitle(title);
+                    entity.setDescription(description);
+                    entity.setTags(tags);
+                    entity.setDate(date);
+                    entity.setCreated(created);
+                    entity.setType(type);
+                }
 
                 return entity;
             } else {
