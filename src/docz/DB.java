@@ -18,11 +18,11 @@ import org.h2.tools.ChangeFileEncryption;
 
 /**
  *
- * @author Michael
+ * @author RyU
  */
-public abstract class DB {
+public final class DB {
 
-    private static final String dbPath = "db/db";
+    private static String dbPath = null;
     private static String pw = null;
 
     protected static void setPW(String pw) {
@@ -30,7 +30,11 @@ public abstract class DB {
     }
 
     public static final String getDBPath() {
-        return new File(dbPath).getAbsolutePath();
+        return dbPath;
+    }
+
+    public static final void setDBPath(String path) {
+        dbPath = path.trim() + File.separator + "db";
     }
 
     static {
@@ -77,7 +81,6 @@ public abstract class DB {
     public static void setSetting(String name, String value) {
         try {
             if (DB.update("update settings set value='" + value + "' where name='" + name + "'") == 0) {
-
                 DB.insert("insert into settings(name, value) values('" + name + "','" + value + "')", false);
             }
         } catch (SQLException ex) {
@@ -133,18 +136,54 @@ public abstract class DB {
     }
 
     public static Connection createConnection() throws SQLException {
-        if (pw != null) {
-            Connection c = DriverManager.getConnection("jdbc:h2:file:" + new File(dbPath).getAbsolutePath() + ";CIPHER=AES", "sa", pw + " " + "password");
-            return c;
+        if (dbPath != null) {
+            if (pw == null) {
+                Connection c = DriverManager.getConnection("jdbc:h2:file:" + new File(dbPath).getAbsolutePath(), null, null);
+                return c;
+            } else {
+                Connection c = DriverManager.getConnection("jdbc:h2:file:" + new File(dbPath).getAbsolutePath() + ";CIPHER=AES", null, pw+" ");
+                return c;
+            }
         }
 
-        throw new SecurityException("no password entered!");
+        throw new IllegalStateException("no database path set");
+    }
+
+    public static boolean needPW() throws SQLException {
+        try {
+            DriverManager.getConnection("jdbc:h2:file:" + new File(dbPath).getAbsolutePath(), null, null).close();
+            return false;
+        } catch (SQLException e) {
+            if (e.getMessage().contains("File corrupted") || e.getMessage().contains("Encryption error") || e.getMessage().contains("Store header is corrupt") || e.getMessage().contains("Wrong user name or password")) {
+                return true;
+            }
+            throw e;
+        }
+    }
+
+    public static boolean checkPW(String pw) throws SQLException {
+        if (dbPath != null) {
+            try {
+                Connection c = DriverManager.getConnection("jdbc:h2:file:" + new File(dbPath).getAbsolutePath() + ";CIPHER=AES", null, pw+" ");
+                c.close();
+                return true;
+            } catch (SQLException ex) {
+                if(ex.getMessage().contains("Encryption error")){
+                    return false;
+                }
+                else{
+                    throw ex;
+                }
+            }
+        }
+
+        throw new IllegalStateException("no database path set");
     }
 
     public static boolean changePW(String oldPW, String newPW) throws SQLException {
-        if (oldPW != null && newPW != null) {
+        if (!(newPW == null && oldPW == null)) {
             try {
-                ChangeFileEncryption.execute(new File(DB.getDBPath()).getParent(), null, "AES", oldPW.toCharArray(), newPW.toCharArray(), false);
+                ChangeFileEncryption.execute(new File(DB.getDBPath()).getParent(), null, "AES", oldPW==null ? null : oldPW.toCharArray(), newPW == null ? null : newPW.toCharArray(), false);
                 DB.setPW(newPW);
                 return true;
             } catch (SQLException sqlex) {
@@ -156,17 +195,20 @@ public abstract class DB {
             }
         }
 
-        throw new SecurityException("no password entered!");
+        throw new SecurityException("no passwords entered!");
     }
 
     public static class DBResultWithStream extends DBResult implements AutoCloseable {
 
         public final InputStream stream;
-        
+
         public DBResultWithStream(DBResult r, int columnIndex) throws SQLException {
             super(r.connection, r.statement, r.resultSet);
-            if(r.resultSet.next()) stream = r.resultSet.getBinaryStream(columnIndex);
-            else stream = null;
+            if (r.resultSet.next()) {
+                stream = r.resultSet.getBinaryStream(columnIndex);
+            } else {
+                stream = null;
+            }
         }
     }
 

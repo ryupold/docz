@@ -7,12 +7,7 @@ package docz;
 
 import java.awt.Font;
 import java.awt.Image;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.w3c.dom.Document;
 
 /**
  *
