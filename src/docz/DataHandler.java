@@ -13,6 +13,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -24,9 +25,21 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import javax.imageio.ImageIO;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  *
@@ -816,6 +829,335 @@ public class DataHandler {
         Collections.sort(resultTmp, new EntityComparator(sorting, order));
         Entity[] results = resultTmp.toArray(new Entity[resultTmp.size()]);
         return results.length > limit ? Arrays.copyOf(results, limit) : results;
+    }
+    
+    public WaitDialog.AsyncProcess createExportProcess(final File exportDir){
+        return new WaitDialog.AsyncProcess("exporting database...") {
+
+                @Override
+                public void finished(boolean success) {
+
+                }
+
+                @Override
+                public void start() throws Exception {
+
+                    try {
+                        this.processing(0.0, "initializing destination");
+                        if (isCanceled()) {
+                            Log.l("exporting aborted");
+                            return;
+                        }
+
+                        //export dir
+                        File dbFile = new File(exportDir.getPath() + File.separator + "db.xml");
+                        File fileDir = new File(exportDir.getPath() + File.separator + "files");
+                        fileDir.mkdirs();
+
+                        if (isCanceled()) {
+                            Log.l("exporting aborted");
+                            return;
+                        }
+                        //entity xml doc
+                        DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+                        Document document = db.newDocument();
+                        Element root = document.createElement("docz");
+                        document.appendChild(root);
+
+                        if (isCanceled()) {
+                            Log.l("exporting aborted");
+                            return;
+                        }
+                        this.processing(0.01, "exporting entity data");
+                        Element entities = document.createElement("entities");
+                        root.appendChild(entities);
+
+                        DB.DBResult r = DB.select("SELECT id, title, description, date, created, type FROM entities ORDER BY id");
+                        try {
+                            while (r.resultSet.next()) {
+                                Element entity = document.createElement("entity");
+                                Element id = document.createElement("id");
+                                id.setTextContent(r.resultSet.getString(1));
+                                entity.appendChild(id);
+                                Element title = document.createElement("title");
+                                title.setTextContent(r.resultSet.getString(2));
+                                entity.appendChild(title);
+                                Element description = document.createElement("description");
+                                description.setTextContent(r.resultSet.getString(3));
+                                entity.appendChild(description);
+                                Element date = document.createElement("date");
+                                date.setTextContent(r.resultSet.getString(4));
+                                entity.appendChild(date);
+                                Element created = document.createElement("created");
+                                created.setTextContent(r.resultSet.getString(5));
+                                entity.appendChild(created);
+                                Element type = document.createElement("type");
+                                type.setTextContent(r.resultSet.getString(6));
+                                entity.appendChild(type);
+                                entities.appendChild(entity);
+                            }
+
+                            r.close();
+
+                            if (isCanceled()) {
+                                Log.l("exporting aborted");
+                                return;
+                            }
+                            this.processing(0.2, "exporting tags...");
+                            //tags xml doc
+                            Element tags = document.createElement("tags");
+                            root.appendChild(tags);
+
+                            r = DB.select("SELECT id, tag FROM tags ORDER BY id");
+                            while (r.resultSet.next()) {
+                                if (isCanceled()) {
+                                    Log.l("exporting aborted");
+                                    return;
+                                }
+                                Element tag = document.createElement("tag");
+                                Element id = document.createElement("id");
+                                id.setTextContent(r.resultSet.getString(1));
+                                tag.appendChild(id);
+                                Element tagname = document.createElement("tag");
+                                tagname.setTextContent(r.resultSet.getString(2));
+                                tag.appendChild(tagname);
+                                tags.appendChild(tag);
+                            }
+                            r.close();
+
+                            if(isCanceled()) {Log.l("exporting aborted"); return;}
+                            this.processing(0.3, "exporting relations...");
+                            //relation xml doc
+                            Element relations = document.createElement("relations");
+                            root.appendChild(relations);
+
+                            r = DB.select("SELECT id, title, description, created, entity1, entity2 FROM relations ORDER BY id");
+                            while (r.resultSet.next()) {
+                                Element relation = document.createElement("relation");
+                                Element id = document.createElement("id");
+                                id.setTextContent(r.resultSet.getString(1));
+                                relation.appendChild(id);
+                                Element title = document.createElement("title");
+                                title.setTextContent(r.resultSet.getString(2));
+                                relation.appendChild(title);
+                                Element description = document.createElement("description");
+                                description.setTextContent(r.resultSet.getString(3));
+                                relation.appendChild(description);
+                                Element created = document.createElement("created");
+                                created.setTextContent(r.resultSet.getString(4));
+                                relation.appendChild(created);
+                                Element entity1 = document.createElement("entity1");
+                                entity1.setTextContent(r.resultSet.getString(5));
+                                relation.appendChild(entity1);
+                                Element entity2 = document.createElement("entity2");
+                                entity2.setTextContent(r.resultSet.getString(6));
+                                relation.appendChild(entity2);
+                                relations.appendChild(relation);
+                            }
+                            r.close();
+
+                            if(isCanceled()) {Log.l("exporting aborted"); return;}
+                            this.processing(0.5, "exporting files...");
+                            //files xml doc
+                            Element files = document.createElement("files");
+                            root.appendChild(files);
+
+                            r = DB.select("SELECT count(*) FROM files");
+                            r.resultSet.next();
+                            long fileCount = r.resultSet.getLong(1);
+                            r.close();
+
+                            double i = 0;
+                            r = DB.select("SELECT id, name, created, file, size, ocr FROM files ORDER BY id");
+                            while (r.resultSet.next()) {
+                                String fname = r.resultSet.getString(2);
+                                if(isCanceled()) {Log.l("exporting aborted"); return;}
+                                this.processing(i / fileCount * 0.5 + 0.5, "exporting file " + fname);
+                                Element file = document.createElement("file");
+                                Element id = document.createElement("id");
+                                id.setTextContent(r.resultSet.getString(1));
+                                file.appendChild(id);
+                                Element name = document.createElement("name");
+                                name.setTextContent(fname);
+                                file.appendChild(name);
+                                Element created = document.createElement("created");
+                                created.setTextContent(r.resultSet.getString(3));
+                                file.appendChild(created);
+                                Element size = document.createElement("size");
+                                size.setTextContent(r.resultSet.getString(5));
+                                file.appendChild(size);
+                                Element ocr = document.createElement("ocr");
+                                ocr.setTextContent(r.resultSet.getString(6));
+                                file.appendChild(ocr);
+                                files.appendChild(file);
+
+                                Entity e = DataHandler.instance.getEntityByID(r.resultSet.getLong(1));
+                                new File(fileDir.getAbsolutePath() + File.separator + "id_" + e.id).mkdirs();
+                                File f = new File(fileDir.getAbsolutePath() + File.separator + "id_" + e.id + File.separator + fname);
+
+                                InputStream byteStream = null;
+                                FileOutputStream fos = new FileOutputStream(f);
+                                byteStream = r.resultSet.getBinaryStream(4);
+
+                                long bytesRead = 0;
+                                long fileSize = r.resultSet.getLong(5);
+                                byte[] buffer = new byte[1024];
+                                int tmpCount = 0;
+                                while ((tmpCount = byteStream.read(buffer)) > 0) {
+                                    bytesRead += tmpCount;
+                                    fos.write(buffer);
+                                    double percent = (double) bytesRead / (double) fileSize;
+                                    if(isCanceled()) {Log.l("exporting aborted"); return;}
+                                    processing(((double) bytesRead / (double) fileSize) * 1.0 / fileCount + i / fileCount * 0.5 + 0.5, "exporting file " + fname);
+                                }
+                                byteStream.close();
+                                fos.close();
+
+                                i += 1;
+                            }
+                        } finally {
+                            r.close();
+                        }
+                        
+                        if(isCanceled()) {Log.l("exporting aborted"); return;}
+                        this.processing(0.99, "saving db file...");
+                        saveXMLDocument(document, dbFile);
+                        if(isCanceled()) {Log.l("exporting aborted"); return;}
+                        this.processing(1.0, "finished!");
+
+                    } catch (Exception ex) {
+                        Log.l(ex);
+                    }
+                }
+            };
+    }
+    
+    public WaitDialog.AsyncProcess createImportProcess(final File importDir){
+        return new WaitDialog.AsyncProcess("importing database...") {
+                @Override
+                public void finished(boolean success) {
+
+                }
+
+                @Override
+                public void start() throws Exception {
+                    try {
+                        this.processing(0.0, "loading id range...");
+                        long nextID_entity = 0;
+                        long nextID_relation = 0;
+                        
+                        DB.DBResult r = DB.select("SELECT max(id) FROM entities");
+                        if(r.resultSet.next()){
+                            nextID_entity = r.resultSet.getLong(1) + 1000;
+                        }
+                        r.close();
+                        
+                        r = DB.select("SELECT max(id) FROM relations");
+                        if(r.resultSet.next()){
+                            nextID_relation = r.resultSet.getLong(1) + 1000;
+                        }
+                        r.close();
+                        
+                        Map<Long, Long> oldAndNewEntityIDLookupTable = new HashMap<>();
+                        
+                        
+                        this.processing(0.0, "loading database file...");
+                        //load document
+                        DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+                        Document document = db.parse(importDir+File.separator+"db.xml");
+                        Element root = document.getDocumentElement();
+                        XPathFactory xPathfactory = XPathFactory.newInstance();
+                        XPath xpath = xPathfactory.newXPath();
+                        XPathExpression xAllEntities = xpath.compile("/docz/entities/entity");
+                        NodeList entityNodes = (NodeList)xAllEntities.evaluate(document, XPathConstants.NODESET);
+                        
+                        List<Relation> relations = new LinkedList<>();
+                        
+                        for(int i=0; i<entityNodes.getLength(); i++){
+                            this.processing((double)(i+1)/(double)entityNodes.getLength(), "importing entity "+(i+1)+"/"+entityNodes.getLength());
+
+                            //entity data
+                            Node entityN = entityNodes.item(i);
+                            Entity entity = new Entity();
+                            
+                            entity.setId(Long.parseLong((String)xpath.compile("id").evaluate(entityN, XPathConstants.STRING)));
+                            entity.setTitle((String)xpath.compile("title").evaluate(entityN, XPathConstants.STRING));
+                            entity.setDescription((String)xpath.compile("description").evaluate(entityN, XPathConstants.STRING));
+                            entity.setDate(new Date(Long.parseLong((String)xpath.compile("date").evaluate(entityN, XPathConstants.STRING))));
+                            entity.setCreated(new Date(Long.parseLong((String)xpath.compile("created").evaluate(entityN, XPathConstants.STRING))));
+                            entity.setType(Integer.parseInt((String)xpath.compile("type").evaluate(entityN, XPathConstants.STRING)));
+                            
+                            
+                            //tags
+                            NodeList allTags = (NodeList)xpath.compile("/docz/tags/tag[id='"+entity.id+"']").evaluate(document, XPathConstants.NODESET);
+                            XPathExpression xTag = xpath.compile("tag");
+                            String tagString = "";
+                            for(int j=0; j<allTags.getLength(); j++){
+                                Node tagN = allTags.item(j);
+                                tagString += xTag.evaluate(tagN, XPathConstants.STRING) + (j!=allTags.getLength()-1 ? ", " : "");
+                            }                          
+                            entity.setTagsAsString(tagString);
+                            
+                            
+                            //relations
+                            NodeList allRelations = (NodeList) xpath.compile("/docz/relations/relation[entity1='"+entity.id+"']").evaluate(document, XPathConstants.NODESET);
+                            int tmp = allRelations.getLength();
+                            if(tmp > 0) Log.l(tmp+" relations");
+                            for(int j=0; j<allRelations.getLength(); j++){
+                                Relation relation = new Relation();
+                                Node relationN = allRelations.item(j);
+                                
+                                relation.setID(Long.parseLong((String)xpath.compile("id").evaluate(relationN, XPathConstants.STRING)));
+                                relation.setTitle((String)xpath.compile("title").evaluate(relationN, XPathConstants.STRING));
+                                relation.setDescription((String)xpath.compile("description").evaluate(relationN, XPathConstants.STRING));
+                                relation.setCreated(new Date(Long.parseLong((String)xpath.compile("created").evaluate(relationN, XPathConstants.STRING))));
+                                relation.setEntityID1(Long.parseLong((String)xpath.compile("entity1").evaluate(relationN, XPathConstants.STRING)));
+                                relation.setEntityID2(Long.parseLong((String)xpath.compile("entity2").evaluate(relationN, XPathConstants.STRING)));
+                                relations.add(relation);
+                            }
+                            
+                            
+                            //files                           
+                            List<File> files = new ArrayList<>();
+                            NodeList allFiles = (NodeList) xpath.compile("/docz/files/file[id='"+entity.id+"']").evaluate(document, XPathConstants.NODESET);
+                            for(int j=0; j<allFiles.getLength(); j++){
+                                Node fileN = allFiles.item(j);
+                                String name = (String)xpath.compile("name").evaluate(fileN, XPathConstants.STRING);
+                                Date created = new Date(Long.parseLong((String)xpath.compile("created").evaluate(fileN, XPathConstants.STRING)));
+                                File file = new File(importDir+File.separator+"files"+File.separator+"id_"+entity.id+File.separator+name);
+                                long size = Long.parseLong((String)xpath.compile("size").evaluate(fileN, XPathConstants.STRING));
+                                String ocr = (String)xpath.compile("ocr").evaluate(fileN, XPathConstants.STRING);
+                                files.add(file);
+                            }
+                            
+                            
+                            //save to DB
+                            long oldID = entity.id;
+                            entity = DataHandler.instance.createEntity(entity.title, entity.description, Arrays.asList(entity.getTags()), entity.date, entity.type);
+                            oldAndNewEntityIDLookupTable.put(oldID, entity.id);
+                            
+                            //save files
+                            DataHandler.instance.addFiles(entity, files.toArray(new File[files.size()]));
+                            
+                            Log.l("imported: "+entity);
+                        }
+                        
+                        this.processing(0.99, "saving relations...");
+                        for(Relation relation : relations){
+                            DataHandler.instance.createRelation(relation.title, relation.description, 
+                                    DataHandler.instance.getEntityByID(oldAndNewEntityIDLookupTable.get(relation.entityID1)), 
+                                    DataHandler.instance.getEntityByID(oldAndNewEntityIDLookupTable.get(relation.entityID2))
+                            );
+                        }
+                                              
+                        this.processing(1.0, "finished importing...");
+                                                
+                        
+                    } catch (Exception e) {
+                        Log.l(e);
+                    }
+                }
+            };
     }
 
     @Override

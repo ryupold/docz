@@ -7,16 +7,22 @@ package docz;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
+import javax.xml.parsers.DocumentBuilder;
 import net.sourceforge.jdatepicker.DateModel;
 import net.sourceforge.jdatepicker.JDateComponentFactory;
 import net.sourceforge.jdatepicker.JDatePanel;
 import net.sourceforge.jdatepicker.impl.JDatePanelImpl;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  *
@@ -605,12 +611,12 @@ public class DocZMainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_menuExitActionPerformed
 
     private void menuExportDBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuExportDBActionPerformed
-        JFileChooser fc = new JFileChooser();
+        final JFileChooser fc = new JFileChooser();
         fc.setMultiSelectionEnabled(false);
-        fc.setDialogType(JFileChooser.SAVE_DIALOG);
         fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        if(fc.showDialog(this, "export database") == JFileChooser.APPROVE_OPTION){
-            //TODO
+        fc.setFileSelectionMode(JFileChooser.SAVE_DIALOG);
+        if (fc.showDialog(this, "export database") == JFileChooser.APPROVE_OPTION) {
+            WaitDialog exporter = new WaitDialog(this, DataHandler.instance.createExportProcess(fc.getSelectedFile()), true, "exporting database");
         }
     }//GEN-LAST:event_menuExportDBActionPerformed
 
@@ -620,7 +626,7 @@ public class DocZMainFrame extends javax.swing.JFrame {
         fc.setDialogType(JFileChooser.OPEN_DIALOG);
         fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         if(fc.showDialog(this, "import database") == JFileChooser.APPROVE_OPTION){
-            //TODO
+            WaitDialog importer = new WaitDialog(this, DataHandler.instance.createImportProcess(fc.getSelectedFile()), true, "importing database");
         }
     }//GEN-LAST:event_menuImportDBActionPerformed
 
