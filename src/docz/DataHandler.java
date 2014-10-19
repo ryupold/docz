@@ -32,6 +32,11 @@ import java.util.Map;
 import javax.imageio.ImageIO;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
@@ -1158,6 +1163,18 @@ public class DataHandler {
                     }
                 }
             };
+    }
+    
+    private void saveXMLDocument(Document document, File file) {
+        try {
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            DOMSource domSource = new DOMSource(document);
+            StreamResult streamResult = new StreamResult(file);
+            transformer.transform(domSource, streamResult);
+        } catch (TransformerException ex) {
+            Log.l(ex);
+        }
     }
 
     @Override

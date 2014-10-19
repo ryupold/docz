@@ -422,7 +422,7 @@ public class DocZMainFrame extends javax.swing.JFrame {
         });
         menuFile.add(menuExportDB);
 
-        menuImportDB.setText("import database...");
+        menuImportDB.setText("import exported database...");
         menuImportDB.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 menuImportDBActionPerformed(evt);
