@@ -146,7 +146,8 @@ public final class Config {
             }
             save();
             
-            return dbFile.delete();
+            dbFile.delete();
+            return true;
         }
         else{
             return false;
