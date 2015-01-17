@@ -22,8 +22,6 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -673,14 +671,15 @@ public class ContentPanel extends javax.swing.JPanel {
 
             final JFileChooser fc = new JFileChooser(new File(lastPath));
 
-            String fileExtension = "";
+            String fileExtension = null;
             if (fileList.getImageTitle(fileList.getSelectedImageIndex()).lastIndexOf(".") >= 0) {
                 fileExtension = fileList.getImageTitle(fileList.getSelectedImageIndex()).substring(fileList.getImageTitle(fileList.getSelectedImageIndex()).lastIndexOf("."));
             }
 
             fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
             fc.setMultiSelectionEnabled(false);
-            fc.setFileFilter(new FileNameExtensionFilter(fileExtension + " files", fileExtension));
+            if(fileExtension != null && !fileExtension.trim().isEmpty())
+                fc.setFileFilter(new FileNameExtensionFilter(fileExtension + " files", fileExtension));
             fc.setSelectedFile(new File(lastPath + File.separator + fileList.getImageTitle(fileList.getSelectedImageIndex())));
             final boolean[] abort = new boolean[]{false};
             if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
@@ -705,7 +704,7 @@ public class ContentPanel extends javax.swing.JPanel {
                             int tmpCount = 0;
                             while (!abort[0] && (tmpCount = byteStream.read(buffer)) > 0) {
                                 bytesRead += tmpCount;
-                                fos.write(buffer);
+                                fos.write(buffer, 0, tmpCount);
                                 double percent = (double) bytesRead / (double) fileSize;
                                 processing((double) bytesRead / (double) fileSize, (((int) (percent * 1000.0)) / 10.0) + "%");
                             }
