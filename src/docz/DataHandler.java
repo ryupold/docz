@@ -1018,9 +1018,9 @@ public class DataHandler {
                                 long fileSize = r.resultSet.getLong(5);
                                 byte[] buffer = new byte[1024];
                                 int tmpCount = 0;
-                                while ((tmpCount = byteStream.read(buffer)) > 0) {
+                                while ((tmpCount = byteStream.read(buffer, 0, buffer.length)) > 0) {
                                     bytesRead += tmpCount;
-                                    fos.write(buffer);
+                                    fos.write(buffer, 0, tmpCount);
                                     double percent = (double) bytesRead / (double) fileSize;
                                     if(isCanceled()) {Log.l("exporting aborted"); return;}
                                     processing(((double) bytesRead / (double) fileSize) * 1.0 / fileCount + i / fileCount * 0.5 + 0.5, "exporting file " + fname);
